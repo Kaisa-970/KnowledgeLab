@@ -145,7 +145,7 @@ export default function FourierSeriesLab() {
     <section className="lab" id="lab" aria-labelledby="fourier-lab-title">
       <div className="lab-heading">
         <div>
-          <span className="eyebrow">交互实验 · 02</span>
+          <span className="eyebrow">交互实验 · 03</span>
           <h3 id="fourier-lab-title">用正弦波拼出方波</h3>
           <p>先预测：增加最高谐波序号 N，峰值会变矮还是更靠近跳点？</p>
         </div>
@@ -168,7 +168,7 @@ export default function FourierSeriesLab() {
             }
           >
             <line x1={PAD.left} y1={toY(0)} x2={WIDTH - PAD.right} y2={toY(0)} stroke="#94a3b4" opacity="0.5" />
-            <line x1={zoom ? PAD.left : toX(0)} y1={PAD.top} x2={zoom ? PAD.left : toX(0)} y2={HEIGHT - PAD.bottom} stroke="#e2e8ee" />
+            <line x1={zoom ? PAD.left + (WIDTH - PAD.left - PAD.right) / 2 : toX(0)} y1={PAD.top} x2={zoom ? PAD.left + (WIDTH - PAD.left - PAD.right) / 2 : toX(0)} y2={HEIGHT - PAD.bottom} stroke="#e2e8ee" />
             {[-1, 1].map((v) => (
               <line key={v} x1={PAD.left} y1={toY(v)} x2={WIDTH - PAD.right} y2={toY(v)} stroke="#e8edf2" />
             ))}

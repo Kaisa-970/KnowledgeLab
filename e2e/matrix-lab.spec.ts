@@ -39,3 +39,23 @@ test('unknown chapter displays a useful fallback', async ({ page }) => {
   await page.goto('/courses/linear-algebra/not-a-chapter')
   await expect(page.getByRole('heading', { name: '未找到课程' })).toBeVisible()
 })
+
+test('dragging a basis endpoint updates the displayed vector and transformed grid', async ({ page }) => {
+  await page.goto('/courses/linear-algebra/linear-transformations')
+  const plot = page.locator('svg.plot')
+  const gridLine = plot.locator(':scope > g').nth(1).locator('line').first()
+  const beforeText = await plot.getAttribute('aria-label')
+  const beforeX = await gridLine.getAttribute('x1')
+  const handle = page.locator('.drag-handle').first()
+  const box = await handle.boundingBox()
+  expect(box).not.toBeNull()
+  if (!box) return
+  const x = box.x + box.width / 2
+  const y = box.y + box.height / 2
+  await page.mouse.move(x, y)
+  await page.mouse.down()
+  await page.mouse.move(x + 34, y - 22, { steps: 6 })
+  await page.mouse.up()
+  await expect.poll(() => plot.getAttribute('aria-label')).not.toBe(beforeText)
+  await expect.poll(() => gridLine.getAttribute('x1')).not.toBe(beforeX)
+})

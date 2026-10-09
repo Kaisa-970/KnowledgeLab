@@ -40,24 +40,44 @@ export default function MatrixTransformLab() {
       ? '保持方向：面积按 det(A) 的绝对值缩放'
       : '方向翻转：有向面积变号'
 
-  function handleMove(event: PointerEvent<SVGCircleElement>, basis: 'e1' | 'e2') {
-    if (dragging.current !== basis || !svgRef.current) return
-    const bounds = svgRef.current.getBoundingClientRect()
-    // SVG preserves 1:1 aspect ratio; the rendered width defines its scale.
-    const k = bounds.width / 440
-    const pos = {
-      x: clamp(((event.clientX - bounds.left) / k - origin.x) / pixelsPerUnit),
-      y: clamp((origin.y - (event.clientY - bounds.top) / k) / pixelsPerUnit),
-    }
-    setMatrix((old) => basis === 'e1'
-      ? { ...old, a: pos.x, c: pos.y }
-      : { ...old, b: pos.x, d: pos.y })
+  function localPointer(event: PointerEvent<SVGSVGElement>) {
+    const svg = svgRef.current
+    const transform = svg?.getScreenCTM()
+    if (!svg || !transform) return null
+    // Browser CTM maps the SVG's 440×440 coordinate system onto CSS pixels.
+    const point = svg.createSVGPoint()
+    point.x = event.clientX
+    point.y = event.clientY
+    return point.matrixTransform(transform.inverse())
   }
 
-  function startDrag(event: PointerEvent<SVGCircleElement>, basis: 'e1' | 'e2') {
-    event.preventDefault()
-    dragging.current = basis
+  function startDrag(event: PointerEvent<SVGSVGElement>) {
+    const point = localPointer(event)
+    if (!point) return
+    const h1 = pixel(e1)
+    const h2 = pixel(e2)
+    const d1 = Math.hypot(point.x - h1.x, point.y - h1.y)
+    const d2 = Math.hypot(point.x - h2.x, point.y - h2.y)
+    if (Math.min(d1, d2) > 17) return
+    dragging.current = d1 <= d2 ? 'e1' : 'e2'
     event.currentTarget.setPointerCapture(event.pointerId)
+    event.preventDefault()
+  }
+
+  function handleMove(event: PointerEvent<SVGSVGElement>) {
+    const basis = dragging.current
+    if (!basis) return
+    const point = localPointer(event)
+    if (!point) return
+    const x = clamp((point.x - origin.x) / pixelsPerUnit)
+    const y = clamp((origin.y - point.y) / pixelsPerUnit)
+    setMatrix((old) => basis === 'e1'
+      ? { ...old, a: x, c: y }
+      : { ...old, b: x, d: y })
+  }
+
+  function endDrag() {
+    dragging.current = null
   }
 
   function input(field: keyof Matrix2, label: string) {
@@ -102,6 +122,10 @@ export default function MatrixTransformLab() {
             className="plot"
             role="img"
             aria-label={'二维变换网格。第一基向量 (' + fmt(e1.x) + ', ' + fmt(e1.y) + ')；第二基向量 (' + fmt(e2.x) + ', ' + fmt(e2.y) + ')'}
+            onPointerDown={startDrag}
+            onPointerMove={handleMove}
+            onPointerUp={endDrag}
+            onPointerCancel={endDrag}
           >
             <defs>
               <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#e65b5b" /></marker>
@@ -120,8 +144,8 @@ export default function MatrixTransformLab() {
             <circle cx={origin.x} cy={origin.y} r="3.2" fill="#39465a" />
             <line x1={origin.x} y1={origin.y} x2={pixel(e1).x} y2={pixel(e1).y} stroke="#e65b5b" strokeWidth="3.3" markerEnd="url(#arrow-red)" />
             <line x1={origin.x} y1={origin.y} x2={pixel(e2).x} y2={pixel(e2).y} stroke="#1686c2" strokeWidth="3.3" markerEnd="url(#arrow-blue)" />
-            <circle className="drag-handle" cx={pixel(e1).x} cy={pixel(e1).y} r="10" stroke="#e65b5b" strokeWidth="2" fill="#fff" onPointerDown={(e) => startDrag(e,'e1')} onPointerMove={(e) => handleMove(e,'e1')} onPointerUp={() => { dragging.current = null }} onPointerCancel={() => { dragging.current = null }} />
-            <circle className="drag-handle" cx={pixel(e2).x} cy={pixel(e2).y} r="10" stroke="#1686c2" strokeWidth="2" fill="#fff" onPointerDown={(e) => startDrag(e,'e2')} onPointerMove={(e) => handleMove(e,'e2')} onPointerUp={() => { dragging.current = null }} onPointerCancel={() => { dragging.current = null }} />
+            <circle className="drag-handle" cx={pixel(e1).x} cy={pixel(e1).y} r="10" stroke="#e65b5b" strokeWidth="2" fill="#fff"  />
+            <circle className="drag-handle" cx={pixel(e2).x} cy={pixel(e2).y} r="10" stroke="#1686c2" strokeWidth="2" fill="#fff"  />
             <text x={pixel(e1).x+14} y={pixel(e1).y-10} fill="#ba3939" fontSize="15" fontWeight="700">e₁'</text>
             <text x={pixel(e2).x+14} y={pixel(e2).y-10} fill="#096594" fontSize="15" fontWeight="700">e₂'</text>
           </svg>

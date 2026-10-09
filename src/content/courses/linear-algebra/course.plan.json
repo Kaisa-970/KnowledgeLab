@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "id": "linear-algebra",
+  "title": "线性代数的几何本质",
+  "domain": "mathematics",
+  "level": "foundation-to-intermediate",
+  "summary": "从空间中的向量与变换出发，以实验、推导和工程联系构建线性代数的心智模型。",
+  "prerequisites": [
+    "平面直角坐标系",
+    "向量加法",
+    "标量乘法"
+  ],
+  "learningOutcomes": [
+    "从基向量的像重建二维矩阵",
+    "解释线性变换与矩阵乘法的关系",
+    "根据行列式解释有向面积变化与退化"
+  ],
+  "knowledgeNodes": [
+    {
+      "id": "vector-basis",
+      "title": "向量与基",
+      "dependsOn": []
+    },
+    {
+      "id": "linear-map",
+      "title": "线性映射与基向量的像",
+      "dependsOn": [
+        "vector-basis"
+      ]
+    },
+    {
+      "id": "determinant",
+      "title": "行列式与有向面积",
+      "dependsOn": [
+        "linear-map"
+      ]
+    },
+    {
+      "id": "matrix-rank",
+      "title": "线性相关与秩",
+      "dependsOn": [
+        "linear-map"
+      ]
+    },
+    {
+      "id": "eigenvectors",
+      "title": "特征值与特征向量",
+      "dependsOn": [
+        "linear-map"
+      ]
+    },
+    {
+      "id": "svd",
+      "title": "奇异值分解",
+      "dependsOn": [
+        "matrix-rank"
+      ]
+    },
+    {
+      "id": "pca",
+      "title": "协方差与 PCA",
+      "dependsOn": [
+        "eigenvectors"
+      ]
+    }
+  ],
+  "chapters": [
+    {
+      "id": "linear-transformations",
+      "title": "矩阵究竟是什么？",
+      "coreQuestion": "为什么知道基向量变换后的去向，就能知道任意平面向量变换后的结果？",
+      "learningObjectives": [
+        "解释矩阵两列表示基向量的去向",
+        "使用线性性推导二维矩阵乘法",
+        "解释行列式的有向面积意义"
+      ],
+      "conceptIds": [
+        "vector-basis",
+        "linear-map",
+        "determinant"
+      ],
+      "prerequisites": [
+        "向量加法",
+        "标量乘法"
+      ],
+      "labIds": [
+        "matrix-basis-lab"
+      ],
+      "lessonPath": "src/content/lessons/linear-transformations.mdx",
+      "status": "prototype"
+    }
+  ],
+  "plannedChapters": [
+    {
+      "id": "rank",
+      "title": "线性相关与秩",
+      "dependsOnChapterIds": [
+        "linear-transformations"
+      ]
+    },
+    {
+      "id": "eigenvectors",
+      "title": "特征值与特征向量",
+      "dependsOnChapterIds": [
+        "rank"
+      ]
+    },
+    {
+      "id": "svd",
+      "title": "奇异值分解 SVD",
+      "dependsOnChapterIds": [
+        "rank"
+      ]
+    },
+    {
+      "id": "pca",
+      "title": "协方差矩阵与 PCA",
+      "dependsOnChapterIds": [
+        "eigenvectors"
+      ]
+    }
+  ]
+}

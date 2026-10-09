@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "KnowledgeLab Course Plan v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "title",
+    "domain",
+    "level",
+    "summary",
+    "prerequisites",
+    "learningOutcomes",
+    "knowledgeNodes",
+    "chapters",
+    "plannedChapters"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "$ref": "#/$defs/id"
+    },
+    "title": {
+      "$ref": "#/$defs/nonempty"
+    },
+    "domain": {
+      "enum": [
+        "mathematics",
+        "programming",
+        "graphics",
+        "ai",
+        "robotics",
+        "other"
+      ]
+    },
+    "level": {
+      "enum": [
+        "foundation",
+        "foundation-to-intermediate",
+        "intermediate",
+        "advanced"
+      ]
+    },
+    "summary": {
+      "$ref": "#/$defs/nonempty"
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/nonempty"
+      }
+    },
+    "learningOutcomes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/nonempty"
+      }
+    },
+    "knowledgeNodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    },
+    "chapters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/chapter"
+      }
+    },
+    "plannedChapters": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/planned"
+      }
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "nonempty": {
+      "type": "string",
+      "minLength": 3
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "dependsOn"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "title": {
+          "$ref": "#/$defs/nonempty"
+        },
+        "dependsOn": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        }
+      }
+    },
+    "chapter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "coreQuestion",
+        "learningObjectives",
+        "conceptIds",
+        "prerequisites",
+        "labIds",
+        "lessonPath",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "title": {
+          "$ref": "#/$defs/nonempty"
+        },
+        "coreQuestion": {
+          "$ref": "#/$defs/nonempty"
+        },
+        "learningObjectives": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/nonempty"
+          }
+        },
+        "conceptIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nonempty"
+          }
+        },
+        "labIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "lessonPath": {
+          "type": "string",
+          "pattern": "^src/content/lessons/[a-z0-9-]+\\.mdx$"
+        },
+        "status": {
+          "enum": [
+            "prototype",
+            "reviewed",
+            "published"
+          ]
+        }
+      }
+    },
+    "planned": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "dependsOnChapterIds"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "title": {
+          "$ref": "#/$defs/nonempty"
+        },
+        "dependsOnChapterIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        }
+      }
+    }
+  }
+}

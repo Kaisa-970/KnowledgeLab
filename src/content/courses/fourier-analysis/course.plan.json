@@ -4,16 +4,17 @@
   "title": "傅里叶分析：从波形到频谱",
   "domain": "mathematics",
   "level": "foundation-to-intermediate",
-  "summary": "从「用正弦波拼出方波」这一具体构造出发，建立周期函数分解为谐波的直觉，推导系数公式，并解释收敛与 Gibbs 过冲的边界行为。",
+  "summary": "从真实的信号分离问题出发，先理解频率视角和正弦为何有用，再把函数内积与向量投影连接起来，最后用方波探究 Gibbs 过冲和不同收敛方式。",
   "prerequisites": [
     "三角函数与弧度制",
-    "定积分与奇偶函数对称性",
-    "级数收敛的初步概念"
+    "定积分和简单的奇偶函数",
+    "基本的向量与线性组合（可在第二节回顾）"
   ],
   "learningOutcomes": [
-    "用正交性解释傅里叶系数公式的来源，而非把公式当作定义",
-    "根据函数的奇偶性与半波对称性判断哪些谐波系数为零",
-    "解释有限项部分和在跳变处的行为，并说明 Gibbs 过冲为何不随项数消失"
+    "解释时域/频域两种视角和选择正弦成分的理由，并指出适用条件",
+    "利用正交内积推导有限频率组合的最优平方误差系数",
+    "利用奇偶与半波对称性计算方波谐波",
+    "用实验和数学区分 Gibbs 过冲、逐点收敛、均方收敛与一致收敛"
   ],
   "knowledgeNodes": [
     {
@@ -73,28 +74,73 @@
   ],
   "chapters": [
     {
-      "id": "square-wave-synthesis",
-      "title": "为什么用正弦波去拼一个方波？",
-      "coreQuestion": "方波有尖锐跳变，为什么一堆光滑的正弦波叠加可以逼近它，却永远不能完美还原？",
+      "id": "why-frequency",
+      "title": "为什么我们需要“频率”这副眼镜？",
+      "coreQuestion": "想保留一段信号的基本节奏、削弱较快的振动，为什么只看时间波形不够直观？为什么选择正弦？",
       "learningObjectives": [
-        "用奇函数对称性说明方波的余弦系数与偶次正弦系数为何为零",
-        "通过有限正交投影推导系数公式，并算出方波奇次 b_n=4/(nπ)、偶次为零",
-        "解释 Gibbs 过冲峰值收敛到 1.179 而非 1 的原因",
-        "区分区域离散 RMS、全周期均方误差、逐点与一致收敛"
+        "读懂由两个正弦构成的信号的时域图和幅度谱",
+        "说明为什么正弦信号适合描述周期振动及适用条件",
+        "解释谐波序号与物理频率的区别"
       ],
       "conceptIds": [
-        "periodic-function",
-        "orthogonality",
-        "fourier-coefficients",
-        "symmetry-vanishing",
-        "gibbs-phenomenon",
-        "partial-sum-convergence"
+        "periodic-function"
       ],
       "prerequisites": [
-        "三角函数与弧度制",
-        "定积分的线性性质"
+        "三角函数",
+        "弧度制"
       ],
       "dependsOnChapterIds": [],
+      "coreTask": "对 y(t)=sin(t)+0.45sin(3t)，预测去掉第 3 次谐波后波形和基本周期的变化，并解释为什么仅凭幅度谱不能重建任意信号。",
+      "lessonPath": "src/content/lessons/why-frequency.mdx",
+      "status": "prototype"
+    },
+    {
+      "id": "frequency-projection",
+      "title": "如果只给你混合波形，能找回每个频率吗？",
+      "coreQuestion": "从只有时间波形、不知道配方的信号中，怎样独立求出各个频率的贡献，而不靠反复猜测？",
+      "learningObjectives": [
+        "解释函数内积与向量点积的联系和区别",
+        "用有限正交投影推导三角系数并正确处理零频常数项",
+        "应用公式提取简单混合函数的幅度和平均值"
+      ],
+      "conceptIds": [
+        "orthogonality",
+        "fourier-coefficients",
+        "frequency-interpretation"
+      ],
+      "prerequisites": [
+        "向量线性组合与投影直觉",
+        "积分"
+      ],
+      "dependsOnChapterIds": [
+        "why-frequency"
+      ],
+      "coreTask": "不用展开所有积分，计算 g(t)=2+cos(2t)+0.4sin(3t) 的平均值、a₂、b₃，并解释其余系数为什么为零。",
+      "lessonPath": "src/content/lessons/frequency-projection.mdx",
+      "status": "prototype"
+    },
+    {
+      "id": "square-wave-synthesis",
+      "title": "为什么方波越拼越像，边缘却总有过冲？",
+      "coreQuestion": "有限正弦组合无法产生跳变，为什么全周期均方误差仍下降，过冲峰却不消失？",
+      "learningObjectives": [
+        "利用奇偶性和半波反对称性求方波各次谐波系数",
+        "解释 Gibbs 峰的高度极限与随项数收缩的位置",
+        "比较区域离散 RMS、全周期 L²、逐点与一致收敛"
+      ],
+      "conceptIds": [
+        "fourier-coefficients",
+        "symmetry-vanishing",
+        "partial-sum-convergence",
+        "gibbs-phenomenon"
+      ],
+      "prerequisites": [
+        "正交投影与傅里叶系数",
+        "简单极限"
+      ],
+      "dependsOnChapterIds": [
+        "frequency-projection"
+      ],
       "labIds": [
         "fourier-square-lab"
       ],
@@ -105,14 +151,14 @@
   "plannedChapters": [
     {
       "id": "arbitrary-period",
-      "title": "频率到底是什么？",
+      "title": "周期与非周期信号怎样表示频率？",
       "dependsOnChapterIds": [
         "square-wave-synthesis"
       ]
     },
     {
       "id": "spectrum-reading",
-      "title": "频谱告诉了我们什么？",
+      "title": "频谱如何描述幅度与相位？",
       "dependsOnChapterIds": [
         "arbitrary-period"
       ]

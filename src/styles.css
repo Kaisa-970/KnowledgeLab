@@ -118,3 +118,28 @@ button { cursor:pointer; }
 
 .mobile-course-nav { display:none; }
 @media (max-width:760px) { .mobile-course-nav { display:flex; gap:8px; flex-direction:column; padding:7px 0 4px; } .mobile-course-nav label { font-size:11px; color:#8394a6; } .mobile-course-nav select { width:100%; padding:9px 12px; border:1px solid #d7e2e9; background:#f8fafc; color:#264b64; border-radius:8px; font-size:13px; } }
+
+/* A purpose-built teaching diagram: keep labels readable across viewport sizes. */
+.frequency-figure { margin:30px 0; border:1px solid #dbe7ea; border-radius:14px; overflow:hidden; background:#fff; box-shadow:0 8px 28px rgba(27,56,80,.05); }
+.frequency-figure-title { display:flex; gap:8px 20px; align-items:baseline; justify-content:space-between; flex-wrap:wrap; padding:17px 20px 13px; background:#f0f7f8; border-bottom:1px solid #e2ebef; }
+.frequency-figure-title strong { color:#213b52; font-size:14px; }
+.frequency-figure-title span { color:#72899b; font-size:11px; }
+.frequency-figure-grid { display:grid; grid-template-columns:minmax(0,1.28fr) minmax(0,1fr); }
+.frequency-figure-panel { padding:13px 13px 7px; min-width:0; }
+.frequency-figure-panel+.frequency-figure-panel { border-left:1px solid #e7eef2; }
+.frequency-figure-panel h3 { font-size:12px; color:#375366; margin:4px 5px 7px; }
+.frequency-figure-panel svg { width:100%; height:auto; display:block; }
+.frequency-figure-key { display:flex; justify-content:center; flex-wrap:wrap; gap:14px; font-size:11px; color:#687e90; }
+.frequency-figure-key span { display:inline-flex; align-items:center; gap:5px; }
+.frequency-figure-dot { width:9px; height:9px; display:inline-block; border-radius:50%; }
+.frequency-figure-dot.base { background:#158f85; }
+.frequency-figure-dot.overtone { background:#bc7345; }
+.frequency-figure figcaption { padding:12px 20px 16px; border-top:1px solid #e9eef2; background:#fbfdfd; color:#61778b; font-size:12px; line-height:1.8; }
+.lesson-article .next-card a { display:inline-block; margin-top:9px; color:#a7ece0; font-weight:700; font-size:13px; }
+.lesson-article .next-card a:hover { text-decoration:underline; }
+@media (max-width:760px) {
+  .frequency-figure-grid { grid-template-columns:1fr; }
+  .frequency-figure-panel+.frequency-figure-panel { border-left:0; border-top:1px solid #e7eef2; }
+  .frequency-figure-panel { max-width:100%; }
+  .frequency-figure-panel svg { max-width:450px; margin:auto; }
+}

@@ -28,9 +28,15 @@ test('det=0 collapses 2D area', () => {
   assert.equal(determinant(A), 0)
 })
 
-test('det<0 represents orientation reversal', () => {
+test('det<0 indicates orientation reversal', () => {
   const mirror = { a: -1, b: 0, c: 0, d: 1 }
   assert.equal(determinant(mirror), -1)
+  // Orientation is the sign of the signed area, not whether each vector reverses.
+  const u = transform(mirror, { x: 1, y: 0 })
+  const v = transform(mirror, { x: 0, y: 1 })
+  assert.equal(u.x * v.y - u.y * v.x, -1)
+  // A negative determinant can leave individual vectors pointing the same way.
+  assert.deepEqual(transform(mirror, { x: 0, y: 1 }), { x: 0, y: 1 })
 })
 
 test('rotation by 90 degrees has determinant 1', () => {

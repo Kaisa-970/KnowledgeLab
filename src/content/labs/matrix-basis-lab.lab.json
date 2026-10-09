@@ -37,7 +37,7 @@
     {
       "id": "determinant",
       "label": "行列式",
-      "description": "显示有向面积倍率以及方向是否翻转"
+      "description": "显示有向面积倍率以及朝向是否反转"
     }
   ],
   "invariants": [
@@ -74,8 +74,8 @@
     },
     {
       "id": "flipped",
-      "setup": "选择方向翻转预设，det(A)<0",
-      "expected": "有向面积变号",
+      "setup": "选择朝向反转预设，det(A)<0",
+      "expected": "有向面积变号，平面定向（手性）改变；但并非每个向量都掉头",
       "oracleIds": [
         "flipped-test"
       ]
@@ -109,7 +109,7 @@
       "kind": "analytical",
       "description": "反射矩阵的行列式是负数",
       "testFile": "src/math/linear.test.ts",
-      "testName": "det<0 represents orientation reversal"
+      "testName": "det<0 indicates orientation reversal"
     },
     {
       "id": "signed-area-test",

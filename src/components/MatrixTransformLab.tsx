@@ -7,7 +7,7 @@ const presets: { label: string; matrix: Matrix2 }[] = [
   { label: '旋转 90°', matrix: { a: 0, b: -1, c: 1, d: 0 } },
   { label: '横向剪切', matrix: { a: 1, b: 1, c: 0, d: 1 } },
   { label: '面积塌缩', matrix: { a: 1, b: 1, c: 1, d: 1 } },
-  { label: '方向翻转', matrix: { a: -1, b: 0, c: 0, d: 1 } },
+  { label: '朝向反转', matrix: { a: -1, b: 0, c: 0, d: 1 } },
 ]
 const origin = { x: 220, y: 220 }
 const pixelsPerUnit = 47
@@ -37,8 +37,8 @@ export default function MatrixTransformLab() {
   const orientation = Math.abs(det) < 0.000001
     ? '面积塌缩：二维区域被压到一条线或一个点'
     : det > 0
-      ? '保持方向：面积按 det(A) 的绝对值缩放'
-      : '方向翻转：有向面积变号'
+      ? '朝向不变：面积按 det(A) 的绝对值缩放'
+      : '朝向反转：有向面积变号，平面定向（手性）改变'
 
   function localPointer(event: PointerEvent<SVGSVGElement>) {
     const svg = svgRef.current

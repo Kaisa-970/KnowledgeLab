@@ -110,7 +110,7 @@
       ],
       "prerequisites": [
         "向量线性组合与投影直觉",
-        "积分"
+        "定积分与线性性质"
       ],
       "dependsOnChapterIds": [
         "why-frequency"

@@ -78,15 +78,17 @@
       "coreQuestion": "方波有尖锐跳变，为什么一堆光滑的正弦波叠加可以逼近它，却永远不能完美还原？",
       "learningObjectives": [
         "用奇函数对称性说明方波的余弦系数与偶次正弦系数为何为零",
-        "从正交性推导 b_n = 4/(nπ) 并说明积分过程中每一步的依据",
-        "解释 Gibbs 过冲峰值收敛到 1.179 而非 1 的原因"
+        "通过有限正交投影推导系数公式，并算出方波奇次 b_n=4/(nπ)、偶次为零",
+        "解释 Gibbs 过冲峰值收敛到 1.179 而非 1 的原因",
+        "区分区域离散 RMS、全周期均方误差、逐点与一致收敛"
       ],
       "conceptIds": [
         "periodic-function",
         "orthogonality",
         "fourier-coefficients",
         "symmetry-vanishing",
-        "gibbs-phenomenon"
+        "gibbs-phenomenon",
+        "partial-sum-convergence"
       ],
       "prerequisites": [
         "三角函数与弧度制",

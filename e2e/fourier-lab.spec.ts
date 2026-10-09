@@ -78,7 +78,7 @@ test('toggling a harmonic changes the curve and reports its state', async ({ pag
   expect(Number(count?.[1])).toBe(4)
 })
 
-test('the overshoot readout is withheld for waves with no jump', async ({ page }) => {
+test('the overshoot readout is withheld for waves outside the peak measurement scope', async ({ page }) => {
   // Reporting a number here would present an ordinary extremum as a Gibbs
   // overshoot, so the lab must say "not applicable" instead.
   await page.goto(LESSON)
@@ -107,4 +107,24 @@ test('switching to the triangle wave converges much faster', async ({ page }) =>
   const triangleError = await errorNow()
   // 1/n^2 decay versus 1/n: the same N should be far more accurate.
   expect(triangleError).toBeLessThan(squareError / 2)
+})
+
+
+test('jump zoom changes the visible domain and resets with keyboard controls', async ({ page }) => {
+  await page.goto(LESSON)
+  const plot = page.locator('svg.plot')
+  const curve = plot.locator('polyline').last()
+  const before = await curve.getAttribute('points')
+  const zoom = page.getByRole('button', { name: '跳变放大', exact: true })
+  await zoom.focus()
+  await page.keyboard.press('Enter')
+  await expect(zoom).toHaveAttribute('aria-pressed', 'true')
+  await expect(plot).toHaveAttribute('aria-label', /放大区间 0 至 π\/3/)
+  expect(await curve.getAttribute('points')).not.toBe(before)
+  await page.getByRole('button', { name: '↺ 重置' }).click()
+  await expect(plot).toHaveAttribute('aria-label', /整个周期/)
+  await page.getByRole('button', { name: '锯齿波', exact: true }).click()
+  await expect(page.getByRole('button', { name: '第 2 次谐波', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: '第 2 次谐波', exact: true }).click()
+  await expect(page.locator('.lab-insight')).toContainText('已删除谐波')
 })

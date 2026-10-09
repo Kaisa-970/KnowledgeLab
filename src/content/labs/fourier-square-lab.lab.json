@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "id": "fourier-square-lab",
   "question": "为什么用有限多个正弦波叠加，不能完美还原方波的跳变？",
-  "prediction": "把谐波数量从 1 增加到 9，跳变处的过冲会消失吗？曲线会更接近方波，但某个地方会怎样？",
+  "prediction": "增加最高谐波序号 N，平台、峰值高度与峰距跳点的位置分别怎样变化？先预测再用跳变放大比较。",
   "controls": [
     {
       "id": "harmonic-count",
-      "label": "谐波数量 N",
-      "description": "在 1 到 49 之间改变参与叠加的谐波数量（只取奇数项）",
+      "label": "最高谐波序号 N",
+      "description": "在 1 到 49 之间改变最高谐波序号 N（步长 2）；方波与三角波仅奇次非零，锯齿波偶次也参与。",
       "kind": "slider"
     },
     {
@@ -21,70 +21,93 @@
       "label": "典型波形预设",
       "description": "切换方波、锯齿波与三角波，比较不同函数的谐波衰减速度。三者幅值均为 1，曲线高度可直接比较。",
       "kind": "preset"
+    },
+    {
+      "id": "jump-zoom",
+      "label": "跳变放大",
+      "description": "在整个周期与固定相位区间 [0, π/3] 之间切换，比较峰高度与位置。",
+      "kind": "toggle"
     }
   ],
   "visibleOutputs": [
     {
       "id": "curve",
       "label": "目标波形与部分和曲线",
-      "description": "叠加显示目标波形 f(t) 与 N 项部分和 S_N(t)"
+      "description": "目标虚线与共享计算来源的部分和实线；最高序号 N 不等于非零项数。"
     },
     {
       "id": "spectrum",
       "label": "谐波幅度条",
-      "description": "显示每个谐波的幅度 |b_n| 或 |a_n|，可见偶次项为零"
+      "description": "显示各谐波幅度 hypot(a_n,b_n)，方波与三角波偶次为零，锯齿波偶次非零。"
     },
     {
       "id": "error",
       "label": "均方根误差",
-      "description": "剔除跳变邻域后 S_N 与目标波形的 RMS 误差，随 N 增大而下降"
+      "description": "2000 点离散 RMS，剔除跳点周期距离 ≤ 0.02 弧度的区域；它不是全周期连续 RMS，后者不剔除也收敛。"
     },
     {
       "id": "overshoot",
       "label": "过冲峰值",
-      "description": "S_N 在跳变附近的峰值，随 N 增大趋近 1.179 而非 1。仅对方波适用；锯齿波跳变在采样区间外、三角波连续，两者显示为不适用，不给出数值。"
+      "description": "完整方波在 (0, π) 的峰值趋于 1.179；删项时仅报告当前曲线峰值。锯齿波的跳变在周期接缝，当前指标不测该过冲；三角波连续。"
     }
   ],
   "invariants": [
     {
       "id": "odd-only",
       "statement": "方波的偶次谐波系数恒为零，只有奇次项参与叠加",
-      "oracleIds": ["square-parity-test", "coefficient-test"]
+      "oracleIds": [
+        "square-parity-test",
+        "coefficient-test"
+      ]
     },
     {
       "id": "jump-midpoint",
       "statement": "在任何有限 N 下 S_N(0)=0，即部分和在跳变处始终取中点值",
-      "oracleIds": ["jump-midpoint-test"]
+      "oracleIds": [
+        "jump-midpoint-test"
+      ]
     },
     {
       "id": "levibniz-limit",
       "statement": "S_N(π/2) 随 N 增大趋于 1，与 Leibniz 级数一致",
-      "oracleIds": ["pi-half-test"]
+      "oracleIds": [
+        "pi-half-test"
+      ]
     },
     {
       "id": "odd-symmetry",
       "statement": "S_N 与方波同为奇函数：S_N(-t) = -S_N(t)",
-      "oracleIds": ["odd-symmetry-test"]
+      "oracleIds": [
+        "odd-symmetry-test"
+      ]
     }
   ],
   "edgeCases": [
     {
       "id": "gibbs",
-      "setup": "把 N 从 9 增大到 201，观察跳变附近的峰值",
+      "setup": "UI 比较 N=9 与 49；数学测试继续覆盖 N=201 及更高序号。",
       "expected": "过冲不消失，峰值稳定在 1.179 附近，只是振荡区域变窄",
-      "oracleIds": ["gibbs-test"]
+      "oracleIds": [
+        "gibbs-test",
+        "peak-location-test"
+      ]
     },
     {
       "id": "n-equals-1",
       "setup": "把 N 设为 1，只保留基波",
       "expected": "曲线是纯正弦，与方波差距很大；这说明单项无法体现跳变",
-      "oracleIds": ["rms-test"]
+      "oracleIds": [
+        "rms-test"
+      ]
     },
     {
       "id": "slow-convergence",
       "setup": "把波形切到三角波，比较相同 N 下的 RMS 误差",
       "expected": "三角波按 1/n² 衰减，误差下降远快于方波的 1/n",
-      "oracleIds": ["rms-test", "triangle-decay-test"]
+      "oracleIds": [
+        "rms-test",
+        "triangle-decay-test"
+      ]
     }
   ],
   "explanation": "方波的傅里叶系数为 b_n=4/(nπ)（仅奇 n），系数按 1/n 缓慢衰减，所以有限项之和始终在跳变处留下振荡；偶次项因半波对称性消失，跳变处的部分和恒等于跳变中点。",
@@ -144,6 +167,27 @@
       "description": "三角波系数按 1/n² 衰减，相同 N 下误差小于方波",
       "testFile": "src/math/fourier.test.ts",
       "testName": "triangle wave is even, has zero mean, and decays like 1/n^2"
+    },
+    {
+      "id": "full-mse-test",
+      "kind": "reference",
+      "description": "中点积分与 Parseval 保留能量对比，覆盖无剔除均方收敛和删除第 3 次谐波误差增量",
+      "testFile": "src/math/fourier.test.ts",
+      "testName": "full-period mean square error agrees with Parseval and converges without exclusion"
+    },
+    {
+      "id": "peak-location-test",
+      "kind": "reference",
+      "description": "解析峰位置 π/(2K) 与邻近采样值比较，覆盖移动峰高度",
+      "testFile": "src/math/fourier.test.ts",
+      "testName": "square first peak moves toward the jump while its height persists"
+    },
+    {
+      "id": "seam-rms-test",
+      "kind": "reference",
+      "description": "对称相位区间独立计算，核验周期接缝两侧均剔除",
+      "testFile": "src/math/fourier.test.ts",
+      "testName": "regional rms excludes both sides of the periodic seam"
     }
   ],
   "implementation": {

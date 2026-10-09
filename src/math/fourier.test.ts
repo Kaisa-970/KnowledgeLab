@@ -195,3 +195,50 @@ test('discontinuities drive the exclusion window in rmsError', () => {
   assert.ok(Number.isFinite(raw) && raw > 0)
   assert.ok(windowed < raw)
 })
+
+test('full-period mean square error agrees with Parseval and converges without exclusion', () => {
+  // Midpoint quadrature avoids target point values at jumps. Parseval supplies
+  // an independent reference: target energy 1 minus retained orthogonal energy.
+  const midpointMse = (terms: ReturnType<typeof analyticalHarmonics>, n: number) => {
+    const count = 12000
+    let sum = 0
+    for (let i = 0; i < count; i++) {
+      const t = -Math.PI + (i + 0.5) * 2 * Math.PI / count
+      sum += (wave('square', t) - partialSum(terms, n, t)) ** 2
+    }
+    return sum / count
+  }
+  let previous = Infinity
+  for (const n of [1, 9, 49]) {
+    const terms = analyticalHarmonics('square', n)
+    const expected = 1 - terms.reduce((sum, term) => sum + term.b ** 2 / 2, 0)
+    const actual = midpointMse(terms, n)
+    assert.ok(close(actual, expected, 2e-6), `${n}: ${actual} versus ${expected}`)
+    assert.ok(actual < previous)
+    previous = actual
+  }
+  const full = analyticalHarmonics('square', 5)
+  const removed = full.filter((term) => term.n !== 3)
+  assert.ok(close(midpointMse(removed, 5) - midpointMse(full, 5), 8 / (9 * Math.PI ** 2), 2e-6))
+})
+
+test('regional rms excludes both sides of the periodic seam', () => {
+  // On a symmetric grid, the error of an odd target and odd approximation
+  // should cancel no bias from retaining only one side of the seam.
+  const terms = analyticalHarmonics('sawtooth', 9)
+  const times = sampleTimes(2000).filter((t) => Math.abs(t) < Math.PI - 0.02)
+  const reference = Math.sqrt(times.reduce((sum, t) => sum + (partialSum(terms, 9, t) - t / Math.PI) ** 2, 0) / times.length)
+  assert.ok(close(rmsError(terms, 9, 'sawtooth'), reference, 1e-12))
+})
+
+test('square first peak moves toward the jump while its height persists', () => {
+  for (const k of [5, 25, 100]) {
+    const n = 2 * k - 1
+    const terms = analyticalHarmonics('square', n)
+    const location = Math.PI / (2 * k)
+    const peak = partialSum(terms, n, location)
+    assert.ok(peak > partialSum(terms, n, location * 0.9))
+    assert.ok(peak > partialSum(terms, n, location * 1.1))
+    assert.ok(peak > GIBBS_OVERSHOOT && peak - GIBBS_OVERSHOOT < 0.004)
+  }
+})

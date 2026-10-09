@@ -57,6 +57,7 @@ export default function FourierSeriesLab() {
   const [waveName, setWaveName] = useState<WaveName>('square')
   const [maxN, setMaxN] = useState(9)
   const [disabled, setDisabled] = useState<number[]>([])
+  const [zoom, setZoom] = useState(false)
 
   // Every coefficient comes from the shared math module; the component only
   // decides which of them to include, never what they are.
@@ -94,10 +95,18 @@ export default function FourierSeriesLab() {
     setDisabled((old) => (old.includes(n) ? old.filter((x) => x !== n) : [...old, n]))
   }
 
+  const hasDisabled = disabled.some((n) => n <= maxN)
+  const zoomPoints = (target: boolean) => Array.from({ length: SAMPLES + 1 }, (_, i) => {
+    const t = (i / SAMPLES) * Math.PI / 3
+    const value = target ? wave(waveName, t) : partialSum(activeTerms, maxN, t)
+    const x = PAD.left + (t / (Math.PI / 3)) * (WIDTH - PAD.left - PAD.right)
+    return `${x.toFixed(2)},${toY(value).toFixed(2)}`
+  }).join(' ')
+
   const jumpText = waveName === 'square'
     ? `跳变处 S_N(0) = ${fmt(partialSum(activeTerms, maxN, 0), 6)}，恒为跳变中点`
     : waveName === 'sawtooth'
-      ? '锯齿波的跳变位于周期边界 t = −π，不在采样区间内'
+      ? '锯齿波在周期接缝 ±π 有跳变；当前峰值测量只覆盖 (0, π)，不测接缝过冲'
       : '三角波在整个周期内连续，没有跳变点'
 
   return (
@@ -108,10 +117,14 @@ export default function FourierSeriesLab() {
           <h3 id="fourier-lab-title">用正弦波拼出方波</h3>
           <p>先预测：把谐波数 N 从 1 加到 9，跳变处的过冲会消失吗？</p>
         </div>
-        <button className="reset-button" type="button" onClick={() => { setMaxN(9); setDisabled([]); setWaveName('square') }}>↺ 重置</button>
+        <button className="reset-button" type="button" onClick={() => { setMaxN(9); setDisabled([]); setWaveName('square'); setZoom(false) }}>↺ 重置</button>
       </div>
       <div className="lab-body">
         <div className="plot-frame">
+          <div className="preset-list">
+            <button type="button" className="preset" aria-pressed={!zoom} onClick={() => setZoom(false)}>整个周期</button>
+            <button type="button" className="preset" aria-pressed={zoom} onClick={() => setZoom(true)}>跳变放大</button>
+          </div>
           <svg
             viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
             className="plot plot-wide"
@@ -119,23 +132,23 @@ export default function FourierSeriesLab() {
             aria-label={
               `部分和曲线。波形 ${waveLabels[waveName]}；已启用谐波 ${included.length} 项；` +
               `最大谐波序号 ${maxN}；均方根误差 ${fmt(error, 5)}；` +
-              (peak === null ? '过冲峰值 不适用（本波形无跳变）' : `过冲峰值 ${fmt(peak, 5)}`)
+              (peak === null ? '过冲峰值 不适用（当前测量范围无跳变）' : `过冲峰值 ${fmt(peak, 5)}`) + (zoom ? `；放大区间 0 至 π/3` : `；整个周期`)
             }
           >
             <line x1={PAD.left} y1={toY(0)} x2={WIDTH - PAD.right} y2={toY(0)} stroke="#94a3b4" opacity="0.5" />
-            <line x1={toX(0)} y1={PAD.top} x2={toX(0)} y2={HEIGHT - PAD.bottom} stroke="#e2e8ee" />
+            <line x1={zoom ? PAD.left : toX(0)} y1={PAD.top} x2={zoom ? PAD.left : toX(0)} y2={HEIGHT - PAD.bottom} stroke="#e2e8ee" />
             {[-1, 1].map((v) => (
               <line key={v} x1={PAD.left} y1={toY(v)} x2={WIDTH - PAD.right} y2={toY(v)} stroke="#e8edf2" />
             ))}
-            {[-Math.PI, 0, Math.PI].map((t) => (
-              <text key={t} x={toX(t)} y={HEIGHT - PAD.bottom + 18} textAnchor="middle" fontSize="11" fill="#93a0ae">
-                {t === 0 ? '0' : t < 0 ? '−π' : 'π'}
+            {(zoom ? [0, Math.PI / 6, Math.PI / 3] : [-Math.PI, 0, Math.PI]).map((t) => (
+              <text key={t} x={zoom ? PAD.left + (t / (Math.PI / 3)) * (WIDTH - PAD.left - PAD.right) : toX(t)} y={HEIGHT - PAD.bottom + 18} textAnchor="middle" fontSize="11" fill="#93a0ae">
+                {t === 0 ? '0' : zoom ? (t === Math.PI / 6 ? 'π/6' : 'π/3') : t < 0 ? '−π' : 'π'}
               </text>
             ))}
             <text x={PAD.left - 8} y={toY(1) + 4} textAnchor="end" fontSize="11" fill="#93a0ae">1</text>
             <text x={PAD.left - 8} y={toY(-1) + 4} textAnchor="end" fontSize="11" fill="#93a0ae">−1</text>
-            <polyline points={polyline(targetCurve)} fill="none" stroke="#b6c1ce" strokeWidth="2.4" strokeDasharray="5 4" />
-            <polyline points={polyline(curve)} fill="none" stroke="#1686c2" strokeWidth="2.2" />
+            <polyline points={zoom ? zoomPoints(true) : polyline(targetCurve)} fill="none" stroke="#b6c1ce" strokeWidth="2.4" strokeDasharray="5 4" />
+            <polyline points={zoom ? zoomPoints(false) : polyline(curve)} fill="none" stroke="#1686c2" strokeWidth="2.2" />
           </svg>
           <div className="plot-legend">
             <span><i className="legend-plain" />目标波形</span>
@@ -143,9 +156,9 @@ export default function FourierSeriesLab() {
           </div>
         </div>
         <div className="lab-panel">
-          <div className="panel-title">谐波数量 N</div>
+          <div className="panel-title">最高谐波序号 N</div>
           <label className="number-control">
-            <span>1 – 49（仅奇数项参与）</span>
+            <span>1 – 49（方波与三角波仅奇数项非零）</span>
             <input
               aria-label="谐波数量 N"
               type="range"
@@ -162,22 +175,22 @@ export default function FourierSeriesLab() {
             <div><small>已启用谐波项数</small><strong>{included.length}</strong></div>
             <div><small>RMS 误差（剔除跳变邻域）</small><strong>{fmt(error, 5)}</strong></div>
             <div>
-              <small>{peak === null ? '过冲峰值（本波形无跳变）' : `过冲峰值 · 极限 ${GIBBS_OVERSHOOT.toFixed(4)}`}</small>
+              <small>{peak === null ? '过冲峰值（当前测量不适用）' : hasDisabled ? '当前曲线峰值（谐波有删减）' : `过冲峰值 · 极限 ${GIBBS_OVERSHOOT.toFixed(4)}`}</small>
               <strong>{peak === null ? '不适用' : fmt(peak, 5)}</strong>
             </div>
           </div>
           <p className="lab-insight" aria-live="polite">
-            {peak === null
-              ? '本波形在采样区间内连续，不存在 Gibbs 过冲；误差会随 N 单调下降，注意不同波形下降速度的差别。'
-              : error < 0.02
-                ? '曲线整体已经贴合，但过冲峰值仍停在 1.179 附近——它不随 N 减小，只是振荡区域变窄。'
-                : '误差随 N 下降，注意跳变附近的振荡并没有同步消失。'}
+            {hasDisabled
+              ? '已删除谐波：当前曲线不是完整的傅里叶部分和，不能套用完整级数的误差和峰值结论。'
+              : peak === null
+                ? waveName === 'triangle' ? '三角波连续且有折角；比较相同 N 的误差与方波有何不同。' : '周期接缝仍有 Gibbs 振荡，当前峰值指标不测量该接缝。'
+                : '增加 N 后整体误差减小；切到跳变放大，比较峰的高度与距跳点的位置。'}
             {' '}{jumpText}
           </p>
 
           <div className="panel-title">单独开关谐波</div>
           <div className="preset-list">
-            {[1, 3, 5, 7, 9].filter((n) => n <= maxN).map((n) => {
+            {usable.filter((term) => term.n <= 9).map((term) => term.n).map((n) => {
               const on = !disabled.includes(n)
               return (
                 <button
@@ -234,7 +247,7 @@ export default function FourierSeriesLab() {
       <p className="lab-footnote">
         约定：周期 T = 2π，区间 [−π, π)，级数写作 f(t) = a₀/2 + Σₙ₌₁(aₙcos nt + bₙsin nt)，
         系数 aₙ = (1/π)∫₋π^π f(t)cos nt dt。横轴为弧度 t，谱图横轴为谐波序号 n（不是频率赫兹）。
-        灰色虚线为目标波形，蓝色实线为 N 项部分和；误差指标已剔除跳变邻域，否则 Gibbs 振荡会掩盖真实收敛速度。
+        灰色虚线为目标波形，蓝色实线为最高序号 N 的部分和；RMS 使用 2000 个等间隔点，剔除跳点周期距离 ≤ 0.02 弧度的邻域，衡量区域误差；全周期连续 RMS 不剔除跳点也能收敛。
       </p>
     </section>
   )

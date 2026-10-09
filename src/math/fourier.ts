@@ -105,9 +105,8 @@ export function partialSumCurve(terms: readonly Harmonic[], maxN: number, count:
  * Discontinuity points of the target wave on [-pi, pi).
  *
  * This matters for measurement: at a jump, S_N never approaches the target, so
- * any sup-norm style error is a constant (it equals the jump half-height for
- * every N) and carries no information about accuracy. Error must be measured
- * away from these points for the number to converge.
+ * uniform error cannot tend to zero for a discontinuous target. This does not
+ * prevent continuous full-period L2 error from converging to zero.
  */
 export function discontinuities(name: WaveName): number[] {
   switch (name) {
@@ -126,7 +125,9 @@ export function discontinuities(name: WaveName): number[] {
  * meaningful scalar for the UI and for the E2E assertions.
  *
  * `exclude` is the half-width around each discontinuity that is skipped, in
- * radians. Without it the Gibbs ringing dominates and the value stalls.
+ * radians, using periodic distance so both sides of the seam are excluded.
+ * This reports a regional error, not the continuous full-period L2 error.
+ * A fixed grid including jumps can retain a floor from its target point values.
  */
 export function rmsError(
   terms: readonly Harmonic[],
@@ -136,7 +137,7 @@ export function rmsError(
   exclude = 0.02,
 ): number {
   const jumps = discontinuities(name)
-  const times = sampleTimes(count).filter((t) => jumps.every((j) => Math.abs(t - j) > exclude))
+  const times = sampleTimes(count).filter((t) => jumps.every((j) => Math.min(Math.abs(t - j), TAU - Math.abs(t - j)) > exclude))
   if (times.length === 0) return 0
   let acc = 0
   for (const t of times) {

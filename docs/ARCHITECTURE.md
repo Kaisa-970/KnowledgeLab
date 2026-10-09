@@ -59,3 +59,16 @@ React 交互组件 ──┤
 - 数据采用简单 JSON，未来再增加 Schema 校验和知识图数据库。
 - 尚无可视化 E2E 测试、课程审核 UI、Agent 服务、生产部署。
 - 第一次交互原型用 SVG，后续选择统一坐标/可视化工具时应保留现有正确性测试。
+
+
+## Phase 0.5：机器可校验的课程协议（已在特性分支实现）
+
+- `schemas/course-plan.schema.json`、`schemas/lab.schema.json` 声明生成产物的数据形状。
+- `scripts/validate-content.mjs` 枚举课程并校验 JSON Schema、知识节点依赖环、章节引用、实验引用、MDX/TSX/计算模块与测试 oracle 的存在。`scripts/validate-content.test.mjs` 故意输入错误数据验证拒绝能力。
+- `src/content/registry.ts` 使用 Vite `import.meta.glob` 构建时收集受信任的本地 `course.plan.json` 和 `.mdx`，在 URL `/courses/:course/:chapter` 查找章节；`App.tsx` 不再维护课程列表。
+- `e2e/matrix-lab.spec.ts` 通过 Playwright 验证预设/滑块对数值与 SVG 结果的影响，并检查移动浏览器视口。
+- `.github/workflows/ci.yml` 依次执行协议校验、类型检查、数值测试、构建和浏览器交互测试；工作流权限仅 `contents: read`。
+
+**安全现状**：CI 仍会执行 PR 中的 npm 脚本和代码，因此这不是将任意不可信 TSX/MDX 当成安全输入的沙箱。真正的自动生成执行器上线前，必须使用独立、最小权限、限制网络和资源的沙箱，并阻止无审核产物进入生产构建。
+
+**质量现状**：Schema 与引用检查不检验推导的数学真值，Playwright 也不证明课程教学效果；独立的数学/内容审查以及对知识的实际理解测试仍需人工或专门的评估流程。

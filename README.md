@@ -60,3 +60,21 @@ npm run build
 ## License
 
 尚未选择开源许可证；在明确授权前不要自动添加许可证文件。
+
+
+## 课程数据协议（v1）
+
+新课程不需要编辑 `src/App.tsx`。增加 `src/content/courses/<id>/course.plan.json`、MDX 和实验契约后，`src/content/registry.ts` 在**构建时**自动注册课程。课程计划是唯一事实来源；`src/content/labs/<id>.lab.json` 包含交互问题、实验不变量、反例及可执行测试索引。
+
+```bash
+npm run validate     # JSON Schema + 课程/实验依赖、文件和测试引用校验
+npm run typecheck
+npm test             # 数学 + 校验器的反例测试
+npm run build
+npx playwright install chromium
+npm run test:e2e     # 桌面与移动浏览器交互测试
+```
+
+详情见 `docs/CONTENT_CONTRACTS.md`。当前浏览器检查由 CI 提供，但人工的教学质量审核尚未自动化。运行时不编译模型生成的任意 MDX。
+
+> 注意：提交中的 `course.plan.json` 和 `lab.json` 只在 **schema / 引用**层面可机检，数学语义依旧需要独立数值验证与审阅。

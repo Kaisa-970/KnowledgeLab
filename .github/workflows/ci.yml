@@ -18,6 +18,8 @@ jobs:
           node-version: '22'
       - name: Install dependencies (lockfile-pinned)
         run: npm ci --no-audit --no-fund
+      - name: Validate Agent skill registry
+        run: node scripts/check-agent-skills.mjs
       - name: Validate course contracts
         run: npm run validate
       - name: Typecheck

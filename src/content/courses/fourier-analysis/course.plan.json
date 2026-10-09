@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "fourier-analysis",
   "title": "傅里叶分析：从波形到频谱",
   "domain": "mathematics",
@@ -24,37 +24,51 @@
     {
       "id": "orthogonality",
       "title": "三角函数系的正交性",
-      "dependsOn": ["periodic-function"]
+      "dependsOn": [
+        "periodic-function"
+      ]
     },
     {
       "id": "fourier-coefficients",
       "title": "傅里叶系数与投影",
-      "dependsOn": ["orthogonality"]
+      "dependsOn": [
+        "orthogonality"
+      ]
     },
     {
       "id": "symmetry-vanishing",
       "title": "奇偶性与半波对称导致的系数消失",
-      "dependsOn": ["fourier-coefficients"]
+      "dependsOn": [
+        "fourier-coefficients"
+      ]
     },
     {
       "id": "partial-sum-convergence",
       "title": "部分和收敛与均方误差",
-      "dependsOn": ["fourier-coefficients"]
+      "dependsOn": [
+        "fourier-coefficients"
+      ]
     },
     {
       "id": "gibbs-phenomenon",
       "title": "跳变处的 Gibbs 过冲",
-      "dependsOn": ["partial-sum-convergence"]
+      "dependsOn": [
+        "partial-sum-convergence"
+      ]
     },
     {
       "id": "frequency-interpretation",
       "title": "谐波序号与频率的对应",
-      "dependsOn": ["fourier-coefficients"]
+      "dependsOn": [
+        "fourier-coefficients"
+      ]
     },
     {
       "id": "spectrum",
       "title": "幅度谱与相位谱",
-      "dependsOn": ["frequency-interpretation"]
+      "dependsOn": [
+        "frequency-interpretation"
+      ]
     }
   ],
   "chapters": [
@@ -67,10 +81,21 @@
         "从正交性推导 b_n = 4/(nπ) 并说明积分过程中每一步的依据",
         "解释 Gibbs 过冲峰值收敛到 1.179 而非 1 的原因"
       ],
-      "conceptIds": ["periodic-function", "orthogonality", "fourier-coefficients", "symmetry-vanishing", "gibbs-phenomenon"],
-      "prerequisites": ["三角函数与弧度制", "定积分的线性性质"],
+      "conceptIds": [
+        "periodic-function",
+        "orthogonality",
+        "fourier-coefficients",
+        "symmetry-vanishing",
+        "gibbs-phenomenon"
+      ],
+      "prerequisites": [
+        "三角函数与弧度制",
+        "定积分的线性性质"
+      ],
       "dependsOnChapterIds": [],
-      "labIds": ["fourier-square-lab"],
+      "labIds": [
+        "fourier-square-lab"
+      ],
       "lessonPath": "src/content/lessons/fourier-square-wave.mdx",
       "status": "prototype"
     }
@@ -79,12 +104,22 @@
     {
       "id": "arbitrary-period",
       "title": "频率到底是什么？",
-      "dependsOnChapterIds": ["square-wave-synthesis"]
+      "dependsOnChapterIds": [
+        "square-wave-synthesis"
+      ]
     },
     {
       "id": "spectrum-reading",
       "title": "频谱告诉了我们什么？",
-      "dependsOnChapterIds": ["arbitrary-period"]
+      "dependsOnChapterIds": [
+        "arbitrary-period"
+      ]
     }
-  ]
+  ],
+  "status": "prototype",
+  "design": {
+    "learningBriefPath": "src/content/courses/fourier-analysis/learning-brief.md",
+    "knowledgeMapPath": "src/content/courses/fourier-analysis/knowledge-map.md",
+    "knowledgeLinksPath": "src/content/courses/fourier-analysis/knowledge-map.json"
+  }
 }

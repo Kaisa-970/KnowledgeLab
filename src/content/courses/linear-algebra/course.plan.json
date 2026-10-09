@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "linear-algebra",
   "title": "线性代数的几何本质",
   "domain": "mathematics",
@@ -120,5 +120,11 @@
         "eigenvectors"
       ]
     }
-  ]
+  ],
+  "status": "prototype",
+  "design": {
+    "learningBriefPath": "src/content/courses/linear-algebra/learning-brief.md",
+    "knowledgeMapPath": "src/content/courses/linear-algebra/knowledge-map.md",
+    "knowledgeLinksPath": "src/content/courses/linear-algebra/knowledge-map.json"
+  }
 }

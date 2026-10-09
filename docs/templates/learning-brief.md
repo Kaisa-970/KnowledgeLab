@@ -31,7 +31,7 @@
 | | prerequisite / same-principle / contrasts-with / applied-in / generalizes | | |
 
 - 当前课程的 `knowledgeNodes` / `chapters` 是否需要更新：
-- 哪些关系尚未在机器 Schema 中表示（先在文档中记录）：
+- 结构化关系写入课程级 `knowledge-map.json`，本稿仅保留设计理由；哪些关系尚不能可靠建模：
 
 ## 媒介与素材决策
 

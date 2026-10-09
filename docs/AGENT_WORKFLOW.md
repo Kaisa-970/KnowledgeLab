@@ -21,9 +21,9 @@
 
 ### Step 2 — 在需要时先写 Knowledge Map 与 Learning Brief，再给课程计划
 
-对新课程、改变课程主线的重大改稿，或新增跨章节知识连接，先读取 §.claude/skills/learning-journey/SKILL.md§ 和 §.claude/skills/knowledge-map/SKILL.md§，形成内部 Learning Brief（起点、认知冲突、转折、新概念出现理由、回扣）和 Knowledge Map（先修、横向关系、应用及原因）；再产出课程计划。局部修正、测试修复和视觉/实现调整可复用已有设计，不要求重新生成整套工件。**是否交互由认知问题决定**，可使用 §coreTask§；计划缺失时不直接生成大量 MDX。
+对新课程、改变课程主线的重大改稿，或新增跨章节知识连接，先读取 `.claude/skills/learning-journey/SKILL.md` 和 `.claude/skills/knowledge-map/SKILL.md`，形成内部 Learning Brief（起点、认知冲突、转折、新概念出现理由、回扣）和 Knowledge Map（先修、横向关系、应用及原因）；再产出课程计划。局部修正、测试修复和视觉/实现调整可复用已有设计，不要求重新生成整套工件。**是否交互由认知问题决定**，可使用 `coreTask`；计划缺失时不直接生成大量 MDX。
 
-知识关系必须区分：现有 schema 的 §dependsOn§ 是“先修依赖”，§same-principle§ / §contrasts-with§ / §applied-in§ 等横向或下游联系暂记在 Learning Brief，不能谎称已有全局图谱。
+知识关系必须区分：现有 schema 的 `dependsOn` 是“先修依赖”，`same-principle` / `contrasts-with` / `applied-in` 等横向或下游联系记录在课程级 `knowledge-map.json`，使用 `{courseId, conceptId}` 端点。机器可校验引用，不代表已有知识网络页面。
 
 ### Step 3 — 单节纵向切片
 
@@ -32,7 +32,7 @@
 ### Step 4 — 实现与测试
 
 - MDX **即使不加载交互仍然具有完整因果叙事**，公式应在解释问题所需时出现；组件独立命名并具有准确类型。
-- 为每个要配图的认知障碍执行 §visual-research§，按 §docs/VISUAL_ASSETS.md§ 区分事实可信性和复用权利；不明授权只引用链接或独立自绘。需自绘时执行 §diagram-authoring§，校验几何、算法与移动端显示。
+- 为每个要配图的认知障碍执行 `visual-research`，按 `docs/VISUAL_ASSETS.md` 区分事实可信性和复用权利；不明授权只引用链接或独立自绘。需自绘时执行 `diagram-authoring`，校验几何、算法与移动端显示。
 - 数学公式通过统一工具渲染；纯计算逻辑至少覆盖基本、边界与退化输入。
 - 对非平凡实验，附可检验的不变量与一个明确的 oracle。
 - 如果需要引用最新技术结论，优先用论文/原始文档，注明查证日期。
@@ -68,7 +68,7 @@
 
 ## 各阶段 Skill 调用（未提供自动 Agent 服务）
 
-按 §docs/AGENT_TOOLKIT.md§ 执行路由：§learning-journey§ / §knowledge-map§ → （需要素材时）§visual-research§ 或 §diagram-authoring§ → §course-review§。Skill 文件位于 §.claude/skills§；没有自动发现机制的 Agent 应在开工前主动读取。**Skills 是明确的操作规范，并不意味着图片检索、网络下载、图像生成等工具已接入。**
+按 `docs/AGENT_TOOLKIT.md` 执行路由：`learning-journey` / `knowledge-map` → （需要素材时）`visual-research` 或 `diagram-authoring` → `course-review`。Skill 文件位于 `.claude/skills`；没有自动发现机制的 Agent 应在开工前主动读取。**Skills 是明确的操作规范，并不意味着图片检索、网络下载、图像生成等工具已接入。**
 
 新课程和重大改稿至少提供：叙事设计摘要、知识连接、实际视觉素材的权利记录（若有），以及独立于构建测试的教学质量检查。局部改动只需说明复用的设计依据和受影响范围。最终 PR 报告必须写明工具不可用/未完成验证的地方。
 

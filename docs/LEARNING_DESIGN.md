@@ -73,7 +73,7 @@
 
 建议关系词：`prerequisite`（前置）、`derives-from`（推导自）、`generalizes`（推广）、`contrasts-with`（区别）、`same-principle`（共同机制）、`applied-in`（应用）、`misconception-of`（容易混淆）。
 
-现有 `course.plan.json` 中 `knowledgeNodes.dependsOn` 是**局部先修依赖图**，不应把所有“应用、比较、类比”都错误地塞进它。其余关系暂记在 learning brief 和课程讲解里，待真实需求验证后再演进机器可读 Schema。不能声称现已实现全局知识图谱。
+现有 `course.plan.json` 中 `knowledgeNodes.dependsOn` 是**局部先修依赖图**，不应把所有“应用、比较、类比”都错误地塞进它。Course Contract v2 将其余关系记录在课程目录的 `knowledge-map.json`（端点、类型、理由、边界）；`knowledge-map.md` 只解释教学桥梁。校验器支持跨课程端点和全局先修环检查，但尚无知识网络页面或推荐系统。
 
 **一个好的连接要说明“同在哪里、不同在哪里”**。例：PCA 取协方差最大特征值对应的主方向，而局部点云平面法线取最小特征值对应方向：共用协方差与特征分解，但目标不同。
 

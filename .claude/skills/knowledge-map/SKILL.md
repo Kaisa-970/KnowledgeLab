@@ -13,7 +13,7 @@ description: 建立课程知识定位、先修依赖、概念对比与跨领域�
 2. 检索现有的概念和章节。避免重建同义概念；必须要引入新节点时说明其与已有节点的边界。
 3. 至少给出：上游知识及具体需要的能力、一个同层连接/比较、一个可迁移应用；有证据不足时明确不写。
 4. 对每条关系选择类型：`prerequisite`、`derives-from`、`generalizes`、`contrasts-with`、`same-principle`、`applied-in`，写明**理由与使用范围**。不要把所有箭头都写成先修关系。
-5. 只有前置依赖进入现有 `knowledgeNodes.dependsOn` 和 `dependsOnChapterIds`；比较/应用等关系保留在 Learning Brief/课程正文，直到 schema 正式扩展。
+5. 局部先修依赖保留在 `knowledgeNodes.dependsOn` 和 `dependsOnChapterIds`。跨课程及其他关系进入课程级 `knowledge-map.json`，端点为 `{courseId, conceptId}`，包含 `kind/reason/boundary`。`prerequisite` 从先修指向后继；只有先修关系要求无环。
 6. 以一个桥接解释或复用问题帮助学习者从已学知识走向新概念，不只贴标签。
 
 ## 质量门槛
@@ -21,7 +21,7 @@ description: 建立课程知识定位、先修依赖、概念对比与跨领域�
 - 全部依赖无环、ID 不冲突，`npm run validate` 通过。
 - 一条连接至少回答：**为什么相连？哪里相同？什么条件下不同？**
 - 课程“下一步”能由当前问题自然引出，而不是随机推荐下一篇。
-- 不假装现有仓库已提供跨课程全局知识图数据库。
+- 跨课程引用可被校验，但不假装已经实现知识网络页面、数据库或推荐系统。
 
 ## 示例
 
@@ -29,5 +29,5 @@ description: 建立课程知识定位、先修依赖、概念对比与跨领域�
 
 ## 输出
 
-`Knowledge Map` 表格（节点、关系、理由、先修状态）、需要修改的课程依赖与正文中的桥接段落、未确定关系清单。
+课程级 `knowledge-map.json`（结构化关系的单一来源）、`knowledge-map.md` 中的教学桥梁与覆盖边界、需要修改的课程依赖与正文桥接段落、未确定关系清单。不另建需要手工同步的关系表。
 

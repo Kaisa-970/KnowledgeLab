@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "KnowledgeLab Knowledge Map v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "courseId",
+    "links"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 2
+    },
+    "courseId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "from",
+          "to",
+          "kind",
+          "reason",
+          "boundary"
+        ],
+        "properties": {
+          "from": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "courseId",
+              "conceptId"
+            ],
+            "properties": {
+              "courseId": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*$"
+              },
+              "conceptId": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*$"
+              }
+            }
+          },
+          "to": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "courseId",
+              "conceptId"
+            ],
+            "properties": {
+              "courseId": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*$"
+              },
+              "conceptId": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*$"
+              }
+            }
+          },
+          "kind": {
+            "enum": [
+              "prerequisite",
+              "derives-from",
+              "generalizes",
+              "contrasts-with",
+              "same-principle",
+              "applied-in"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "pattern": "\\S",
+            "minLength": 3
+          },
+          "boundary": {
+            "type": "string",
+            "pattern": "\\S",
+            "minLength": 3
+          }
+        }
+      }
+    }
+  }
+}

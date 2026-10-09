@@ -17,7 +17,22 @@ export type Chapter = {
   status: 'prototype' | 'reviewed' | 'published'
 }
 export type CoursePlan = {
-  schemaVersion: 1
+  schemaVersion: 2
+  status: Chapter['status']
+  design: { learningBriefPath: string; knowledgeMapPath: string; knowledgeLinksPath: string }
+  review?: {
+    authoredBy: string
+    reviewedBy: string
+    revision: string
+    reportPath: string
+    chapterIds: string[]
+    content: 'pending' | 'passed'
+    mathematics: 'pending' | 'passed'
+    build: 'pending' | 'passed'
+    browser: 'pending' | 'passed'
+    visual: 'pending' | 'passed' | 'not-applicable'
+  }
+  publication?: { url: string; approvedBy: string; evidencePath: string }
   id: string
   title: string
   domain: CourseDomain

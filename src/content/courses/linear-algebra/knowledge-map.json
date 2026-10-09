@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "courseId": "linear-algebra",
+  "links": [
+    {
+      "from": {
+        "courseId": "linear-algebra",
+        "conceptId": "linear-map"
+      },
+      "to": {
+        "courseId": "linear-algebra",
+        "conceptId": "matrix-rank"
+      },
+      "kind": "applied-in",
+      "reason": "基的像决定像空间，线性相关的像会丢失输入方向。",
+      "boundary": "秩描述像空间维数，不由单个向量长度判断。"
+    },
+    {
+      "from": {
+        "courseId": "linear-algebra",
+        "conceptId": "linear-map"
+      },
+      "to": {
+        "courseId": "fourier-analysis",
+        "conceptId": "fourier-coefficients"
+      },
+      "kind": "same-principle",
+      "reason": "向量与函数都可以在选定基中用系数组合，线性结构允许分量叠加。",
+      "boundary": "有限维基表示不自动证明三角函数系的完备性或无穷级数收敛；本课尚未教授正交投影。"
+    }
+  ]
+}

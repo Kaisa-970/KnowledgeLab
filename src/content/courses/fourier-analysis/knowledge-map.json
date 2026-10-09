@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "courseId": "fourier-analysis",
+  "links": [
+    {
+      "from": {
+        "courseId": "fourier-analysis",
+        "conceptId": "fourier-coefficients"
+      },
+      "to": {
+        "courseId": "linear-algebra",
+        "conceptId": "linear-map"
+      },
+      "kind": "same-principle",
+      "reason": "函数分量叠加与矩阵按列组合共享线性结构，可作为从有限维走向函数空间的桥梁。",
+      "boundary": "内积、正交投影与无穷维收敛需要单独建立，不能假定线性代数现有章节已经教授。"
+    },
+    {
+      "from": {
+        "courseId": "fourier-analysis",
+        "conceptId": "partial-sum-convergence"
+      },
+      "to": {
+        "courseId": "fourier-analysis",
+        "conceptId": "gibbs-phenomenon"
+      },
+      "kind": "contrasts-with",
+      "reason": "均方误差减小可以和跳变邻域过冲并存，二者衡量不同性质。",
+      "boundary": "Gibbs 描述移动邻域的极限行为，不否定固定连续点的逐点收敛。"
+    }
+  ]
+}

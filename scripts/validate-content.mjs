@@ -13,6 +13,7 @@ function compileSchema(fileName) {
 }
 export const validatePlanShape = compileSchema('course-plan.schema.json')
 export const validateLabShape = compileSchema('lab.schema.json')
+export const validateKnowledgeMapShape = compileSchema('knowledge-map.schema.json')
 export function schemaErrors(validate) {
   return (validate.errors ?? []).map((e) => (e.instancePath || '/') + ' ' + e.message).join('; ')
 }
@@ -40,6 +41,48 @@ function detectCycles(nodes, idKey, getDeps, label, problems) {
 export function validateCourseLinks(plan, labs, read = defaultRead) {
   const problems = []
   if (!validatePlanShape(plan)) return ['course schema: ' + schemaErrors(validatePlanShape)]
+  const prefix = 'src/content/courses/' + plan.id + '/'
+  const evidencePaths = [...Object.values(plan.design), plan.review?.reportPath, plan.publication?.evidencePath].filter(Boolean)
+  for (const filename of evidencePaths) {
+    if (!filename.startsWith(prefix)) problems.push(plan.id + ': evidence must belong to its course: ' + filename)
+    try {
+      if (!read(filename).trim()) problems.push(plan.id + ': empty evidence ' + filename)
+    } catch { problems.push(plan.id + ': missing evidence ' + filename) }
+  }
+  const review = plan.review
+  if (review && review.authoredBy === review.reviewedBy) problems.push(plan.id + ': review must be independent of author')
+  const statusRank = { prototype: 0, reviewed: 1, published: 2 }
+  const courseRank = statusRank[plan.status]
+  if (courseRank >= 1 && plan.chapters.some((c) => statusRank[c.status] < courseRank)) {
+    problems.push(plan.id + ': course status exceeds chapter status')
+  }
+  const requiredChapters = plan.status === 'prototype' ? plan.chapters.filter((c) => c.status !== 'prototype') : plan.chapters
+  if (courseRank >= 1 || requiredChapters.length) {
+    if (!review) problems.push(plan.id + ': reviewed status requires review evidence')
+    else {
+      for (const key of ['content', 'mathematics']) {
+        if (review[key] !== 'passed') problems.push(plan.id + ': review ' + key + ' has not passed')
+      }
+      for (const c of requiredChapters) {
+        if (!review.chapterIds.includes(c.id)) problems.push(c.id + ': missing review coverage')
+      }
+    }
+  }
+  for (const id of review?.chapterIds ?? []) {
+    if (!plan.chapters.some((c) => c.id === id)) problems.push(plan.id + ': review references unknown chapter ' + id)
+  }
+  const published = plan.status === 'published' || plan.chapters.some((c) => c.status === 'published')
+  if (published) {
+    if (!plan.publication) problems.push(plan.id + ': published status requires publication evidence')
+    for (const key of ['build', 'browser', 'visual']) {
+      // These courses all use mathematical/visual learning activities. A waiver
+      // must not quietly bypass actual browser or visual inspection.
+      if (review?.[key] !== 'passed') problems.push(plan.id + ': publication ' + key + ' has not passed')
+    }
+    if (plan.status === 'published' && plan.chapters.some((c) => c.status !== 'published')) {
+      problems.push(plan.id + ': published course contains unpublished chapters')
+    }
+  }
   checkUnique(plan.knowledgeNodes.map((n) => n.id), 'knowledge nodes', problems)
   detectCycles(plan.knowledgeNodes, 'id', (n) => n.dependsOn, 'knowledge graph', problems)
   // Validate every lab's own shape first: later passes read into lab fields, so a
@@ -118,7 +161,45 @@ export function validateCourseLinks(plan, labs, read = defaultRead) {
   return problems
 }
 
-export function validateRepository(read = defaultRead, courses = ['linear-algebra']) {
+export function validateKnowledgeLinks(plans, maps) {
+  const problems = []
+  const nodes = new Set(plans.flatMap((p) => p.knowledgeNodes.map((n) => p.id + '/' + n.id)))
+  const prerequisites = new Map([...nodes].map((id) => [id, []]))
+  for (const p of plans) for (const n of p.knowledgeNodes) {
+    prerequisites.get(p.id + '/' + n.id).push(...n.dependsOn.map((id) => p.id + '/' + id))
+  }
+  const seen = new Set()
+  for (const [courseId, map] of Object.entries(maps)) {
+    if (!validateKnowledgeMapShape(map)) {
+      problems.push(courseId + ': knowledge map schema: ' + schemaErrors(validateKnowledgeMapShape))
+      continue
+    }
+    if (map.courseId !== courseId) problems.push(courseId + ': knowledge map course mismatch')
+    for (const link of map.links) {
+      const from = link.from.courseId + '/' + link.from.conceptId
+      const to = link.to.courseId + '/' + link.to.conceptId
+      if (!nodes.has(from)) problems.push(courseId + ': unknown knowledge endpoint ' + from)
+      if (!nodes.has(to)) problems.push(courseId + ': unknown knowledge endpoint ' + to)
+      if (from === to) problems.push(courseId + ': self knowledge link ' + from)
+      if (link.from.courseId !== courseId) problems.push(courseId + ': knowledge link must originate in its course')
+      const key = from + ':' + link.kind + ':' + to
+      if (seen.has(key)) problems.push(courseId + ': duplicate knowledge link ' + key)
+      seen.add(key)
+      // prerequisite is directed from required knowledge to dependent knowledge.
+      // Comparison/application links may form cycles; only prerequisites are a DAG.
+      if (link.kind === 'prerequisite' && prerequisites.has(to)) prerequisites.get(to).push(from)
+    }
+  }
+  detectCycles([...prerequisites].map(([id, deps]) => ({id, deps})), 'id', (n) => n.deps, 'global prerequisite graph', problems)
+  return problems
+}
+
+function discoverCourses() {
+  return fs.readdirSync(path.join(root, 'src/content/courses'), { withFileTypes: true })
+    .filter((e) => e.isDirectory()).map((e) => e.name)
+}
+
+export function validateRepository(read = defaultRead, courses = discoverCourses()) {
   const problems = []
   const referencedLabs = new Set()
   const plans = []
@@ -140,14 +221,19 @@ export function validateRepository(read = defaultRead, courses = ['linear-algebr
     catch { problems.push('missing/invalid lab contract: ' + labId) }
   }
   for (const plan of plans) problems.push(...validateCourseLinks(plan, labs, read))
+  const maps = {}
+  const validPlans = plans.filter((p) => validatePlanShape(p))
+  for (const plan of validPlans) {
+    try { maps[plan.id] = JSON.parse(read(plan.design.knowledgeLinksPath)) }
+    catch { problems.push(plan.id + ': missing/invalid structured knowledge map') }
+  }
+  problems.push(...validateKnowledgeLinks(validPlans, maps))
   return problems
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   // Filesystem discovery: new course.plan.json is automatically included.
-  const coursesDir = path.join(root, 'src/content/courses')
-  const courses = fs.readdirSync(coursesDir, { withFileTypes: true })
-    .filter((e) => e.isDirectory()).map((e) => e.name)
+  const courses = discoverCourses()
   const problems = validateRepository(defaultRead, courses)
   if (problems.length) {
     for (const problem of problems) console.error('CONTENT ERROR:', problem)

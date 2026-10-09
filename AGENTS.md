@@ -7,25 +7,25 @@
 
 **KnowledgeLab 不是“带动画的教材”。** 每节课必须从一个真正的问题、认知冲突或现有方法的限制出发，解释**为什么需要新知识 → 它如何被理解和建立 → 为什么有效 → 适用于何处 → 与其他知识是什么关系**。数学严谨性不能妥协，但不能以毫无动机的定义/公式开篇。实际内容按因果脉络自由组织，**禁止机械套“问题/实验/公式/应用”固定章节模板**。
 
-**知识网络优先于知识点数量。** 新课需要明确当前知识的位置、具体先修依赖、横向比较/共同原理，以及能迁移到的新任务；关系必须有理由，不能只贴标签。现有 §dependsOn§ 只表示先修，不能拿它表示所有类型的知识连接。
+**知识网络优先于知识点数量。** 新课需要明确当前知识的位置、具体先修依赖、横向比较/共同原理，以及能迁移到的新任务；关系必须有理由，不能只贴标签。现有 `dependsOn` 只表示先修，不能拿它表示所有类型的知识连接。
 
-**图像和交互都是可选的解释手段，不是 KPI。** 首先判断学习上的困难，选择文字、原理图、静态对照、代码/数学推导、交互、实物照片中的最合适方式。确实不适合交互时可按 Schema 用可验证的 §coreTask§；不得为了产出动画而扭曲知识。
+**图像和交互都是可选的解释手段，不是 KPI。** 首先判断学习上的困难，选择文字、原理图、静态对照、代码/数学推导、交互、实物照片中的最合适方式。确实不适合交互时可按 Schema 用可验证的 `coreTask`；不得为了产出动画而扭曲知识。
 
-**在需要时先做内部设计工件，再写正文**：新课程、改变课程主线的重大改稿，或新增跨章节知识连接时，使用 Learning Brief（学习动机、认知转折、自然叙事）和 Knowledge Map（前置/对比/应用及具体理由）。格式见 §docs/templates/learning-brief.md§，按 §docs/LEARNING_DESIGN.md§ 评审。局部修正、测试修复和视觉/实现调整不要求重新填写整套工件；应复用已有设计并在交付说明中注明影响范围。
+**在需要时先做内部设计工件，再写正文**：新课程、改变课程主线的重大改稿，或新增跨章节知识连接时，使用 Learning Brief（学习动机、认知转折、自然叙事）和 Knowledge Map（前置/对比/应用及具体理由）。格式见 `docs/templates/learning-brief.md`，按 `docs/LEARNING_DESIGN.md` 评审。局部修正、测试修复和视觉/实现调整不要求重新填写整套工件；应复用已有设计并在交付说明中注明影响范围。
 
-**图示与素材来源**：先看 §docs/VISUAL_ASSETS.md§ 和 §visual-research§ Skill；一手资料优先用于事实核查，但官方/博客公开发布不代表图片可复用。无明确许可只能链接或独立原创绘制；图片必须有图注、替代文字和可追踪许可/原创来源。
+**图示与素材来源**：先看 `docs/VISUAL_ASSETS.md` 和 `visual-research` Skill；一手资料优先用于事实核查，但官方/博客公开发布不代表图片可复用。无明确许可只能链接或独立原创绘制；图片必须有图注、替代文字和可追踪许可/原创来源。
 
 ## Agent Skills 与工具使用入口
 
-仓库中的 Skill 放在 §.claude/skills/<name>/SKILL.md§；其他编码 Agent 即使不能自动发现，也**必须按本表显式打开对应文件**。Skill 文件是工作说明，不会自动安装网络、浏览器、图像生成等工具。
+仓库中的 Skill 放在 `.claude/skills/<name>/SKILL.md`；其他编码 Agent 即使不能自动发现，也**必须按本表显式打开对应文件**。Skill 文件是工作说明，不会自动安装网络、浏览器、图像生成等工具。
 
-- 新课程规划／重构叙事：§.claude/skills/learning-journey/SKILL.md§
-- 加入概念或章节／补充知识网络：§.claude/skills/knowledge-map/SKILL.md§
-- 需要引用外部素材或寻找插图：§.claude/skills/visual-research/SKILL.md§
-- 需要原创数学/流程/算法示意：§.claude/skills/diagram-authoring/SKILL.md§
-- 提交课程 PR／修改主要教学内容：§.claude/skills/course-review/SKILL.md§
+- 新课程规划／重构叙事：`.claude/skills/learning-journey/SKILL.md`
+- 加入概念或章节／补充知识网络：`.claude/skills/knowledge-map/SKILL.md`
+- 需要引用外部素材或寻找插图：`.claude/skills/visual-research/SKILL.md`
+- 需要原创数学/流程/算法示意：`.claude/skills/diagram-authoring/SKILL.md`
+- 提交课程 PR／修改主要教学内容：`.claude/skills/course-review/SKILL.md`
 
-工具选择、证据和能力缺失回退规则见 §docs/AGENT_TOOLKIT.md§。即使没有自动调用 Skill 的环境，也必须手动执行相应步骤并交付审查记录。**此要求目前主要靠 Agent 和人工审查，尚无可以证明教学叙事正确的自动校验器。**
+工具选择、证据和能力缺失回退规则见 `docs/AGENT_TOOLKIT.md`。即使没有自动调用 Skill 的环境，也必须手动执行相应步骤并交付审查记录。**此要求目前主要靠 Agent 和人工审查，尚无可以证明教学叙事正确的自动校验器。**
 
 ## 0. 目标与边界
 
@@ -41,7 +41,7 @@ KnowledgeLab 旨在提供一种**交互式、探索式、有理论深度的学�
 
 ### 1.1 从直觉和因果链出发，最终抵达严格定义
 
-以下只是**作者设计时需要考虑的认知问题清单**，**不是网站课程的七段固定章节或强制顺序**。优先根据具体困惑安排自然的发现路径（见 §docs/LEARNING_DESIGN.md§）：
+以下只是**作者设计时需要考虑的认知问题清单**，**不是网站课程的七段固定章节或强制顺序**。优先根据具体困惑安排自然的发现路径（见 `docs/LEARNING_DESIGN.md`）：
 
 1. **问题**：学习者究竟要解释哪种现象/解决哪种任务？为什么值得学？
 2. **可观察现象**：具体几何图形、数据变化、运行状态或实际例子。
@@ -75,7 +75,7 @@ KnowledgeLab 旨在提供一种**交互式、探索式、有理论深度的学�
 
 ## 2. 互动规则：交互必须改变认知
 
-每个核心章节至少需要一种与学习目标直接对应的**可检验理解活动**：可以是有意义的交互实验，也可以是经说明理由的 §coreTask§（问题变式、反例判断、代码追踪、纸面证明等）。交互不是强制指标；若不适合就不要制作，现有 Schema 的 §labIds§ / §coreTask§ 互斥规则仍然有效。
+每个核心章节至少需要一种与学习目标直接对应的**可检验理解活动**：可以是有意义的交互实验，也可以是经说明理由的 `coreTask`（问题变式、反例判断、代码追踪、纸面证明等）。交互不是强制指标；若不适合就不要制作，现有 Schema 的 `labIds` / `coreTask` 互斥规则仍然有效。
 
 **仅当选择交互实验时**，对其必须写明：
 - `question`：要回答的具体问题；
@@ -146,7 +146,7 @@ KnowledgeLab 旨在提供一种**交互式、探索式、有理论深度的学�
 ## 7. 机器可执行课程协议（新增硬性门禁）
 
 - **单一来源**：新课程的正式计划放在 `src/content/courses/<course-id>/course.plan.json`，实验契约放在 `src/content/labs/<lab-id>.lab.json`。禁止再创建独立的 `course.json` 与计划文件手工同步。
-- 计划必须符合 `schemas/course-plan.schema.json`；实验必须符合 `schemas/lab.schema.json`，包含问题、预测、controls、visibleOutputs、invariants、edgeCases、oracles 和实现引用。
+- 课程计划采用 Course Contract v2，维护可复用的课程级 Learning Brief、Knowledge Map 和结构化知识关系；状态升级与风险复核遵循 `docs/CONTENT_CONTRACTS.md`。计划必须符合 `schemas/course-plan.schema.json`；实验必须符合 `schemas/lab.schema.json`，包含问题、预测、controls、visibleOutputs、invariants、edgeCases、oracles 和实现引用。
 - 所有 `labIds` 必须解析到实际实验，所有 `oracleIds` 必须解析到实际测试记录，引用的 MDX/组件/数学模块/测试文件必须存在。知识依赖图不得出现未知节点或环。
 - `npm run validate` 是发布门禁，不可以靠增加空字符串、占位 oracle 或无意义断言“骗过”校验器。
 - Schema 只能验证结构和部分引用；**并不能证明定理与视觉行为正确**。数学正确性依靠解析基准、性质测试或独立参考方法；浏览器执行与人工内容审查必须分别记录。

@@ -75,9 +75,11 @@ KnowledgeLab **不是带动画的教科书**：先从值得追问的问题、已
 尚未选择开源许可证；在明确授权前不要自动添加许可证文件。
 
 
-## 课程数据协议（v1）
+## 课程数据协议（v2）
 
 新课程不需要编辑 `src/App.tsx`。增加 `src/content/courses/<id>/course.plan.json`、MDX 和实验契约后，`src/content/registry.ts` 在**构建时**自动注册课程。课程计划是唯一事实来源；`src/content/labs/<id>.lab.json` 包含交互问题、实验不变量、反例及可执行测试索引。
+
+每门课程还需提供课程级 `learning-brief.md`、`knowledge-map.md` 和 `knowledge-map.json`，由计划的 `design` 引用；局部修复复用现有设计。跨课程关系与 `prototype/reviewed/published` 状态证据按 [内容契约](docs/CONTENT_CONTRACTS.md) 校验，校验通过不代表内容已独立审核或获得发布授权。
 
 ```bash
 npm run validate     # JSON Schema + 课程/实验依赖、文件和测试引用校验

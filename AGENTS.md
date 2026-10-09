@@ -11,7 +11,7 @@
 
 **图像和交互都是可选的解释手段，不是 KPI。** 首先判断学习上的困难，选择文字、原理图、静态对照、代码/数学推导、交互、实物照片中的最合适方式。确实不适合交互时可按 Schema 用可验证的 §coreTask§；不得为了产出动画而扭曲知识。
 
-**先做两个内部设计工件，再批量写正文**：Learning Brief（学习动机、认知转折、自然叙事）和 Knowledge Map（前置/对比/应用及具体理由）。格式见 §docs/templates/learning-brief.md§，按 §docs/LEARNING_DESIGN.md§ 评审。旧课程改写时也适用。
+**在需要时先做内部设计工件，再写正文**：新课程、改变课程主线的重大改稿，或新增跨章节知识连接时，使用 Learning Brief（学习动机、认知转折、自然叙事）和 Knowledge Map（前置/对比/应用及具体理由）。格式见 §docs/templates/learning-brief.md§，按 §docs/LEARNING_DESIGN.md§ 评审。局部修正、测试修复和视觉/实现调整不要求重新填写整套工件；应复用已有设计并在交付说明中注明影响范围。
 
 **图示与素材来源**：先看 §docs/VISUAL_ASSETS.md§ 和 §visual-research§ Skill；一手资料优先用于事实核查，但官方/博客公开发布不代表图片可复用。无明确许可只能链接或独立原创绘制；图片必须有图注、替代文字和可追踪许可/原创来源。
 

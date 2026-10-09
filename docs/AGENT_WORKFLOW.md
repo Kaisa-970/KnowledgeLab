@@ -19,9 +19,9 @@
 
 先检查 `AGENTS.md`、课程规范、现有章节与组件，确定目标难度、默认教学语言、领域和约束。禁止忽略已有知识图与重复建造组件。
 
-### Step 2 — 先写 Knowledge Map 与 Learning Brief，再给课程计划
+### Step 2 — 在需要时先写 Knowledge Map 与 Learning Brief，再给课程计划
 
-先读取 §.claude/skills/learning-journey/SKILL.md§ 和 §.claude/skills/knowledge-map/SKILL.md§，形成内部 Learning Brief（起点、认知冲突、转折、新概念出现理由、回扣）和 Knowledge Map（先修、横向关系、应用及原因）；再产出课程计划：必备前置、核心问题、章节顺序、需要的图示或实验、数学/实现重点、误区与可验证标准。**是否交互由认知问题决定**，可使用 §coreTask§；计划缺失时不直接生成大量 MDX。
+对新课程、改变课程主线的重大改稿，或新增跨章节知识连接，先读取 §.claude/skills/learning-journey/SKILL.md§ 和 §.claude/skills/knowledge-map/SKILL.md§，形成内部 Learning Brief（起点、认知冲突、转折、新概念出现理由、回扣）和 Knowledge Map（先修、横向关系、应用及原因）；再产出课程计划。局部修正、测试修复和视觉/实现调整可复用已有设计，不要求重新生成整套工件。**是否交互由认知问题决定**，可使用 §coreTask§；计划缺失时不直接生成大量 MDX。
 
 知识关系必须区分：现有 schema 的 §dependsOn§ 是“先修依赖”，§same-principle§ / §contrasts-with§ / §applied-in§ 等横向或下游联系暂记在 Learning Brief，不能谎称已有全局图谱。
 
@@ -70,7 +70,7 @@
 
 按 §docs/AGENT_TOOLKIT.md§ 执行路由：§learning-journey§ / §knowledge-map§ → （需要素材时）§visual-research§ 或 §diagram-authoring§ → §course-review§。Skill 文件位于 §.claude/skills§；没有自动发现机制的 Agent 应在开工前主动读取。**Skills 是明确的操作规范，并不意味着图片检索、网络下载、图像生成等工具已接入。**
 
-每门课至少提供：叙事设计摘要、知识连接、实际视觉素材的权利记录（若有），以及独立于构建测试的教学质量检查。最终 PR 报告必须写明工具不可用/未完成验证的地方。
+新课程和重大改稿至少提供：叙事设计摘要、知识连接、实际视觉素材的权利记录（若有），以及独立于构建测试的教学质量检查。局部改动只需说明复用的设计依据和受影响范围。最终 PR 报告必须写明工具不可用/未完成验证的地方。
 
 ## 局部迭代
 

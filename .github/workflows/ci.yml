@@ -16,8 +16,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
+      - name: Install dependencies (lockfile-pinned)
+        run: npm ci --no-audit --no-fund
       - name: Validate course contracts
         run: npm run validate
       - name: Typecheck

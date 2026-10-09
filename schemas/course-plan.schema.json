@@ -124,7 +124,7 @@
         "learningObjectives",
         "conceptIds",
         "prerequisites",
-        "labIds",
+        "dependsOnChapterIds",
         "lessonPath",
         "status"
       ],
@@ -161,7 +161,6 @@
         },
         "labIds": {
           "type": "array",
-          "minItems": 1,
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/id"
@@ -177,6 +176,13 @@
             "reviewed",
             "published"
           ]
+        },
+        "dependsOnChapterIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
         }
       }
     },

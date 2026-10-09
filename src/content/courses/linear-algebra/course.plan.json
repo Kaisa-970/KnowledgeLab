@@ -83,6 +83,7 @@
         "向量加法",
         "标量乘法"
       ],
+      "dependsOnChapterIds": [],
       "labIds": [
         "matrix-basis-lab"
       ],

@@ -45,3 +45,36 @@ test('missing source test is rejected', () => {
   data.oracles[0].testName = 'a test that was never written'
   assert.match(validateCourseLinks(plan, {[lab.id]:data}, read).join(' '), /test not found/)
 })
+test('real chapter depending on an unknown chapter is rejected', () => {
+  const data = copy(plan)
+  data.chapters[0].dependsOnChapterIds = ['not-a-chapter']
+  assert.match(validateCourseLinks(data, {[lab.id]:lab}, read).join(' '), /unknown chapter dependency/)
+})
+test('real chapter depending on an unpublished chapter is rejected', () => {
+  const data = copy(plan)
+  data.chapters[0].dependsOnChapterIds = ['eigenvectors']
+  assert.match(validateCourseLinks(data, {[lab.id]:lab}, read).join(' '), /depends on unpublished chapter/)
+})
+test('a cycle through a real and a planned chapter is rejected', () => {
+  const data = copy(plan)
+  data.plannedChapters[0].dependsOnChapterIds = ['linear-transformations']
+  data.chapters[0].dependsOnChapterIds = ['rank']
+  assert.match(validateCourseLinks(data, {[lab.id]:lab}, read).join(' '), /dependency cycle/)
+})
+test('malformed labs are reported as content errors, never thrown', () => {  const cases = {
+    'missing implementation': (() => { const c = copy(lab); delete c.implementation; return c })(),
+    'implementation missing mathPath': (() => { const c = copy(lab); delete c.implementation.mathPath; return c })(),
+    'empty oracles': (() => { const c = copy(lab); c.oracles = []; return c })(),
+    'non-array oracles': (() => { const c = copy(lab); c.oracles = 'nope'; return c })(),
+    'invariant missing oracleIds': (() => { const c = copy(lab); delete c.invariants[0].oracleIds; return c })(),
+    'empty object': {},
+    'null': null,
+  }
+  for (const [name, value] of Object.entries(cases)) {
+    let problems
+    assert.doesNotThrow(() => {
+      problems = validateCourseLinks(plan, {[lab.id]: value}, read)
+    }, name + ' should not throw')
+    assert.ok(problems.length > 0, name + ' should be reported')
+  }
+})

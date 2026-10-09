@@ -11,18 +11,22 @@ Schema 位于 `schemas/course-plan.schema.json` 和 `schemas/lab.schema.json`。
 
 ## 新增一节课程
 
-1. 在对应课程计划增加 chapter（`id,title,coreQuestion,learningObjectives,conceptIds,prerequisites,labIds,lessonPath,status`）。
+1. 在对应课程计划增加 chapter（`id,title,coreQuestion,learningObjectives,conceptIds,prerequisites,dependsOnChapterIds,labIds,lessonPath,status`）。新章节在 `plannedChapters` 中已占位时，**沿用它原有的 `id`** 并从 `plannedChapters` 移除；依赖边指向真实章节的 id。
+   确无合适交互的章节，可用 `coreTask`（可验证的静态思考任务）替代 `labIds`——二者必须择一，同时声明会被拒绝。
 2. 新增一份 `.mdx`，在 Markdown 中引用仓库内的可信交互组件。
 3. 每个新交互需要一份 `.lab.json`，提供 invariant 和 edge case，并给每条断言绑定至少一个 oracle ID。
 4. 使用纯计算函数（`src/math`）与独立测试，确保 oracle 中的 `testFile` + `testName` 指向可实际执行的测试。
 5. 运行 `npm run validate`、`npm test`、`npm run build`、`npm run test:e2e`；最后单独进行数学与教学内容审查。
 6. 提交 PR，报告未通过或尚未执行的审核项目。不能直接将生成的代码部署。
 
+`chapters` 与 `plannedChapters` 共用同一个 id 命名空间：章节从规划状态转为"真实"时 id 不变，因此两者的依赖边放在同一张图里检查环。
+
 ## 校验器能够拒绝
 
 - Schema 中必填字段遗漏、列表为空或额外未定义字段；
 - 课程知识节点引用不存在、出现依赖环；
 - 章节的实验引用不存在、章节重复 ID；
+- 章节依赖不存在的章节，或依赖尚未发布的规划章节，或依赖成环；
 - 实验的 oracle ID 不存在、重复 oracle ID；
 - 章节 MDX、组件、数学模块、测试源文件不存在；
 - 实验声明的测试名字与测试源码不匹配。

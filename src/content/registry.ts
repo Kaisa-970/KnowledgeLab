@@ -8,6 +8,7 @@ export type Chapter = {
   learningObjectives: string[]
   conceptIds: string[]
   prerequisites: string[]
+  dependsOnChapterIds: string[]
   labIds: string[]
   lessonPath: string
   status: 'prototype' | 'reviewed' | 'published'

@@ -42,30 +42,59 @@ export function validateCourseLinks(plan, labs, read = defaultRead) {
   if (!validatePlanShape(plan)) return ['course schema: ' + schemaErrors(validatePlanShape)]
   checkUnique(plan.knowledgeNodes.map((n) => n.id), 'knowledge nodes', problems)
   detectCycles(plan.knowledgeNodes, 'id', (n) => n.dependsOn, 'knowledge graph', problems)
+  // Validate every lab's own shape first: later passes read into lab fields, so a
+  // malformed lab must be reported as a content error, never thrown as a TypeError.
+  const shapedLabs = {}
+  for (const [key, lab] of Object.entries(labs)) {
+    if (!validateLabShape(lab)) {
+      problems.push(key + ': lab schema: ' + schemaErrors(validateLabShape))
+      continue
+    }
+    if (key !== lab.id) problems.push(key + ': lab id mismatch ' + lab.id)
+    shapedLabs[key] = lab
+  }
   const chapterIds = plan.chapters.map((x) => x.id)
   const plannedIds = plan.plannedChapters.map((x) => x.id)
   checkUnique([...chapterIds, ...plannedIds], 'chapters', problems)
+  const plannedIdSet = new Set(plannedIds)
+  // Chapters and plannedChapters share one id namespace: a planned chapter keeps
+  // its id when it becomes real, so both kinds of edge must live in one graph.
   detectCycles(
-    [...plan.chapters.map((c) => ({ id: c.id, dependsOnChapterIds: [] })), ...plan.plannedChapters],
+    [
+      ...plan.chapters.map((c) => ({ id: c.id, dependsOnChapterIds: c.dependsOnChapterIds })),
+      ...plan.plannedChapters,
+    ],
     'id', (x) => x.dependsOnChapterIds, 'chapter graph', problems
   )
+  for (const chapter of plan.chapters) {
+    for (const id of chapter.dependsOnChapterIds) {
+      if (!chapterIds.includes(id) && !plannedIdSet.has(id)) {
+        problems.push(chapter.id + ': unknown chapter dependency ' + id)
+      }
+      if (plannedIdSet.has(id)) {
+        problems.push(chapter.id + ': depends on unpublished chapter ' + id)
+      }
+    }
+  }
   const knownNodes = new Set(plan.knowledgeNodes.map((x) => x.id))
   const knownLabs = new Set(Object.keys(labs))
   for (const chapter of plan.chapters) {
+    const labIds = chapter.labIds ?? []
     for (const id of chapter.conceptIds) if (!knownNodes.has(id)) problems.push(chapter.id + ': unknown concept ' + id)
-    for (const id of chapter.labIds) if (!knownLabs.has(id)) problems.push(chapter.id + ': unknown lab ' + id)
+    for (const id of labIds) if (!knownLabs.has(id)) problems.push(chapter.id + ': unknown lab ' + id)
+    if (chapter.coreTask && labIds.length > 0) {
+      problems.push(chapter.id + ': declares both coreTask and labIds; pick one')
+    }
     let lesson = ''
     try { lesson = read(chapter.lessonPath) } catch { problems.push(chapter.id + ': missing lesson ' + chapter.lessonPath) }
-    for (const id of chapter.labIds) {
-      const lab = labs[id]
+    for (const id of labIds) {
+      const lab = shapedLabs[id]
       if (!lab || !lesson) continue
       const componentName = path.basename(lab.implementation.componentPath, '.tsx')
       if (!lesson.includes('<' + componentName)) problems.push(chapter.id + ': lesson does not render ' + componentName)
     }
   }
-  for (const [key, lab] of Object.entries(labs)) {
-    if (!validateLabShape(lab)) { problems.push(key + ': lab schema: ' + schemaErrors(validateLabShape)); continue }
-    if (key !== lab.id) problems.push(key + ': lab id mismatch ' + lab.id)
+  for (const [key, lab] of Object.entries(shapedLabs)) {
     for (const filename of [lab.implementation.componentPath, lab.implementation.mathPath]) {
       try { read(filename) } catch { problems.push(lab.id + ': missing implementation ' + filename) }
     }
@@ -101,7 +130,9 @@ export function validateRepository(read = defaultRead, courses = ['linear-algebr
     if (plan.id !== courseId) problems.push('course directory and id mismatch: ' + courseId)
     plans.push(plan)
     if (!validatePlanShape(plan)) { problems.push(courseId + ' schema: ' + schemaErrors(validatePlanShape)); continue }
-    for (const chapter of plan.chapters) for (const labId of chapter.labIds) referencedLabs.add(labId)
+    for (const chapter of plan.chapters) {
+      for (const labId of chapter.labIds ?? []) referencedLabs.add(labId)
+    }
   }
   const labs = {}
   for (const labId of referencedLabs) {

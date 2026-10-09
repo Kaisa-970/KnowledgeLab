@@ -5,7 +5,7 @@
 ## A. 课程级交付物
 
 每门课建议产生：
-- `course.json`：`id`、`title`、`domain`、`level`、`summary`、`prerequisites`、`learningOutcomes`、`chapters` 等；
+- `course.plan.json`：`id`、`title`、`domain`、`level`、`summary`、`prerequisites`、`learningOutcomes`、`chapters` 等；
 - 章节依赖图：先修概念、当前章节与后续知识节点；
 - 每章一份 MDX，独立交互组件放 `src/components`；
 - 关键实验说明（模板见下）与测试；
@@ -86,3 +86,10 @@ explanation: "列向量决定基向量去向，线性性决定其余点去向"
 - [ ] 公式渲染、代码类型检查与相关计算单测通过？
 - [ ] 已执行交互/响应式检查？未执行时是否明确标注？
 - [ ] 是否列出可追溯来源及未核实的版本敏感结论？
+
+
+## G. 机器可读内容契约
+
+课程元数据的唯一来源是 `course.plan.json`（不是同时维护 `course.json` 与另一份课程计划）。必须通过 `schemas/course-plan.schema.json`。每个 `labIds` 指向 `src/content/labs/<id>.lab.json`，其 `invariants` 与 `edgeCases` 的 `oracleIds` 必须指向已有 `oracles`，各 `testFile` 和 `testName` 必须指向真实测试。规范和可执行校验见 `docs/CONTENT_CONTRACTS.md`。
+
+Schema 能检验字段存在、引用完整和依赖无环，无法从自然语言证明数学正确性；它不替代推导审核和真实交互检验。生成代码不得直接越过 PR 审核进入正式部署。

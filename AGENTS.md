@@ -116,3 +116,19 @@ KnowledgeLab 旨在提供一种**交互式、探索式、有理论深度的学�
 教学准确性 > 有效交互 > 因果解释深度 > 视觉一致性 > 内容数量 > 炫酷效果。
 
 新增课程优先复用组件，但**不能为了复用而牺牲关键概念的准确表达**。课程计划可增量迭代，保持小批量、可审阅提交。重大架构变更、仓库公开性/许可、云资源费用和发布权限应由仓库所有者决定。
+
+
+## 7. 机器可执行课程协议（新增硬性门禁）
+
+- **单一来源**：新课程的正式计划放在 `src/content/courses/<course-id>/course.plan.json`，实验契约放在 `src/content/labs/<lab-id>.lab.json`。禁止再创建独立的 `course.json` 与计划文件手工同步。
+- 计划必须符合 `schemas/course-plan.schema.json`；实验必须符合 `schemas/lab.schema.json`，包含问题、预测、controls、visibleOutputs、invariants、edgeCases、oracles 和实现引用。
+- 所有 `labIds` 必须解析到实际实验，所有 `oracleIds` 必须解析到实际测试记录，引用的 MDX/组件/数学模块/测试文件必须存在。知识依赖图不得出现未知节点或环。
+- `npm run validate` 是发布门禁，不可以靠增加空字符串、占位 oracle 或无意义断言“骗过”校验器。
+- Schema 只能验证结构和部分引用；**并不能证明定理与视觉行为正确**。数学正确性依靠解析基准、性质测试或独立参考方法；浏览器执行与人工内容审查必须分别记录。
+- 当前 `import.meta.glob` 的静态课程注册用于可信的仓库内容；未经审核的 Agent 生成 MDX/TSX 不得直接进入主分支和生产编译。
+- 新增章节只添加结构化计划、MDX、实验组件与测试；原则上不得修改 `src/App.tsx` 的课程导航与注册逻辑。
+- GitHub PR 的 CI 结果不是发布授权。当前 CI 的代码执行环境**不等于对任意恶意生成代码已完成隔离**，正式全自动 Agent 必须另建最小权限沙箱。
+
+## 8. PR 报告格式
+
+写明课程 ID、章节 ID、实验 ID、数学 oracle 的来源与覆盖范围；列出 `validate/typecheck/test/build/browser` 的实际执行结果，以及独立内容审查和发布是否完成。无法证实的步骤标记“未执行/未核验”，不要宣称“所有质量门禁已通过”。

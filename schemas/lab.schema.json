@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "KnowledgeLab Interactive Lab Contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "question",
+    "prediction",
+    "controls",
+    "visibleOutputs",
+    "invariants",
+    "edgeCases",
+    "explanation",
+    "oracles",
+    "implementation"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "$ref": "#/$defs/id"
+    },
+    "question": {
+      "$ref": "#/$defs/nonempty"
+    },
+    "prediction": {
+      "$ref": "#/$defs/nonempty"
+    },
+    "controls": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/control"
+      }
+    },
+    "visibleOutputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/output"
+      }
+    },
+    "invariants": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/assertion"
+      }
+    },
+    "edgeCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/edge"
+      }
+    },
+    "explanation": {
+      "$ref": "#/$defs/nonempty"
+    },
+    "oracles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/oracle"
+      }
+    },
+    "implementation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "componentPath",
+        "mathPath"
+      ],
+      "properties": {
+        "componentPath": {
+          "type": "string",
+          "pattern": "^src/components/[A-Za-z][A-Za-z0-9]*\\.tsx$"
+        },
+        "mathPath": {
+          "type": "string",
+          "pattern": "^src/math/[a-z][a-z0-9-]*\\.ts$"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "nonempty": {
+      "type": "string",
+      "minLength": 3
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "description",
+        "kind"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "$ref": "#/$defs/nonempty"
+        },
+        "description": {
+          "$ref": "#/$defs/nonempty"
+        },
+        "kind": {
+          "enum": [
+            "slider",
+            "drag",
+            "preset",
+            "input",
+            "toggle",
+            "button"
+          ]
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "description"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "$ref": "#/$defs/nonempty"
+        },
+        "description": {
+          "$ref": "#/$defs/nonempty"
+        }
+      }
+    },
+    "assertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "statement",
+        "oracleIds"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "statement": {
+          "$ref": "#/$defs/nonempty"
+        },
+        "oracleIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "setup",
+        "expected",
+        "oracleIds"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "setup": {
+          "$ref": "#/$defs/nonempty"
+        },
+        "expected": {
+          "$ref": "#/$defs/nonempty"
+        },
+        "oracleIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        }
+      }
+    },
+    "oracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "description",
+        "testFile",
+        "testName"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "kind": {
+          "enum": [
+            "analytical",
+            "property",
+            "reference",
+            "regression"
+          ]
+        },
+        "description": {
+          "$ref": "#/$defs/nonempty"
+        },
+        "testFile": {
+          "type": "string",
+          "pattern": "^src/math/[a-z][a-z0-9-]*\\.test\\.ts$"
+        },
+        "testName": {
+          "$ref": "#/$defs/nonempty"
+        }
+      }
+    }
+  }
+}

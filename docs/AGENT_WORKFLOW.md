@@ -70,3 +70,15 @@
 ## 安全闸门
 
 未来 Agent 生成的 TSX/MDX 代码必须在隔离环境中验证，不可把不可信代码直接提交部署。令牌、私有内容与沙箱权限需要隔离；外部内容与模型输出一律视为不可信。设置执行时间、CPU/GPU 和网络限制，先产出候选 PR 而非无审核上线。
+
+
+## 已落地的机器门禁（Phase 0.5）
+
+1. `course.plan.json`：课程目标、知识节点依赖、章节问题和资源引用，采用 `schemas/course-plan.schema.json`。
+2. `<lab-id>.lab.json`：实验预测、控件、可观察输出、不变量、边界与 oracle 绑定，采用 `schemas/lab.schema.json`。
+3. `npm run validate`：自动发现课程、检查 Schema 与跨文件引用、环与 oracle 测试名字；无效产物不能通过 CI。
+4. `npm test`：校验器的失败用例与独立编写的数学计算测试；不能用空 testName 或模型自称通过来替代实际 oracle。
+5. `npm run test:e2e`：在 Chromium 桌面和移动视口检查页面/预设/滑块/可访问性基础路径。
+6. **人工审查仍为必要阶段**：检查数学推导、实验是否促进理解、视觉体验和版权引用。
+
+自动 Agent 仍未接入，不应误读本节为“已经有自治 Agent”。现阶段的 CI 只在可信 PR 开发流程中使用，并非不可信代码沙箱。

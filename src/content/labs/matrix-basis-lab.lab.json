@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "id": "matrix-basis-lab",
+  "question": "为什么矩阵的列等于基向量经线性变换后的去向？",
+  "prediction": "只改变第一列时，第二个基向量会动吗？平面网格会怎样变化？",
+  "controls": [
+    {
+      "id": "basis-drag",
+      "label": "拖动基向量端点",
+      "description": "改变 T(e₁) 或 T(e₂) 的位置并更新矩阵",
+      "kind": "drag"
+    },
+    {
+      "id": "matrix-sliders",
+      "label": "矩阵参数滑块",
+      "description": "在指定范围内修改 a、b、c、d",
+      "kind": "slider"
+    },
+    {
+      "id": "presets",
+      "label": "典型变换预设",
+      "description": "切换单位、旋转、剪切、退化与翻转",
+      "kind": "preset"
+    }
+  ],
+  "visibleOutputs": [
+    {
+      "id": "grid",
+      "label": "二维网格",
+      "description": "同步显示原网格和线性变换后的网格"
+    },
+    {
+      "id": "basis",
+      "label": "变换后基向量",
+      "description": "展示 T(e₁) 与 T(e₂) 的方向和数值"
+    },
+    {
+      "id": "determinant",
+      "label": "行列式",
+      "description": "显示有向面积倍率以及方向是否翻转"
+    }
+  ],
+  "invariants": [
+    {
+      "id": "basis-columns",
+      "statement": "T(e₁) 和 T(e₂) 分别等于矩阵第一列和第二列",
+      "oracleIds": [
+        "columns-test"
+      ]
+    },
+    {
+      "id": "linearity",
+      "statement": "T(2u+3v)=2T(u)+3T(v)",
+      "oracleIds": [
+        "linearity-test"
+      ]
+    },
+    {
+      "id": "signed-area",
+      "statement": "det(A) 与变换后的单位基向量叉积一致，给出有向面积倍率",
+      "oracleIds": [
+        "signed-area-test"
+      ]
+    }
+  ],
+  "edgeCases": [
+    {
+      "id": "singular",
+      "setup": "选择面积塌缩预设，det(A)=0",
+      "expected": "网格在一条线或点上，面积为零",
+      "oracleIds": [
+        "singular-test"
+      ]
+    },
+    {
+      "id": "flipped",
+      "setup": "选择方向翻转预设，det(A)<0",
+      "expected": "有向面积变号",
+      "oracleIds": [
+        "flipped-test"
+      ]
+    }
+  ],
+  "explanation": "矩阵列向量表示基向量变换后的坐标；任意向量由基向量线性组合而成，故整体变换由这两列确定。",
+  "oracles": [
+    {
+      "id": "columns-test",
+      "kind": "analytical",
+      "description": "利用 T(e₁) 和 T(e₂) 的解析形式校验两列",
+      "testFile": "src/math/linear.test.ts",
+      "testName": "matrix columns are transformed basis vectors"
+    },
+    {
+      "id": "linearity-test",
+      "kind": "property",
+      "description": "通过两个非平凡向量的组合测试线性性",
+      "testFile": "src/math/linear.test.ts",
+      "testName": "linearity: T(2u + 3v) = 2Tu + 3Tv"
+    },
+    {
+      "id": "singular-test",
+      "kind": "analytical",
+      "description": "退化矩阵的行列式精确为零",
+      "testFile": "src/math/linear.test.ts",
+      "testName": "det=0 collapses 2D area"
+    },
+    {
+      "id": "flipped-test",
+      "kind": "analytical",
+      "description": "反射矩阵的行列式是负数",
+      "testFile": "src/math/linear.test.ts",
+      "testName": "det<0 represents orientation reversal"
+    },
+    {
+      "id": "signed-area-test",
+      "kind": "reference",
+      "description": "通过变换后基向量叉积的独立计算与解析结果交叉核验行列式",
+      "testFile": "src/math/linear.test.ts",
+      "testName": "signed area agrees with an independent cross-product reference"
+    }
+  ],
+  "implementation": {
+    "componentPath": "src/components/MatrixTransformLab.tsx",
+    "mathPath": "src/math/linear.ts"
+  }
+}

@@ -59,14 +59,25 @@ export function chapterUrl(courseId: string, chapterId: string): string {
   return '/courses/' + encodeURIComponent(courseId) + '/' + encodeURIComponent(chapterId)
 }
 
-export function getRoute(pathname: string) {
-  if (pathname === '/' || pathname === '/index.html') {
-    const course = courses[0]
-    return course ? { course, chapter: course.chapters[0] } : undefined
-  }
+/**
+ * Route resolution.
+ *
+ * `/` is an explicit course index rather than "the first course". Course order
+ * comes from a locale sort of titles, so defaulting the root path to courses[0]
+ * would silently change what a bookmarked `/` shows whenever a course is added
+ * or renamed. The index is stable; the sidebar still lists every course.
+ */
+export type Route =
+  | { kind: 'index' }
+  | { kind: 'missing' }
+  | { kind: 'chapter'; course: CoursePlan; chapter: Chapter }
+
+export function getRoute(pathname: string): Route {
+  if (pathname === '/' || pathname === '/index.html') return { kind: 'index' }
   const match = /^\/courses\/([a-z0-9-]+)\/([a-z0-9-]+)\/?$/.exec(pathname)
-  if (!match) return undefined
+  if (!match) return { kind: 'missing' }
   const course = courses.find((item) => item.id === match[1])
   const chapter = course?.chapters.find((item) => item.id === match[2])
-  return course && chapter ? { course, chapter } : undefined
+  if (!course || !chapter) return { kind: 'missing' }
+  return { kind: 'chapter', course, chapter }
 }

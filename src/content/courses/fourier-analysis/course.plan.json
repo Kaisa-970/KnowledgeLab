@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "id": "fourier-analysis",
+  "title": "傅里叶分析：从波形到频谱",
+  "domain": "mathematics",
+  "level": "foundation-to-intermediate",
+  "summary": "从「用正弦波拼出方波」这一具体构造出发，建立周期函数分解为谐波的直觉，推导系数公式，并解释收敛与 Gibbs 过冲的边界行为。",
+  "prerequisites": [
+    "三角函数与弧度制",
+    "定积分与奇偶函数对称性",
+    "级数收敛的初步概念"
+  ],
+  "learningOutcomes": [
+    "用正交性解释傅里叶系数公式的来源，而非把公式当作定义",
+    "根据函数的奇偶性与半波对称性判断哪些谐波系数为零",
+    "解释有限项部分和在跳变处的行为，并说明 Gibbs 过冲为何不随项数消失"
+  ],
+  "knowledgeNodes": [
+    {
+      "id": "periodic-function",
+      "title": "周期函数与三角函数",
+      "dependsOn": []
+    },
+    {
+      "id": "orthogonality",
+      "title": "三角函数系的正交性",
+      "dependsOn": ["periodic-function"]
+    },
+    {
+      "id": "fourier-coefficients",
+      "title": "傅里叶系数与投影",
+      "dependsOn": ["orthogonality"]
+    },
+    {
+      "id": "symmetry-vanishing",
+      "title": "奇偶性与半波对称导致的系数消失",
+      "dependsOn": ["fourier-coefficients"]
+    },
+    {
+      "id": "partial-sum-convergence",
+      "title": "部分和收敛与均方误差",
+      "dependsOn": ["fourier-coefficients"]
+    },
+    {
+      "id": "gibbs-phenomenon",
+      "title": "跳变处的 Gibbs 过冲",
+      "dependsOn": ["partial-sum-convergence"]
+    },
+    {
+      "id": "frequency-interpretation",
+      "title": "谐波序号与频率的对应",
+      "dependsOn": ["fourier-coefficients"]
+    },
+    {
+      "id": "spectrum",
+      "title": "幅度谱与相位谱",
+      "dependsOn": ["frequency-interpretation"]
+    }
+  ],
+  "chapters": [
+    {
+      "id": "square-wave-synthesis",
+      "title": "为什么用正弦波去拼一个方波？",
+      "coreQuestion": "方波有尖锐跳变，为什么一堆光滑的正弦波叠加可以逼近它，却永远不能完美还原？",
+      "learningObjectives": [
+        "用奇函数对称性说明方波的余弦系数与偶次正弦系数为何为零",
+        "从正交性推导 b_n = 4/(nπ) 并说明积分过程中每一步的依据",
+        "解释 Gibbs 过冲峰值收敛到 1.179 而非 1 的原因"
+      ],
+      "conceptIds": ["periodic-function", "orthogonality", "fourier-coefficients", "symmetry-vanishing", "gibbs-phenomenon"],
+      "prerequisites": ["三角函数与弧度制", "定积分的线性性质"],
+      "dependsOnChapterIds": [],
+      "labIds": ["fourier-square-lab"],
+      "lessonPath": "src/content/lessons/fourier-square-wave.mdx",
+      "status": "prototype"
+    }
+  ],
+  "plannedChapters": [
+    {
+      "id": "arbitrary-period",
+      "title": "频率到底是什么？",
+      "dependsOnChapterIds": ["square-wave-synthesis"]
+    },
+    {
+      "id": "spectrum-reading",
+      "title": "频谱告诉了我们什么？",
+      "dependsOnChapterIds": ["arbitrary-period"]
+    }
+  ]
+}

@@ -53,6 +53,15 @@ button { cursor:pointer; }
 .answer summary { cursor:pointer; color:#285979; font-size:14px; font-weight:700; }
 .answer p { margin:10px 0 0; }
 .next-card { background:#153b59; color:white; padding:24px; border-radius:12px; margin:32px 0 0; }
+.index-course { border-top:1px solid #e7ebf0; padding-top:22px; margin-top:26px; }
+.index-course h2 { margin:0 0 10px!important; font-size:19px!important; }
+.index-facts { display:flex; flex-wrap:wrap; gap:8px 18px; color:#8a99a8; font-size:12px; margin-bottom:14px; }
+.index-chapters { list-style:none; padding:0; margin:0; display:grid; gap:10px; }
+.index-chapters li { display:grid; gap:3px; }
+.index-chapters a { color:#0c7c70; font-weight:600; font-size:14px; }
+.index-chapters a:hover { text-decoration:underline; }
+.index-chapters span { color:#93a0ae; font-size:12px; line-height:1.7; }
+.index-planned { color:#a2acb8!important; font-size:12px!important; margin-top:14px!important; }
 .next-card strong { color:white; font-size:17px; }
 .next-card p { color:#c5d5e2; margin:8px 0; }
 .next-card span { color:#92c9cb; font-size:12px; }
@@ -74,6 +83,12 @@ button { cursor:pointer; }
 .lab-body { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(230px,1fr); }
 .plot-frame { background:#fbfdfe; border-right:1px solid #edf0f3; padding:10px; min-width:0; }
 .plot { display:block; width:100%; aspect-ratio:1/1; touch-action:none; overflow:hidden; }
+.plot-wide { aspect-ratio:auto; }
+.spectrum { display:block; width:100%; height:auto; margin-bottom:6px; }
+.preset-active { border-color:#3ba69b; color:#0c7c70; background:#eef8f6; }
+.harmonic-toggle { font-variant-numeric:tabular-nums; }
+.harmonic-on { border-color:#3ba69b; color:#0c7c70; background:#f1f9f7; }
+.legend-accent { border-color:#1686c2!important; }
 .drag-handle { cursor:grab; }
 .drag-handle:active { cursor:grabbing; }
 .plot-legend { display:flex; justify-content:center; gap:19px; color:#8795a4; font-size:11px; padding:3px 0 12px; }

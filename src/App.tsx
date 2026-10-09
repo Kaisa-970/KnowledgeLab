@@ -7,10 +7,42 @@ const domains = [
   { id: 'ai', name: 'AI 与机器人', symbol: '◎' },
 ]
 
+/** The root path lists every course; it is not a redirect to whichever sorts first. */
+function CourseIndex() {
+  return (
+    <div className="lesson-article">
+      <h1>课程目录</h1>
+      <p className="lead">交互式课程：先看见现象，动手改变条件，再理解背后的数学与运行机制。</p>
+      {courses.map((entry) => (
+        <section key={entry.id} className="index-course">
+          <h2>{entry.title}</h2>
+          <p>{entry.summary}</p>
+          <div className="index-facts">
+            <span>领域：{entry.domain}</span>
+            <span>难度：{entry.level}</span>
+            <span>先修：{entry.prerequisites.join('、') || '无'}</span>
+          </div>
+          <ul className="index-chapters">
+            {entry.chapters.map((item) => (
+              <li key={item.id}>
+                <a href={chapterUrl(entry.id, item.id)}>{item.title}</a>
+                <span>{item.coreQuestion}</span>
+              </li>
+            ))}
+          </ul>
+          {entry.plannedChapters.length > 0 && (
+            <p className="index-planned">规划中：{entry.plannedChapters.map((item) => item.title).join('、')}</p>
+          )}
+        </section>
+      ))}
+    </div>
+  )
+}
+
 export default function App() {
   const route = getRoute(window.location.pathname)
-  const course = route?.course
-  const chapter = route?.chapter
+  const course = route.kind === 'chapter' ? route.course : undefined
+  const chapter = route.kind === 'chapter' ? route.chapter : undefined
   const Lesson = chapter ? getLessonComponent(chapter) : undefined
 
   return (
@@ -65,7 +97,7 @@ export default function App() {
       </aside>
       <div className="main-panel" id="top">
         <header className="topbar">
-          <span className="topbar-path">学习 / {course?.title || '课程目录'} / <strong>{chapter?.title || '未找到章节'}</strong></span>
+          <span className="topbar-path">学习 / {course?.title || '课程目录'} / <strong>{chapter?.title || '全部课程'}</strong></span>
           <a href="https://github.com/Kaisa-970/KnowledgeLab" target="_blank" rel="noreferrer">GitHub ↗</a>
         </header>
         <div className="layout">
@@ -75,11 +107,13 @@ export default function App() {
                 <div className="chapter-badge">{course.domain.toUpperCase()} <span>·</span> {chapter.id.toUpperCase()}</div>
                 <article className="lesson-article"><Lesson /></article>
               </>
+            ) : route.kind === 'index' ? (
+              <CourseIndex />
             ) : (
               <div className="lesson-article">
                 <h1>未找到课程</h1>
-                <p>当前路径没有已登记的章节。请选择侧栏中的课程，或返回首页。</p>
-                <a href="/">返回课程首页 →</a>
+                <p>当前路径没有已登记的章节。请选择侧栏中的课程，或返回课程目录。</p>
+                <a href="/">返回课程目录 →</a>
               </div>
             )}
             <footer className="page-footer">KnowledgeLab · 用实验建立理解 · 当前为课程样板，不是 AI 自动生成服务</footer>

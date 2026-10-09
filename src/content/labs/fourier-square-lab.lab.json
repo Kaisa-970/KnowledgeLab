@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "id": "fourier-square-lab",
+  "question": "为什么用有限多个正弦波叠加，不能完美还原方波的跳变？",
+  "prediction": "把谐波数量从 1 增加到 9，跳变处的过冲会消失吗？曲线会更接近方波，但某个地方会怎样？",
+  "controls": [
+    {
+      "id": "harmonic-count",
+      "label": "谐波数量 N",
+      "description": "在 1 到 49 之间改变参与叠加的谐波数量（只取奇数项）",
+      "kind": "slider"
+    },
+    {
+      "id": "harmonic-toggle",
+      "label": "单独开关某个谐波",
+      "description": "启用或禁用指定的第 n 个谐波，观察它对方波形状的贡献",
+      "kind": "toggle"
+    },
+    {
+      "id": "presets",
+      "label": "典型波形预设",
+      "description": "切换方波、锯齿波与三角波，比较不同函数的谐波衰减速度。三者幅值均为 1，曲线高度可直接比较。",
+      "kind": "preset"
+    }
+  ],
+  "visibleOutputs": [
+    {
+      "id": "curve",
+      "label": "目标波形与部分和曲线",
+      "description": "叠加显示目标波形 f(t) 与 N 项部分和 S_N(t)"
+    },
+    {
+      "id": "spectrum",
+      "label": "谐波幅度条",
+      "description": "显示每个谐波的幅度 |b_n| 或 |a_n|，可见偶次项为零"
+    },
+    {
+      "id": "error",
+      "label": "均方根误差",
+      "description": "剔除跳变邻域后 S_N 与目标波形的 RMS 误差，随 N 增大而下降"
+    },
+    {
+      "id": "overshoot",
+      "label": "过冲峰值",
+      "description": "S_N 在跳变附近的峰值，随 N 增大趋近 1.179 而非 1。仅对方波适用；锯齿波跳变在采样区间外、三角波连续，两者显示为不适用，不给出数值。"
+    }
+  ],
+  "invariants": [
+    {
+      "id": "odd-only",
+      "statement": "方波的偶次谐波系数恒为零，只有奇次项参与叠加",
+      "oracleIds": ["square-parity-test", "coefficient-test"]
+    },
+    {
+      "id": "jump-midpoint",
+      "statement": "在任何有限 N 下 S_N(0)=0，即部分和在跳变处始终取中点值",
+      "oracleIds": ["jump-midpoint-test"]
+    },
+    {
+      "id": "levibniz-limit",
+      "statement": "S_N(π/2) 随 N 增大趋于 1，与 Leibniz 级数一致",
+      "oracleIds": ["pi-half-test"]
+    },
+    {
+      "id": "odd-symmetry",
+      "statement": "S_N 与方波同为奇函数：S_N(-t) = -S_N(t)",
+      "oracleIds": ["odd-symmetry-test"]
+    }
+  ],
+  "edgeCases": [
+    {
+      "id": "gibbs",
+      "setup": "把 N 从 9 增大到 201，观察跳变附近的峰值",
+      "expected": "过冲不消失，峰值稳定在 1.179 附近，只是振荡区域变窄",
+      "oracleIds": ["gibbs-test"]
+    },
+    {
+      "id": "n-equals-1",
+      "setup": "把 N 设为 1，只保留基波",
+      "expected": "曲线是纯正弦，与方波差距很大；这说明单项无法体现跳变",
+      "oracleIds": ["rms-test"]
+    },
+    {
+      "id": "slow-convergence",
+      "setup": "把波形切到三角波，比较相同 N 下的 RMS 误差",
+      "expected": "三角波按 1/n² 衰减，误差下降远快于方波的 1/n",
+      "oracleIds": ["rms-test", "triangle-decay-test"]
+    }
+  ],
+  "explanation": "方波的傅里叶系数为 b_n=4/(nπ)（仅奇 n），系数按 1/n 缓慢衰减，所以有限项之和始终在跳变处留下振荡；偶次项因半波对称性消失，跳变处的部分和恒等于跳变中点。",
+  "oracles": [
+    {
+      "id": "coefficient-test",
+      "kind": "analytical",
+      "description": "解析系数与独立中点数值积分逐项比对，覆盖三种波形与 n=0..9",
+      "testFile": "src/math/fourier.test.ts",
+      "testName": "analytical coefficients agree with independent midpoint integration"
+    },
+    {
+      "id": "square-parity-test",
+      "kind": "property",
+      "description": "方波所有余弦项为零，且偶次正弦项为零",
+      "testFile": "src/math/fourier.test.ts",
+      "testName": "square wave has no cosine terms and only odd sine terms"
+    },
+    {
+      "id": "pi-half-test",
+      "kind": "reference",
+      "description": "S_N(π/2) 与 Leibniz 级数部分和交叉核验，确认收敛到 1",
+      "testFile": "src/math/fourier.test.ts",
+      "testName": "partial sums of the square wave converge to 1 at t = pi/2"
+    },
+    {
+      "id": "jump-midpoint-test",
+      "kind": "analytical",
+      "description": "任意 N 下 S_N(0)=0，跳变处取值恒为跳变中点",
+      "testFile": "src/math/fourier.test.ts",
+      "testName": "S_N at a jump stays at the midpoint for every N"
+    },
+    {
+      "id": "gibbs-test",
+      "kind": "reference",
+      "description": "过冲峰值收敛到 Gibbs 常数 1.179，而非收敛到 1",
+      "testFile": "src/math/fourier.test.ts",
+      "testName": "the Gibbs overshoot converges to a constant above 1, not to 1"
+    },
+    {
+      "id": "rms-test",
+      "kind": "property",
+      "description": "剔除跳变邻域后 RMS 误差对三种波形随 N 单调下降",
+      "testFile": "src/math/fourier.test.ts",
+      "testName": "rms error decreases monotonically for every wave"
+    },
+    {
+      "id": "odd-symmetry-test",
+      "kind": "property",
+      "description": "部分和在取样点上满足奇对称 S_N(-t)=-S_N(t)",
+      "testFile": "src/math/fourier.test.ts",
+      "testName": "every partial sum is odd-symmetric for odd waves"
+    },
+    {
+      "id": "triangle-decay-test",
+      "kind": "analytical",
+      "description": "三角波系数按 1/n² 衰减，相同 N 下误差小于方波",
+      "testFile": "src/math/fourier.test.ts",
+      "testName": "triangle wave is even, has zero mean, and decays like 1/n^2"
+    }
+  ],
+  "implementation": {
+    "componentPath": "src/components/FourierSeriesLab.tsx",
+    "mathPath": "src/math/fourier.ts"
+  }
+}

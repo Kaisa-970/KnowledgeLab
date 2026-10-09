@@ -29,7 +29,9 @@ test('matrix presets change computation and rendered basis vectors', async ({ pa
 })
 
 test('slider changes transformation without editing the lesson shell', async ({ page }) => {
-  await page.goto('/')
+  // The root path is the course index, so go to the chapter explicitly rather
+  // than relying on "/" resolving to this course.
+  await page.goto('/courses/linear-algebra/linear-transformations')
   const plot = page.locator('svg.plot')
   await page.getByRole('slider', { name: '矩阵元素 a' }).fill('1.5')
   await expect(plot).toHaveAttribute('aria-label', /第一基向量 \(1\.5, 0\.0\)/)

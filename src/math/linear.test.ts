@@ -38,3 +38,19 @@ test('rotation by 90 degrees has determinant 1', () => {
   assert.deepEqual(transform(R, { x: 1, y: 0 }), { x: 0, y: 1 })
   assert.equal(determinant(R), 1)
 })
+
+test('signed area agrees with an independent cross-product reference', () => {
+  const A = { a: 2, b: -1, c: 3, d: 4 }
+  // Independent reference: parallelogram cross product from transformed basis,
+  // compared against the analytical determinant of the untransformed matrix.
+  const p = transform(A, { x: 1, y: 0 })
+  const q = transform(A, { x: 0, y: 1 })
+  const signedArea = p.x * q.y - p.y * q.x
+  assert.equal(signedArea, 11)
+  assert.equal(determinant(A), signedArea)
+  const reverse = { a: -1, b: 0, c: 0, d: 1 }
+  const u = transform(reverse, { x: 1, y: 0 })
+  const v = transform(reverse, { x: 0, y: 1 })
+  assert.equal(u.x * v.y - u.y * v.x, -1)
+  assert.equal(determinant(reverse), -1)
+})

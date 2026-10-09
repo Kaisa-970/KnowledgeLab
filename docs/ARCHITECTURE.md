@@ -10,7 +10,7 @@ React 交互组件 ──┤
 ```
 
 文件结构：
-- `src/content/courses/*/course.json`：课程元数据与知识依赖；
+- `src/content/courses/*/course.plan.json`：课程元数据与知识依赖；
 - `src/content/lessons/*.mdx`：课程内容/交互引用；
 - `src/components/*`：可复用 UI 与实验；
 - `src/math/*`：数学算法纯函数；
@@ -55,7 +55,7 @@ React 交互组件 ──┤
 
 ## 技术债与未来决策
 
-- 初始内容注册在 `src/App.tsx`，尚无自动课程路由或动态索引。
+- **历史状态（Phase 0）**：初始内容硬编码在 `src/App.tsx`；Phase 0.5 已改为基于可信文件的构建时路由注册。
 - 数据采用简单 JSON，未来再增加 Schema 校验和知识图数据库。
 - 尚无可视化 E2E 测试、课程审核 UI、Agent 服务、生产部署。
 - 第一次交互原型用 SVG，后续选择统一坐标/可视化工具时应保留现有正确性测试。

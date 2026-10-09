@@ -54,6 +54,13 @@
       "oracleIds": [
         "linearity-test"
       ]
+    },
+    {
+      "id": "signed-area",
+      "statement": "det(A) 与变换后的单位基向量叉积一致，给出有向面积倍率",
+      "oracleIds": [
+        "signed-area-test"
+      ]
     }
   ],
   "edgeCases": [
@@ -103,6 +110,13 @@
       "description": "反射矩阵的行列式是负数",
       "testFile": "src/math/linear.test.ts",
       "testName": "det<0 represents orientation reversal"
+    },
+    {
+      "id": "signed-area-test",
+      "kind": "reference",
+      "description": "通过变换后基向量叉积的独立计算与解析结果交叉核验行列式",
+      "testFile": "src/math/linear.test.ts",
+      "testName": "signed area agrees with an independent cross-product reference"
     }
   ],
   "implementation": {

@@ -5,7 +5,7 @@
 ## A. 课程级交付物
 
 每门课建议产生：
-- `course.json`：`id`、`title`、`domain`、`level`、`summary`、`prerequisites`、`learningOutcomes`、`chapters` 等；
+- `course.plan.json`：`id`、`title`、`domain`、`level`、`summary`、`prerequisites`、`learningOutcomes`、`chapters` 等；
 - 章节依赖图：先修概念、当前章节与后续知识节点；
 - 每章一份 MDX，独立交互组件放 `src/components`；
 - 关键实验说明（模板见下）与测试；

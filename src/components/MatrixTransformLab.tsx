@@ -29,7 +29,7 @@ function fmt(value: number) {
 
 export default function MatrixTransformLab() {
   const [matrix, setMatrix] = useState<Matrix2>(identity)
-  const [dragging, setDragging] = useState<'e1' | 'e2' | null>(null)
+  const dragging = useRef<'e1' | 'e2' | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
   const e1 = transform(matrix, { x: 1, y: 0 })
   const e2 = transform(matrix, { x: 0, y: 1 })
@@ -40,8 +40,8 @@ export default function MatrixTransformLab() {
       ? '保持方向：面积按 det(A) 的绝对值缩放'
       : '方向翻转：有向面积变号'
 
-  function handleMove(event: PointerEvent<SVGSVGElement>) {
-    if (!dragging || !svgRef.current) return
+  function handleMove(event: PointerEvent<SVGCircleElement>, basis: 'e1' | 'e2') {
+    if (dragging.current !== basis || !svgRef.current) return
     const bounds = svgRef.current.getBoundingClientRect()
     // SVG preserves 1:1 aspect ratio; the rendered width defines its scale.
     const k = bounds.width / 440
@@ -49,15 +49,15 @@ export default function MatrixTransformLab() {
       x: clamp(((event.clientX - bounds.left) / k - origin.x) / pixelsPerUnit),
       y: clamp((origin.y - (event.clientY - bounds.top) / k) / pixelsPerUnit),
     }
-    setMatrix((old) => dragging === 'e1'
+    setMatrix((old) => basis === 'e1'
       ? { ...old, a: pos.x, c: pos.y }
       : { ...old, b: pos.x, d: pos.y })
   }
 
   function startDrag(event: PointerEvent<SVGCircleElement>, basis: 'e1' | 'e2') {
     event.preventDefault()
-    setDragging(basis)
-    svgRef.current?.setPointerCapture(event.pointerId)
+    dragging.current = basis
+    event.currentTarget.setPointerCapture(event.pointerId)
   }
 
   function input(field: keyof Matrix2, label: string) {
@@ -102,9 +102,6 @@ export default function MatrixTransformLab() {
             className="plot"
             role="img"
             aria-label={'二维变换网格。第一基向量 (' + fmt(e1.x) + ', ' + fmt(e1.y) + ')；第二基向量 (' + fmt(e2.x) + ', ' + fmt(e2.y) + ')'}
-            onPointerMove={handleMove}
-            onPointerUp={() => setDragging(null)}
-            onPointerCancel={() => setDragging(null)}
           >
             <defs>
               <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#e65b5b" /></marker>
@@ -123,8 +120,8 @@ export default function MatrixTransformLab() {
             <circle cx={origin.x} cy={origin.y} r="3.2" fill="#39465a" />
             <line x1={origin.x} y1={origin.y} x2={pixel(e1).x} y2={pixel(e1).y} stroke="#e65b5b" strokeWidth="3.3" markerEnd="url(#arrow-red)" />
             <line x1={origin.x} y1={origin.y} x2={pixel(e2).x} y2={pixel(e2).y} stroke="#1686c2" strokeWidth="3.3" markerEnd="url(#arrow-blue)" />
-            <circle className="drag-handle" cx={pixel(e1).x} cy={pixel(e1).y} r="10" stroke="#e65b5b" strokeWidth="2" fill="#fff" onPointerDown={(e) => startDrag(e,'e1')} />
-            <circle className="drag-handle" cx={pixel(e2).x} cy={pixel(e2).y} r="10" stroke="#1686c2" strokeWidth="2" fill="#fff" onPointerDown={(e) => startDrag(e,'e2')} />
+            <circle className="drag-handle" cx={pixel(e1).x} cy={pixel(e1).y} r="10" stroke="#e65b5b" strokeWidth="2" fill="#fff" onPointerDown={(e) => startDrag(e,'e1')} onPointerMove={(e) => handleMove(e,'e1')} onPointerUp={() => { dragging.current = null }} onPointerCancel={() => { dragging.current = null }} />
+            <circle className="drag-handle" cx={pixel(e2).x} cy={pixel(e2).y} r="10" stroke="#1686c2" strokeWidth="2" fill="#fff" onPointerDown={(e) => startDrag(e,'e2')} onPointerMove={(e) => handleMove(e,'e2')} onPointerUp={() => { dragging.current = null }} onPointerCancel={() => { dragging.current = null }} />
             <text x={pixel(e1).x+14} y={pixel(e1).y-10} fill="#ba3939" fontSize="15" fontWeight="700">e₁'</text>
             <text x={pixel(e2).x+14} y={pixel(e2).y-10} fill="#096594" fontSize="15" fontWeight="700">e₂'</text>
           </svg>

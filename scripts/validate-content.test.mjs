@@ -20,6 +20,31 @@ test('plan rejects chapters without labIds and coreQuestion', () => {
   delete data.chapters[0].coreQuestion
   assert.equal(validatePlanShape(data), false)
 })
+test('a chapter may use coreTask instead of interactive labs', () => {
+  const data = copy(plan)
+  data.chapters[0].coreTask = '在不使用实验的情况下，手算三个矩阵的行列式并解释符号'
+  delete data.chapters[0].labIds
+  assert.equal(validatePlanShape(data), true)
+})
+test('repository validation accepts a chapter with coreTask and no labs', () => {
+  const data = copy(plan)
+  data.chapters[0].coreTask = '在不使用实验的情况下，手算三个矩阵的行列式并解释符号'
+  delete data.chapters[0].labIds
+  const readPlan = (filename) => filename === 'src/content/courses/linear-algebra/course.plan.json'
+    ? JSON.stringify(data)
+    : read(filename)
+  assert.deepEqual(validateRepository(readPlan), [])
+})
+test('a chapter needs either labs or a coreTask', () => {
+  const data = copy(plan)
+  data.chapters[0].labIds = []
+  assert.equal(validatePlanShape(data), false)
+})
+test('declaring both coreTask and labs is rejected', () => {
+  const data = copy(plan)
+  data.chapters[0].coreTask = '额外任务'
+  assert.match(validateCourseLinks(data, {[lab.id]:lab}, read).join(' '), /declares both coreTask and labIds/)
+})
 test('lab rejects missing invariant oracle link', () => {
   const data = copy(lab)
   data.invariants[0].oracleIds = []

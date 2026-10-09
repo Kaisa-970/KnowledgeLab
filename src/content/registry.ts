@@ -9,7 +9,10 @@ export type Chapter = {
   conceptIds: string[]
   prerequisites: string[]
   dependsOnChapterIds: string[]
-  labIds: string[]
+  // A chapter carries interactive labs, or a verifiable static task when no
+  // experiment is appropriate; the schema requires at least one of the two.
+  labIds?: string[]
+  coreTask?: string
   lessonPath: string
   status: 'prototype' | 'reviewed' | 'published'
 }
@@ -46,6 +49,10 @@ export function getLessonComponent(chapter: Chapter): LessonComponent | undefine
   const filename = chapter.lessonPath.slice(prefix.length)
   if (!/^[a-z0-9-]+\.mdx$/.test(filename)) return undefined
   return lessonModules['./lessons/' + filename]
+}
+
+export function chapterLabIds(chapter: Chapter): string[] {
+  return chapter.labIds ?? []
 }
 
 export function chapterUrl(courseId: string, chapterId: string): string {

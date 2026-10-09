@@ -1,4 +1,4 @@
-import { chapterUrl, courses, getLessonComponent, getRoute } from './content/registry'
+import { chapterLabIds, chapterUrl, courses, getLessonComponent, getRoute } from './content/registry'
 
 const domains = [
   { id: 'mathematics', name: '数学实验室', symbol: '∑' },
@@ -88,7 +88,8 @@ export default function App() {
             <span className="toc-label">课程进度</span>
             <strong>{chapter?.title || '请选择课程'}</strong>
             {chapter && <p>核心问题：{chapter.coreQuestion}</p>}
-            {chapter?.labIds.map((id) => <a key={id} href="#lab">交互实验：{id}</a>)}
+            {chapter && chapterLabIds(chapter).map((id) => <a key={id} href="#lab">交互实验：{id}</a>)}
+            {chapter?.coreTask && <p>核心任务：{chapter.coreTask}</p>}
             <div className="toc-tip"><strong>学习建议</strong><p>先预测变化，再动手实验，最后阅读推导。结果与预测不一致时，追问原因。</p></div>
           </aside>
         </div>

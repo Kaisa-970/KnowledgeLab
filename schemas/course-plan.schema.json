@@ -82,6 +82,33 @@
     }
   },
   "$defs": {
+    "withCoreTask": {
+      "type": "object",
+      "properties": {
+        "coreTask": {
+          "$ref": "#/$defs/nonempty"
+        }
+      },
+      "required": [
+        "coreTask"
+      ]
+    },
+    "withLabs": {
+      "type": "object",
+      "properties": {
+        "labIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        }
+      },
+      "required": [
+        "labIds"
+      ]
+    },
     "id": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9-]*$"
@@ -128,7 +155,19 @@
         "lessonPath",
         "status"
       ],
+      "anyOf": [
+        {
+          "$ref": "#/$defs/withCoreTask"
+        },
+        {
+          "$ref": "#/$defs/withLabs"
+        }
+      ],
       "properties": {
+        "coreTask": {
+          "type": "string",
+          "description": "当该节不适合交互实验时，替代 labIds 的可验证静态思考任务。"
+        },
         "id": {
           "$ref": "#/$defs/id"
         },
@@ -137,6 +176,13 @@
         },
         "coreQuestion": {
           "$ref": "#/$defs/nonempty"
+        },
+        "dependsOnChapterIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
         },
         "learningObjectives": {
           "type": "array",
@@ -176,13 +222,6 @@
             "reviewed",
             "published"
           ]
-        },
-        "dependsOnChapterIds": {
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/id"
-          }
         }
       }
     },

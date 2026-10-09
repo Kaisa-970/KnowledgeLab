@@ -47,6 +47,7 @@ test('dragging a basis endpoint updates the displayed vector and transformed gri
   const beforeText = await plot.getAttribute('aria-label')
   const beforeX = await gridLine.getAttribute('x1')
   const handle = page.locator('.drag-handle').first()
+  await handle.scrollIntoViewIfNeeded()
   const box = await handle.boundingBox()
   expect(box).not.toBeNull()
   if (!box) return

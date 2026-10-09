@@ -8,7 +8,7 @@ test('the course index lists both courses and links to each chapter', async ({ p
   // The sidebar repeats every chapter title, so scope to the index body and match
   // the link text exactly rather than by substring.
   const index = page.locator('.index-course')
-  await expect(index.getByRole('link', { name: '为什么用正弦波去拼一个方波？', exact: true })).toBeVisible()
+  await expect(index.getByRole('link', { name: '为什么方波越拼越像，边缘却总有过冲？', exact: true })).toBeVisible()
   await expect(index.getByRole('link', { name: '矩阵究竟是什么？', exact: true })).toBeVisible()
 })
 
@@ -19,7 +19,7 @@ test('an unknown chapter reports a missing route, not the index', async ({ page 
 
 test('the Fourier lesson renders its lab on desktop and mobile', async ({ page }, testInfo) => {
   await page.goto(LESSON)
-  await expect(page.getByRole('heading', { name: '为什么用正弦波去拼一个方波？' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '为什么方波越拼越像，边缘却总有过冲？' })).toBeVisible()
   await expect(page.getByRole('heading', { name: '用正弦波拼出方波' })).toBeVisible()
   if (testInfo.project.name === 'mobile-chromium') {
     await expect(page.getByRole('combobox', { name: '选择课程章节' })).toHaveValue(LESSON)

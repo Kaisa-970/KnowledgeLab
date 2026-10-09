@@ -1,0 +1,106 @@
+import MatrixTransformLab from '../../components/MatrixTransformLab'
+
+<div className="lesson-meta"><span>数学 · 线性代数</span><span>第 01 节 / 预计 15–20 分钟</span></div>
+
+# 矩阵究竟是什么？
+
+<div className="lead">矩阵不只是数字排成的表。更值得记住的是：它描述了一个空间如何被变换。只要知道两个基向量去了哪里，就能推算平面中每个向量的新位置。</div>
+
+<div className="objectives">
+  <strong>本节目标</strong>
+  <p>通过变形网格理解矩阵的每一列、推导矩阵乘向量，并解释行列式的几何意义。先修：坐标、向量加法与数乘。</p>
+</div>
+
+## 01 / 从一个问题开始
+
+假设我们把整个平面向右拉伸，再向上倾斜。平面上有无数个点：难道需要记录每个点新的位置吗？
+
+答案是**不需要**。如果变换保持“相加以后再变换”和“先变换再相加”等价，那么只需记录基向量的去向。
+
+下面不要急着看公式。先尝试移动两个彩色箭头，观察整张网格。
+
+<MatrixTransformLab />
+
+## 02 / 为什么只需要两列数字？
+
+在平面中，我们选两个基向量：
+
+$$
+\mathbf e_1=\begin{bmatrix}1\\0\end{bmatrix},
+\qquad
+\mathbf e_2=\begin{bmatrix}0\\1\end{bmatrix}
+$$
+
+任何向量都可写成这两个基向量的线性组合：
+
+$$
+\mathbf v=x\mathbf e_1+y\mathbf e_2
+$$
+
+对于线性变换 $T$，必须满足**可加性**与**齐次性**：
+
+$$
+T(\mathbf u+\mathbf v)=T(\mathbf u)+T(\mathbf v),
+\qquad T(k\mathbf v)=kT(\mathbf v)
+$$
+
+因此：
+
+$$
+T(\mathbf v)=xT(\mathbf e_1)+yT(\mathbf e_2)
+$$
+
+如果令 $T(\mathbf e_1)=(a,c)^\mathsf T$，$T(\mathbf e_2)=(b,d)^\mathsf T$，就有：
+
+$$
+\begin{bmatrix}x'\\y'\end{bmatrix}
+=
+\underbrace{\begin{bmatrix}a&b\\c&d\end{bmatrix}}_{A}
+\begin{bmatrix}x\\y\end{bmatrix}
+=
+\begin{bmatrix}ax+by\\cx+dy\end{bmatrix}
+$$
+
+**核心发现：矩阵的第一列就是第一个基向量变换后的位置；第二列是第二个基向量的去向。** 不需要逐点储存一整张网格。
+
+## 03 / 行列式到底在测量什么？
+
+试试上面实验中的「面积塌缩」和「方向翻转」。
+
+$$
+\det(A)=ad-bc
+$$
+
+对于二维线性变换，行列式代表**有向面积缩放因子**：绝对值给面积倍率，符号表明是否改变方向。
+
+- $\det(A)>0$：面积倍率为 $\det(A)$，方向不翻转。
+- $\det(A)<0$：面积倍率为 $|\det(A)|$，方向翻转。
+- $\det(A)=0$：两个变换后的基向量共线（也可能为零向量），整个平面的二维面积塌缩。
+
+注意：**行列式不是长度缩放因子**。不同方向的长度可能变化不同，但所有二维区域的面积变化倍率相同。
+
+## 04 / 自己检验线性性
+
+观察矩阵 $A=\begin{bmatrix}2&1\\0&1\end{bmatrix}$。
+
+1. 在纸上预测 $T(\mathbf e_1)$ 和 $T(\mathbf e_2)$。
+2. 再计算 $T(2\mathbf e_1+3\mathbf e_2)$。
+3. 令实验矩阵为 $a=2,b=1,c=0,d=1$，验证前两列是否符合预测。
+4. 想一想：为什么改变第一列时，第二个基向量的位置不变？
+
+<details className="answer">
+  <summary>查看推导与答案</summary>
+  <p>第一列给 $T(\mathbf e_1)=(2,0)$，第二列给 $T(\mathbf e_2)=(1,1)$；由线性性，$T(2\mathbf e_1+3\mathbf e_2)=2(2,0)+3(1,1)=(7,3)$。改变第一列只改变 $T(\mathbf e_1)$，但会影响包含 $\mathbf e_1$ 分量的所有其他向量。</p>
+</details>
+
+## 05 / 它与之后的知识有什么关系？
+
+理解矩阵是**对空间的变换**，接下来会自然遇到几个问题：
+
+- 当变换把空间压扁，是什么信息丢失了？→ **线性相关与秩**
+- 有没有方向被变换后仍保持在同一直线上？→ **特征向量与特征值**
+- 能否把任意变换拆成旋转与拉伸？→ **SVD**
+- 为什么 PCA 能从点云中提取主要方向？→ **协方差矩阵与特征分解**
+- 在计算机图形学中，顶点坐标如何随模型与相机矩阵变化？→ **坐标空间与渲染管线**
+
+<div className="next-card"><strong>下一步：线性相关与秩</strong><p>当两个变换后的基向量落到同一条线上时，平面究竟失去了多少自由度？</p><span>课程规划中 · 尚未发布</span></div>

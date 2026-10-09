@@ -1,10 +1,14 @@
 import { test, expect } from '@playwright/test'
 
-test('lesson is discovered by the course registry', async ({ page }) => {
+test('lesson is discovered and navigable on desktop/mobile', async ({ page }, testInfo) => {
   await page.goto('/courses/linear-algebra/linear-transformations')
   await expect(page.getByRole('heading', { name: '矩阵究竟是什么？' })).toBeVisible()
   await expect(page.getByRole('heading', { name: '拖动基向量，改变整个空间' })).toBeVisible()
-  await expect(page.getByRole('link', { name: /矩阵究竟是什么/ })).toBeVisible()
+  if (testInfo.project.name === 'mobile-chromium') {
+    await expect(page.getByRole('combobox', { name: '选择课程章节' })).toHaveValue('/courses/linear-algebra/linear-transformations')
+  } else {
+    await expect(page.getByRole('link', { name: /矩阵究竟是什么/ })).toBeVisible()
+  }
 })
 
 test('matrix presets change computation and rendered basis vectors', async ({ page }) => {

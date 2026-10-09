@@ -100,3 +100,6 @@ button { cursor:pointer; }
 .lab-footnote { margin:0!important; border-top:1px solid #edf0f3; padding:12px 21px; color:#8796a6!important; font-size:11px!important; line-height:1.7!important; }
 @media (max-width:1150px) { .layout { grid-template-columns:minmax(0,1fr); max-width:900px; } .toc { display:none; } }
 @media (max-width:760px) { .app-shell { display:block; } .sidebar { position:static; height:auto; padding:10px 15px; border-right:0; border-bottom:1px solid #e7ebf0; } .brand { padding:5px 0; font-size:17px; } .sidebar-caption,.sidebar .nav-domain,.course-title,.lesson-link,.sidebar-bottom { display:none; } .topbar { height:48px; padding:0 17px; } .layout { padding:28px 17px 60px; } .lab-body { grid-template-columns:1fr; } .plot-frame { border-right:0; border-bottom:1px solid #edf0f3; } .lab-heading { padding:17px; } .lab-panel { padding:18px; } .lesson-meta { gap:12px; flex-wrap:wrap; } .lesson-article h2 { margin-top:40px; } }
+
+.mobile-course-nav { display:none; }
+@media (max-width:760px) { .mobile-course-nav { display:flex; gap:8px; flex-direction:column; padding:7px 0 4px; } .mobile-course-nav label { font-size:11px; color:#8394a6; } .mobile-course-nav select { width:100%; padding:9px 12px; border:1px solid #d7e2e9; background:#f8fafc; color:#264b64; border-radius:8px; font-size:13px; } }

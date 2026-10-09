@@ -20,6 +20,22 @@ export default function App() {
           <span className="brand-symbol">K<span>·</span></span>
           <span>KnowledgeLab<small>INTERACTIVE LEARNING</small></span>
         </a>
+        <nav className="mobile-course-nav" aria-label="移动端课程导航">
+          <label htmlFor="mobile-lesson">选择课程章节</label>
+          <select
+            id="mobile-lesson"
+            aria-label="选择课程章节"
+            value={course && chapter ? chapterUrl(course.id, chapter.id) : ''}
+            onChange={(event) => { if (event.target.value) window.location.assign(event.target.value) }}
+          >
+            <option value="">请选择章节</option>
+            {courses.flatMap((entry) => entry.chapters.map((item) => (
+              <option key={entry.id + '/' + item.id} value={chapterUrl(entry.id, item.id)}>
+                {entry.title} / {item.title}
+              </option>
+            )))}
+          </select>
+        </nav>
         <div className="sidebar-caption">学习领域</div>
         {domains.map((domain) => (
           <div className={'nav-domain ' + (course?.domain === domain.id ? 'active' : 'inactive')} key={domain.id}>

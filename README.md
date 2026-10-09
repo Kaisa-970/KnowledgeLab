@@ -44,6 +44,19 @@ npm run build
 - SVG：首个二维线性代数实验
 - 后续按需引入 Three.js、代码沙箱、课程 Schema/生成器
 
+## 核心教学理念与 Agent Skills
+
+KnowledgeLab **不是带动画的教科书**：先从值得追问的问题、已有解释的不足和认知转折自然引出知识，再用严格推导建立理解，并把概念放回知识网络中。图示与交互都是可选的解释手段；素材查找**优先一手官方/学术资料核验事实**，但图片嵌入必须另外核实版权/授权，无法复用时用可编辑的原创 SVG/数据图代替。
+
+- `docs/LEARNING_DESIGN.md`：问题驱动的叙事、知识连接、教学质量审查；
+- `docs/VISUAL_ASSETS.md`：视觉素材来源阶梯、授权核查、原创示意和验收；
+- `docs/AGENT_TOOLKIT.md`：Agent 的工具选择与 Skill 路由；
+- `.claude/skills/*/SKILL.md`：可被 Claude 类 Agent 读取的五份工作规程，也由 `AGENTS.md` 指引其他 Agent 显式读取；
+- `docs/templates/learning-brief.md`、`docs/templates/visual-brief.md`：内部设计记录；
+- `docs/examples/fourier-learning-brief.md`：针对已有傅里叶课程的叙事重构示例（**仅设计稿，不是已修改的课程**）。
+
+这些是仓库级规范/Skills，**不是已部署的自治 Agent 服务，也不会自动安装图片检索或生成工具**。
+
 ## 推荐阅读顺序
 
 1. `docs/PRODUCT.md` — 产品边界与设计原则

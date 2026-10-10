@@ -236,7 +236,7 @@ export default function PerspectiveInterpLab() {
             />
           </div>
           <div className="plot-legend">
-            <span><i className="legend-plain" />两张图仅三个顶点位置相同</span>
+            <span><i className="legend-plain" />两张图的三个顶点位置相同，内部格线不同</span>
             <span><i className="legend-accent" />格子形状暴露差异</span>
           </div>
         </div>

@@ -38,14 +38,36 @@ function CourseIndex() {
             <summary>{track.title} <span>{track.modules.length} 个模块</span></summary>
             <ul className="curriculum-modules">
               {track.modules.map((module) => (
-                <li key={module.id}>
+                <li key={module.id} id={'module-' + module.id}>
                   <strong>{module.title}</strong>
                   <p>{module.focus}</p>
+                  {module.dependsOnModuleIds.length > 0 && (
+                    <div className="module-prerequisites">先修模块：{module.dependsOnModuleIds.map((id, index) => {
+                      const prerequisite = curriculum.tracks.flatMap((entry) => entry.modules).find((entry) => entry.id === id)
+                      return <span key={id}>{index > 0 ? '、' : ''}<a href={'#module-' + id} onClick={() => {
+                        const details = document.getElementById('module-' + id)?.closest('details')
+                        if (details) details.open = true
+                      }}>{prerequisite?.title}</a></span>
+                    })}</div>
+                  )}
                   {module.courseIds.map((id) => {
                     const course = courses.find((item) => item.id === id)
                     return course ? <a key={id} href={chapterUrl(id, course.chapters[0].id)}>{course.title} · 已收录</a> : null
                   })}
                   {module.plannedCourses.map((item) => <span className="curriculum-planned" key={item.id}>{item.title} · 规划中</span>)}
+                  {module.plannedCourses.map((item) => 'learningDesign' in item && item.learningDesign ? (
+                    <details className="planned-course-design" key={item.id}>
+                      <summary>{item.title} · 学习路线（规划）</summary>
+                      <p>{item.scope}</p>
+                      <strong>进入前需要</strong>
+                      <ul>{item.learningDesign.prerequisites.map((text) => <li key={text}>{text}</li>)}</ul>
+                      <strong>学习目标</strong>
+                      <ul>{item.learningDesign.learningOutcomes.map((text) => <li key={text}>{text}</li>)}</ul>
+                      <ol>{item.learningDesign.chapters.map((chapter) => (
+                        <li key={chapter.id}><strong>{chapter.title}</strong><p>{chapter.coreQuestion}</p><p>目标：{chapter.outcome}</p></li>
+                      ))}</ol>
+                    </details>
+                  ) : null)}
                 </li>
               ))}
             </ul>

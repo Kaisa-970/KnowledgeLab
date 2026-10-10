@@ -213,6 +213,12 @@ button { cursor:pointer; }
 .curriculum-modules a { color:#17877c; font-size:12px; font-weight:600; }
 .curriculum-modules a:hover { text-decoration:underline; }
 .curriculum-planned { color:#9ea9b6; font-size:12px; }
+.module-prerequisites { font-size:12px; color:#526779; }
+.planned-course-design { width:100%; min-width:0; }
+.curriculum-track .planned-course-design summary { padding:8px 0; border:0; font-size:12px; }
+.planned-course-design ul, .planned-course-design ol { padding-left:22px; font-size:12px; line-height:1.7; }
+.planned-course-design li { margin:8px 0; overflow-wrap:anywhere; }
+.curriculum-modules>li { scroll-margin-top:80px; }
 @media(max-width:760px) {
   .chapter-badge { flex-wrap:wrap; line-height:1.5; }
   .topbar-path { max-width:100%; }

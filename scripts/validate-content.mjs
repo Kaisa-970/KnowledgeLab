@@ -224,6 +224,10 @@ export function validateCurriculum(plans, curriculum) {
       if (courseIds.has(item.id)) problems.push('curriculum: realized course still listed as planned ' + item.id)
       if (planned.has(item.id)) problems.push('curriculum: duplicate planned course ' + item.id)
       if (placements.has(item.id)) problems.push('curriculum: planned course clashes with realized placement ' + item.id)
+      if (item.learningDesign) {
+        checkUnique(item.learningDesign.chapters.map((chapter) => chapter.id), 'curriculum planned chapters ' + item.id, problems)
+        detectCycles(item.learningDesign.chapters, 'id', (chapter) => chapter.dependsOnChapterIds, 'curriculum planned chapter graph ' + item.id, problems)
+      }
       planned.add(item.id)
     }
   }
@@ -274,7 +278,18 @@ export function validateRepository(read = defaultRead, courses = discoverCourses
   }
   problems.push(...validateKnowledgeLinks(validPlans, maps))
   try {
-    problems.push(...validateCurriculum(validPlans, JSON.parse(read('src/content/curriculum/curriculum.json'))))
+    const curriculum = JSON.parse(read('src/content/curriculum/curriculum.json'))
+    const curriculumProblems = validateCurriculum(validPlans, curriculum)
+    problems.push(...curriculumProblems)
+    if (validateCurriculumShape(curriculum)) {
+      for (const track of curriculum.tracks) for (const module of track.modules) for (const planned of module.plannedCourses) {
+        const briefPath = planned.learningDesign?.briefPath
+        if (briefPath) {
+          try { if (!read(briefPath).trim()) problems.push('curriculum: empty learning brief ' + planned.id) }
+          catch { problems.push('curriculum: missing learning brief ' + planned.id) }
+        }
+      }
+    }
   } catch {
     problems.push('curriculum: missing/invalid global curriculum')
   }

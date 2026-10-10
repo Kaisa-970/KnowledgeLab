@@ -8,6 +8,7 @@
 - 唯一规划来源：`src/content/curriculum/curriculum.json`，Schema：`schemas/curriculum.schema.json`。
 - 组织层级：**Track 学科主线 → Module 专题模块 → Course 课程 → Chapter 章节 → Concept 知识节点**。
 - `courseIds` 表示实际课程；`plannedCourses` 仅表示未来主题与范围（`scope`），不是已完成课程。规划课程被实现时，要保持 ID，从 planned 移入同模块的 courseIds。
+- 需要细化的规划课可增加 `learningDesign`：具体先修能力、可检查目标、带先修依赖的章节路线与内部 Brief 路径。它仍是规划，不能提供假章节链接；实现时迁入正式计划并移除原规划，不维护两份路线。目录按需展示路线，并以锚点显示模块先修；先修不等于强制阅读顺序。
 - 每门实际课程通过 `curriculum.trackId/moduleId` 指明**唯一主归属**，并匹配全局目录。`domain` 是粗领域标签。跨领域关系继续由 `knowledge-map.json` 表达为网状链接，不在两条主线复制同一门课程。
 - `dependsOnModuleIds` 只用于有根据的模块级先修关系。个人可以基于已知能力跳过上游内容；树状归属不是个人必须遵循的阅读顺序。
 - 五条主线（数学、图形学与 GPU、机器学习与生成模型、机器人与空间智能、计算机系统）是可演进的**初始系统规划**。

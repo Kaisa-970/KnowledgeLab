@@ -264,3 +264,25 @@ test('global curriculum requires structured nonempty tracks and planned scopes',
   }
   assert.match(validateRepository(noManifest).join(' '), /missing\/invalid global curriculum/)
 })
+
+test('detailed planned courses reject incomplete goals and invalid chapter dependencies', () => {
+  const data = copy(curriculum)
+  const design = data.tracks.find((track) => track.id === 'ai-models').modules.find((module) => module.id === 'generative-models').plannedCourses[0].learningDesign
+  design.chapters[0].dependsOnChapterIds = ['missing-chapter']
+  assert.match(validateCurriculum([plan], data).join(' '), /unknown dependency missing-chapter/)
+  design.chapters[0].dependsOnChapterIds = [design.chapters[1].id]
+  assert.match(validateCurriculum([plan], data).join(' '), /dependency cycle/)
+  design.chapters[0].dependsOnChapterIds = []
+  design.chapters.push(copy(design.chapters[0]))
+  assert.match(validateCurriculum([plan], data).join(' '), /planned chapters.*duplicate ids/)
+  design.learningOutcomes = []
+  assert.equal(validateCurriculumShape(data), false)
+})
+
+test('detailed planned courses require readable learning briefs', () => {
+  const customRead = (name) => {
+    if (name === 'src/content/curriculum/generative-models-brief.md') throw new Error('missing')
+    return read(name)
+  }
+  assert.match(validateRepository(customRead).join(' '), /missing learning brief generative-models/)
+})

@@ -178,7 +178,79 @@
             {
               "id": "generative-models",
               "title": "生成模型系统课程",
-              "scope": "概率建模、采样路径、训练目标与各大生成范式"
+              "scope": "从随机数到数据分布，比较自回归、VAE、GAN、Diffusion 与 Flow Matching 的训练及生成机制；不涵盖具体产品教程和三维资产管线",
+              "learningDesign": {
+                "briefPath": "src/content/curriculum/generative-models-brief.md",
+                "prerequisites": [
+                  "理解网络是输入到输出的可训练函数，能区分训练与推理；不要求先掌握 Transformer",
+                  "能理解随机采样与平均值；条件概率、梯度与数值积分在用到时补充",
+                  "原理与实现路径需要向量、导数和平方误差的基本计算"
+                ],
+                "learningOutcomes": [
+                  "用双峰数据解释预测均值与生成样本为何不同",
+                  "画出各类生成模型的训练与推理数据流，指出各自的监督信号",
+                  "解释 Diffusion 的噪声预测和 Flow Matching 的速度预测如何支持逐步生成",
+                  "区分分布路径、网络预测目标与数值采样器，并解释条件生成和潜空间的作用"
+                ],
+                "chapters": [
+                  {
+                    "id": "sampling-not-averaging",
+                    "title": "为什么平均答案不像任何一个真实样本？",
+                    "coreQuestion": "数据集中在 -2 与 +2 附近，为什么平方误差最小的常数预测 0 反而不是好样本？",
+                    "outcome": "计算均值并说明生成任务需要保留多种可能的概率结构",
+                    "dependsOnChapterIds": []
+                  },
+                  {
+                    "id": "noise-to-distribution",
+                    "title": "随机数怎样变得有结构？",
+                    "coreQuestion": "从高斯随机数出发，怎样使大量输出落入两团目标数据，而不只追求一个输出正确？",
+                    "outcome": "区分单个样本轨迹与整批样本分布，解释随机起点与生成映射的分工",
+                    "dependsOnChapterIds": ["sampling-not-averaging"]
+                  },
+                  {
+                    "id": "generation-routes",
+                    "title": "为什么有的逐个生成，有的一次解码？",
+                    "coreQuestion": "自回归、VAE 和 GAN 用什么训练信号，从哪里开始生成？",
+                    "outcome": "追踪三种机制的输入输出，区分 VAE 的重建与独立生成；ELBO 与对抗目标按需推导",
+                    "dependsOnChapterIds": ["noise-to-distribution"]
+                  },
+                  {
+                    "id": "diffusion-training",
+                    "title": "把数据弄坏，为什么能制造训练题目？",
+                    "coreQuestion": "已知的加噪过程怎样提供监督标签，模型在不同噪声程度下学到了什么？",
+                    "outcome": "写出加噪输入与噪声预测损失，说明同一输入可能有多个来源及条件平均预测的含义",
+                    "dependsOnChapterIds": ["noise-to-distribution"]
+                  },
+                  {
+                    "id": "diffusion-sampling",
+                    "title": "没有原图，凭什么还能去噪？",
+                    "coreQuestion": "推理从新噪声出发，为什么反向更新可能形成数据样本，而不是恢复某张隐藏原图？",
+                    "outcome": "追踪反向生成步骤，连接噪声预测与 score，并说明模型近似和采样误差",
+                    "dependsOnChapterIds": ["diffusion-training"]
+                  },
+                  {
+                    "id": "flow-matching",
+                    "title": "能不能直接教模型往哪里移动？",
+                    "coreQuestion": "给噪声与数据之间规定路径，如何得到速度标签，生成时为何不需要知道终点？",
+                    "outcome": "计算线性插值的速度目标，区分条件路径、平均速度场与 ODE 生成轨迹",
+                    "dependsOnChapterIds": ["noise-to-distribution"]
+                  },
+                  {
+                    "id": "shared-probability-paths",
+                    "title": "去噪与移动，究竟共享了什么？",
+                    "coreQuestion": "Diffusion 也能用 ODE 采样，为什么不能按随机或确定性简单分类？",
+                    "outcome": "分别比较分布路径、预测参数化、训练目标和采样器；按需推导连续性方程与 probability flow ODE",
+                    "dependsOnChapterIds": ["diffusion-sampling", "flow-matching"]
+                  },
+                  {
+                    "id": "conditioning-and-latents",
+                    "title": "文字怎样控制生成，为什么在潜空间运行？",
+                    "coreQuestion": "条件、guidance、autoencoder 与去噪网络各自改变了生成链的哪一部分？",
+                    "outcome": "标注条件和张量流向，区分模型架构、生成机制和求解步数，说明压缩与引导的代价",
+                    "dependsOnChapterIds": ["generation-routes", "shared-probability-paths"]
+                  }
+                ]
+              }
             }
           ]
         },

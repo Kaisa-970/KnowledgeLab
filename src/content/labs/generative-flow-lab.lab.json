@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "generative-flow-lab",
+  "question": "当前状态的局部速度怎样把高斯噪声的整体分布变成双峰？",
+  "prediction": "先判断进度为 1 时样本会全去均值还是分到两侧；再预测恰好从对称中心出发会怎样。",
+  "controls": [
+    { "id": "time", "label": "生成进度", "description": "从 0 到 1 手动改变积分终止时间", "kind": "slider" },
+    { "id": "weight", "label": "左侧概率", "description": "0 到 1 改变目标混合权重", "kind": "slider" },
+    { "id": "initial", "label": "所选起点", "description": "-2 到 2 选择一条轨迹的随机初值", "kind": "slider" },
+    { "id": "steps", "label": "积分步数", "description": "10、100、200 步中点法比较有限步误差", "kind": "input" },
+    { "id": "presets", "label": "边界与重置", "description": "终点、75% 权重、对称中心和默认值", "kind": "preset" }
+  ],
+  "visibleOutputs": [
+    { "id": "density", "label": "概率密度", "description": "当前解析密度与目标密度同轴对照" },
+    { "id": "samples", "label": "有限样本", "description": "80 个固定噪声起点的积分输出" },
+    { "id": "trajectory", "label": "所选轨迹", "description": "位置随生成进度变化及其当前速度" }
+  ],
+  "invariants": [
+    { "id": "mass", "statement": "解析路径密度总质量为 1，均值随 t 线性变化", "oracleIds": ["mass-reference"] },
+    { "id": "continuity", "statement": "解析速度场与密度满足连续性方程", "oracleIds": ["continuity-reference"] },
+    { "id": "shared-calculation", "statement": "当前数值与红点、轨迹由同一积分结果生成", "oracleIds": ["single-gaussian"] }
+  ],
+  "edgeCases": [
+    { "id": "single-mode", "setup": "权重为 0 或 1", "expected": "变成单高斯，积分结果逼近解析缩放和平移", "oracleIds": ["single-gaussian"] },
+    { "id": "central", "setup": "权重为 0.5，起点为 0", "expected": "对称中心速度为 0；中心轨迹停住但其他轨迹移动", "oracleIds": ["symmetry"] }
+  ],
+  "explanation": "实验使用线性独立耦合路径的解析条件平均速度，以数值积分生成新轨迹；没有训练神经网络，密度与有限步样本不宣称完全相等。",
+  "oracles": [
+    { "id": "mass-reference", "kind": "reference", "description": "独立中点数值积分验证质量和一阶矩", "testFile": "src/math/generative.test.ts", "testName": "path density has normalized mass and correct endpoint moments" },
+    { "id": "continuity-reference", "kind": "reference", "description": "时间与空间有限差分检验密度通量残差", "testFile": "src/math/generative.test.ts", "testName": "analytic velocity satisfies the continuity equation by finite differences" },
+    { "id": "single-gaussian", "kind": "analytical", "description": "独立解析单高斯传输 x=mu+s*z 验证积分并检验收敛", "testFile": "src/math/generative.test.ts", "testName": "midpoint sampler agrees with single Gaussian exact transport and converges" },
+    { "id": "symmetry", "kind": "property", "description": "对称速度奇函数及中央固定点", "testFile": "src/math/generative.test.ts", "testName": "balanced flow is odd and has a zero central trajectory" }
+  ],
+  "implementation": { "componentPath": "src/components/GenerativeFlowLab.tsx", "mathPath": "src/math/generative.ts" }
+}

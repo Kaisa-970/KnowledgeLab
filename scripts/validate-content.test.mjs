@@ -190,7 +190,7 @@ test('knowledge maps reject unknown endpoints, duplicates, self links, and prere
 })
 
 test('global curriculum covers all existing courses exactly once', () => {
-  const plans = ['linear-algebra', 'fourier-analysis', 'graphics-rasterization']
+  const plans = fs.readdirSync(path.join(root, 'src/content/courses'))
     .map((id) => JSON.parse(read('src/content/courses/' + id + '/course.plan.json')))
   assert.equal(validateCurriculumShape(curriculum), true)
   assert.deepEqual(validateCurriculum(plans, curriculum), [])
@@ -267,7 +267,15 @@ test('global curriculum requires structured nonempty tracks and planned scopes',
 
 test('detailed planned courses reject incomplete goals and invalid chapter dependencies', () => {
   const data = copy(curriculum)
-  const design = data.tracks.find((track) => track.id === 'ai-models').modules.find((module) => module.id === 'generative-models').plannedCourses[0].learningDesign
+  const design = {
+    briefPath: 'src/content/curriculum/example-brief.md',
+    prerequisites: ['basic functions'], learningOutcomes: ['explain sampling'],
+    chapters: [
+      {id: 'first', title: 'First topic', coreQuestion: 'Why sample?', outcome: 'Explain samples', dependsOnChapterIds: []},
+      {id: 'second', title: 'Second topic', coreQuestion: 'How sample?', outcome: 'Compute samples', dependsOnChapterIds: ['first']}
+    ]
+  }
+  data.tracks[0].modules[0].plannedCourses.push({id: 'example-planned', title: 'Example course', scope: 'Example scope', learningDesign: design})
   design.chapters[0].dependsOnChapterIds = ['missing-chapter']
   assert.match(validateCurriculum([plan], data).join(' '), /unknown dependency missing-chapter/)
   design.chapters[0].dependsOnChapterIds = [design.chapters[1].id]
@@ -280,9 +288,15 @@ test('detailed planned courses reject incomplete goals and invalid chapter depen
 })
 
 test('detailed planned courses require readable learning briefs', () => {
+  const data = copy(curriculum)
+  data.tracks[0].modules[0].plannedCourses.push({id: 'example-planned', title: 'Example course', scope: 'Example scope', learningDesign: {
+    briefPath: 'src/content/curriculum/example-brief.md', prerequisites: ['basic functions'], learningOutcomes: ['explain sampling'],
+    chapters: [{id: 'first', title: 'First topic', coreQuestion: 'Why sample?', outcome: 'Explain samples', dependsOnChapterIds: []}]
+  }})
   const customRead = (name) => {
-    if (name === 'src/content/curriculum/generative-models-brief.md') throw new Error('missing')
+    if (name === 'src/content/curriculum/curriculum.json') return JSON.stringify(data)
+    if (name === 'src/content/curriculum/example-brief.md') throw new Error('missing')
     return read(name)
   }
-  assert.match(validateRepository(customRead).join(' '), /missing learning brief generative-models/)
+  assert.match(validateRepository(customRead).join(' '), /missing learning brief example-planned/)
 })

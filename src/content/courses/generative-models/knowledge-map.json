@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "courseId": "generative-models",
+  "links": [
+    { "from": { "courseId": "generative-models", "conceptId": "sampling-distribution" }, "to": { "courseId": "generative-models", "conceptId": "conditional-mean" }, "kind": "contrasts-with", "reason": "无条件平方误差最优常数是均值，而生成需保留多种结果及其概率；理解两种任务差别才能解释双峰例子。", "boundary": "条件平均仍可用于噪声和速度回归，不能因此认为所有平方误差训练都无法生成。" },
+    { "from": { "courseId": "generative-models", "conceptId": "flow-matching" }, "to": { "courseId": "generative-models", "conceptId": "diffusion-training" }, "kind": "same-principle", "reason": "两者都用数据与可采样噪声构造中间状态和监督标签，减少直接学习整体生成过程的困难。", "boundary": "路径、预测目标和采样器不同；FM 实验不是 DDPM 的反向链。" },
+    { "from": { "courseId": "generative-models", "conceptId": "flow-matching" }, "to": { "courseId": "generative-models", "conceptId": "probability-path" }, "kind": "derives-from", "reason": "对选定条件路径求导得到速度标签，通过条件回归得到相应边缘分布的速度场。", "boundary": "连续性方程结论要求足够正则性和正确速度；有限网络和数值积分只近似满足。" },
+    { "from": { "courseId": "generative-models", "conceptId": "data-vector" }, "to": { "courseId": "linear-algebra", "conceptId": "vector-basis" }, "kind": "derives-from", "reason": "图像可以按像素或潜空间坐标写成高维向量，噪声、状态及预测输出借用同一坐标空间的表示。", "boundary": "本课的一维图是机制缩小模型，不能表示真实图像分布的全部几何；生成映射不必线性。" }
+  ]
+}

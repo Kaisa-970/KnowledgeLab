@@ -219,6 +219,22 @@ button { cursor:pointer; }
 .planned-course-design ul, .planned-course-design ol { padding-left:22px; font-size:12px; line-height:1.7; }
 .planned-course-design li { margin:8px 0; overflow-wrap:anywhere; }
 .curriculum-modules>li { scroll-margin-top:80px; }
+.gen-lab { border:1px solid #dce5e8; border-radius:8px; padding:18px; background:#fff; }
+.gen-lab-heading { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:14px; }
+.gen-lab-heading span { color:#6c7784; font-size:12px; }
+.gen-controls { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:20px 0; }
+.gen-controls label { display:flex; flex-wrap:wrap; gap:8px; font-size:13px; align-items:center; }
+.gen-controls output { margin-left:auto; font-variant-numeric:tabular-nums; }
+.gen-controls input { width:100%; accent-color:#128577; }
+.gen-controls select { margin-left:auto; max-width:100%; padding:5px; }
+.gen-presets { display:flex; flex-wrap:wrap; gap:8px; }
+.gen-presets button { border:1px solid #cad9de; background:#f5f9f9; color:#28534e; border-radius:4px; padding:7px 10px; font-size:12px; }
+.gen-lab figure { margin:18px 0; }
+.gen-lab svg { display:block; width:100%; height:auto; }
+.gen-lab svg text { font-size:16px; }
+.gen-lab figcaption { font-size:12px; line-height:1.7; color:#627384; }
+.gen-readout { display:flex; flex-wrap:wrap; gap:16px; font-size:12px; font-variant-numeric:tabular-nums; }
+@media(max-width:480px) { .gen-controls { grid-template-columns:1fr; } .gen-lab { padding:12px; } }
 @media(max-width:760px) {
   .chapter-badge { flex-wrap:wrap; line-height:1.5; }
   .topbar-path { max-width:100%; }

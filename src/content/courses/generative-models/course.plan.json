@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 2,
+  "id": "generative-models",
+  "title": "生成模型：从随机数到有结构的数据",
+  "status": "prototype",
+  "curriculum": { "trackId": "ai-models", "moduleId": "generative-models" },
+  "domain": "ai",
+  "level": "foundation-to-intermediate",
+  "summary": "为什么平均答案不像真实样本？从双峰小数据理解生成分布，再分开追踪 Diffusion 的加噪训练与逆向生成、Flow Matching 的速度训练与积分生成。",
+  "prerequisites": ["函数、随机数与平均值的基本直觉", "知道模型训练会调整参数；条件概率在正文补充", "深入推导需要向量、导数与积分"],
+  "learningOutcomes": ["用双峰数据区分预测均值与生成分布", "区分训练时构造标签与推理时更新状态", "写出噪声预测和速度预测的输入、目标与损失", "解释条件平均速度、生成轨迹与数值误差的关系"],
+  "knowledgeNodes": [
+    { "id": "sampling-distribution", "title": "采样与数据分布", "dependsOn": [] },
+    { "id": "conditional-mean", "title": "平方误差与条件平均", "dependsOn": ["sampling-distribution"] },
+    { "id": "data-vector", "title": "数据、噪声与高维向量", "dependsOn": [] },
+    { "id": "probability-path", "title": "概率分布的连续路径", "dependsOn": ["sampling-distribution"] },
+    { "id": "diffusion-training", "title": "加噪与噪声预测训练", "dependsOn": ["conditional-mean", "data-vector"] },
+    { "id": "score", "title": "概率密度的 score 与去噪", "dependsOn": ["diffusion-training"] },
+    { "id": "diffusion-sampling", "title": "反向条件分布与逐步生成", "dependsOn": ["diffusion-training"] },
+    { "id": "flow-matching", "title": "条件速度回归与流匹配", "dependsOn": ["conditional-mean", "probability-path"] },
+    { "id": "numerical-sampling", "title": "ODE 采样与有限步误差", "dependsOn": ["flow-matching"] },
+    { "id": "generation-routes", "title": "自回归、VAE 与 GAN 的生成路线", "dependsOn": ["sampling-distribution"] },
+    { "id": "shared-probability-paths", "title": "分布路径、预测目标与采样器", "dependsOn": ["diffusion-sampling", "flow-matching"] },
+    { "id": "conditioning-and-latents", "title": "条件生成与潜空间", "dependsOn": ["generation-routes", "shared-probability-paths"] }
+  ],
+  "chapters": [
+    { "id": "sampling-not-averaging", "title": "为什么平均答案不像任何一个真实样本？", "coreQuestion": "平方误差最优答案为何可能落在两类数据之间？", "learningObjectives": ["计算双峰数据的最优常数与生成比例", "解释单个预测误差和整体分布两种评价"], "conceptIds": ["sampling-distribution", "conditional-mean"], "prerequisites": ["平均值和平方"], "dependsOnChapterIds": [], "coreTask": "将 -2/+2 的比例改为 3:1，计算常数最优值并说明生成器应保留哪些结果与比例。", "lessonPath": "src/content/lessons/generative-sampling-not-averaging.mdx", "status": "prototype" },
+    { "id": "noise-to-distribution", "title": "随机数怎样变得有结构？", "coreQuestion": "单个样本没有目标终点，如何让一批随机数形成双峰？", "learningObjectives": ["区分样本轨迹、密度和有限样本", "预测初始状态和概率权重的作用"], "conceptIds": ["probability-path", "data-vector"], "prerequisites": ["采样与分布"], "dependsOnChapterIds": ["sampling-not-averaging"], "labIds": ["generative-flow-lab"], "lessonPath": "src/content/lessons/generative-noise-to-distribution.mdx", "status": "prototype" },
+    { "id": "diffusion-training", "title": "把数据弄坏，为什么能制造训练题目？", "coreQuestion": "模型如何用已知加噪过程学到未知数据的规律？", "learningObjectives": ["追踪加噪输入、时间与噪声标签", "解释平方回归为什么学条件平均而非总能猜中噪声"], "conceptIds": ["diffusion-training", "conditional-mean", "score"], "prerequisites": ["平方误差", "分布视角"], "dependsOnChapterIds": ["noise-to-distribution"], "coreTask": "给定 x=2、epsilon=-1、alpha=0.6、sigma=0.8，计算网络输入与噪声标签；解释网络为何不接收真实 x。", "lessonPath": "src/content/lessons/generative-diffusion-training.mdx", "status": "prototype" },
+    { "id": "diffusion-sampling", "title": "没有原图，凭什么还能去噪？", "coreQuestion": "预测噪声怎样参与反向生成，为什么不能一次减完？", "learningObjectives": ["区分一次干净数据估计和下一步反向状态", "解释随机初始化、反向条件分布和误差来源"], "conceptIds": ["diffusion-sampling", "score"], "prerequisites": ["噪声预测训练"], "dependsOnChapterIds": ["diffusion-training"], "coreTask": "把同一噪声预测网络的生成步数改为更少，判断变的是训练标签还是采样过程，并解释无法保证质量相同的原因。", "lessonPath": "src/content/lessons/generative-diffusion-sampling.mdx", "status": "prototype" },
+    { "id": "flow-matching", "title": "能不能直接教模型往哪里移动？", "coreQuestion": "训练时知道终点，生成时不知道终点，速度预测为何仍能运行？", "learningObjectives": ["计算线性路径的位置与速度标签", "区分条件路径速度、平均速度场与生成轨迹", "解释正则性和积分误差边界"], "conceptIds": ["flow-matching", "numerical-sampling", "probability-path"], "prerequisites": ["分布与条件平均"], "dependsOnChapterIds": ["noise-to-distribution"], "coreTask": "用 z=1、x=-2、t=0.5 算位置和速度；再判断对称路径的 x=0 处平均速度为零是否意味着所有样本不移动。", "lessonPath": "src/content/lessons/generative-flow-matching.mdx", "status": "prototype" }
+  ],
+  "plannedChapters": [
+    { "id": "generation-routes", "title": "为什么有的逐个生成，有的一次解码？", "dependsOnChapterIds": ["noise-to-distribution"] },
+    { "id": "shared-probability-paths", "title": "去噪与移动，究竟共享了什么？", "dependsOnChapterIds": ["diffusion-sampling", "flow-matching"] },
+    { "id": "conditioning-and-latents", "title": "文字怎样控制生成，为什么在潜空间运行？", "dependsOnChapterIds": ["generation-routes", "shared-probability-paths"] }
+  ],
+  "design": { "learningBriefPath": "src/content/courses/generative-models/learning-brief.md", "knowledgeMapPath": "src/content/courses/generative-models/knowledge-map.md", "knowledgeLinksPath": "src/content/courses/generative-models/knowledge-map.json" }
+}

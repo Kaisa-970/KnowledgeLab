@@ -17,7 +17,31 @@ export type Chapter = {
   lessonPath: string
   status: 'prototype' | 'reviewed' | 'published'
 }
-export const curriculum = curriculumData
+export type PlannedChapterDesign = {
+  id: string
+  title: string
+  coreQuestion: string
+  outcome: string
+  dependsOnChapterIds: string[]
+}
+export type PlannedLearningDesign = {
+  briefPath: string
+  prerequisites: string[]
+  learningOutcomes: string[]
+  chapters: PlannedChapterDesign[]
+}
+export type CurriculumPlannedCourse = { id: string; title: string; scope: string; learningDesign?: PlannedLearningDesign }
+export type CurriculumModule = {
+  id: string
+  title: string
+  focus: string
+  dependsOnModuleIds: string[]
+  courseIds: string[]
+  plannedCourses: CurriculumPlannedCourse[]
+}
+export type CurriculumTrack = { id: string; title: string; domain: CourseDomain; modules: CurriculumModule[] }
+export type CurriculumManifest = { schemaVersion: 1; tracks: CurriculumTrack[] }
+export const curriculum = curriculumData as CurriculumManifest
 
 export type CoursePlan = {
   curriculum: { trackId: string; moduleId: string }

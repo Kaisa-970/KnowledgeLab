@@ -3,12 +3,13 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { validatePlanShape, validateLabShape, validateCourseLinks, validateRepository, validateKnowledgeLinks } from './validate-content.mjs'
+import { validatePlanShape, validateLabShape, validateCourseLinks, validateRepository, validateKnowledgeLinks, validateCurriculum, validateCurriculumShape } from './validate-content.mjs'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const read = (filename) => fs.readFileSync(path.join(root, filename), 'utf8')
 const plan = JSON.parse(read('src/content/courses/linear-algebra/course.plan.json'))
 const lab = JSON.parse(read('src/content/labs/matrix-basis-lab.lab.json'))
+const curriculum = JSON.parse(read('src/content/curriculum/curriculum.json'))
 const copy = (value) => structuredClone(value)
 
 test('repository contracts validate', () => {
@@ -186,4 +187,80 @@ test('knowledge maps reject unknown endpoints, duplicates, self links, and prere
   const cycle = structuredClone(base)
   cycle.links = [link(['a', 'one'], ['a', 'two'], 'prerequisite'), link(['a', 'two'], ['a', 'one'], 'prerequisite')]
   assert.match(validateKnowledgeLinks(plans, {a: cycle}).join(' '), /global prerequisite graph.*dependency cycle/)
+})
+
+test('global curriculum covers all existing courses exactly once', () => {
+  const plans = ['linear-algebra', 'fourier-analysis', 'graphics-rasterization']
+    .map((id) => JSON.parse(read('src/content/courses/' + id + '/course.plan.json')))
+  assert.equal(validateCurriculumShape(curriculum), true)
+  assert.deepEqual(validateCurriculum(plans, curriculum), [])
+})
+
+test('new courses without global placement are rejected by repository validation', () => {
+  const data = copy(plan)
+  data.curriculum = { trackId: 'mathematics', moduleId: 'optimization' }
+  const customRead = (name) => name === 'src/content/courses/linear-algebra/course.plan.json'
+    ? JSON.stringify(data) : read(name)
+  const errors = validateRepository(customRead).join(' ')
+  assert.match(errors, /course placement mismatch linear-algebra/)
+})
+
+test('unknown and duplicated realized course placements are rejected', () => {
+  const data = copy(curriculum)
+  const p = data.tracks[0].modules[0].courseIds
+  p[0] = 'missing-course'
+  assert.match(validateCurriculum([plan], data).join(' '), /unknown realized course missing-course/)
+  assert.match(validateCurriculum([plan], data).join(' '), /unplaced course linear-algebra/)
+  const repeated = copy(curriculum)
+  repeated.tracks[0].modules[1].courseIds.push('linear-algebra')
+  assert.match(validateCurriculum([plan], repeated).join(' '), /duplicate course placement linear-algebra/)
+})
+
+test('new course needs matching track/module ownership and domain', () => {
+  const misplaced = copy(plan)
+  misplaced.curriculum = {trackId:'graphics-gpu', moduleId:'graphics-pipeline'}
+  assert.match(validateCurriculum([misplaced], curriculum).join(' '), /course placement mismatch linear-algebra/)
+  const wrongDomain = copy(plan)
+  wrongDomain.domain = 'graphics'
+  assert.match(validateCurriculum([wrongDomain], curriculum).join(' '), /course domain mismatch linear-algebra/)
+  const missing = copy(curriculum)
+  missing.tracks[0].modules[0].courseIds = []
+  assert.match(validateCurriculum([plan], missing).join(' '), /unplaced course linear-algebra/)
+})
+
+test('planned courses are not phantom published courses or duplicate ids', () => {
+  const data = copy(curriculum)
+  data.tracks[0].modules[0].plannedCourses.push({
+    id: 'linear-algebra', title: '错误重复', scope: '课程已经存在'
+  })
+  assert.match(validateCurriculum([plan], data).join(' '), /realized course still listed as planned linear-algebra/)
+  const repeated = copy(curriculum)
+  repeated.tracks[0].modules[0].plannedCourses.push({
+    ...repeated.tracks[0].modules[1].plannedCourses[0]
+  })
+  assert.match(validateCurriculum([plan], repeated).join(' '), /duplicate planned course fourier-transform/)
+})
+
+test('module prerequisites reference known modules and cannot cycle', () => {
+  const unknown = copy(curriculum)
+  unknown.tracks[0].modules[0].dependsOnModuleIds = ['missing-module']
+  assert.match(validateCurriculum([plan], unknown).join(' '), /unknown dependency missing-module/)
+  const cycle = copy(curriculum)
+  cycle.tracks[0].modules[0].dependsOnModuleIds = ['analysis-signals']
+  cycle.tracks[0].modules[1].dependsOnModuleIds = ['linear-algebra']
+  assert.match(validateCurriculum([plan], cycle).join(' '), /dependency cycle/)
+  const dup = copy(curriculum)
+  dup.tracks[1].modules[0].id = 'linear-algebra'
+  assert.match(validateCurriculum([plan], dup).join(' '), /curriculum modules has duplicate ids/)
+})
+
+test('global curriculum requires structured nonempty tracks and planned scopes', () => {
+  const bad = copy(curriculum)
+  bad.tracks[0].modules[0].plannedCourses.push({id: 'unfinished', title: '未规划'})
+  assert.equal(validateCurriculumShape(bad), false)
+  const noManifest = (name) => {
+    if (name === 'src/content/curriculum/curriculum.json') throw new Error('missing manifest')
+    return read(name)
+  }
+  assert.match(validateRepository(noManifest).join(' '), /missing\/invalid global curriculum/)
 })

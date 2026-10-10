@@ -169,5 +169,9 @@
     "learningBriefPath": "src/content/courses/fourier-analysis/learning-brief.md",
     "knowledgeMapPath": "src/content/courses/fourier-analysis/knowledge-map.md",
     "knowledgeLinksPath": "src/content/courses/fourier-analysis/knowledge-map.json"
+  },
+  "curriculum": {
+    "trackId": "mathematics",
+    "moduleId": "analysis-signals"
   }
 }

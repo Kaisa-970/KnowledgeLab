@@ -126,5 +126,9 @@
     "learningBriefPath": "src/content/courses/linear-algebra/learning-brief.md",
     "knowledgeMapPath": "src/content/courses/linear-algebra/knowledge-map.md",
     "knowledgeLinksPath": "src/content/courses/linear-algebra/knowledge-map.json"
+  },
+  "curriculum": {
+    "trackId": "mathematics",
+    "moduleId": "linear-algebra"
   }
 }

@@ -116,5 +116,9 @@
     "learningBriefPath": "src/content/courses/graphics-rasterization/learning-brief.md",
     "knowledgeMapPath": "src/content/courses/graphics-rasterization/knowledge-map.md",
     "knowledgeLinksPath": "src/content/courses/graphics-rasterization/knowledge-map.json"
+  },
+  "curriculum": {
+    "trackId": "graphics-gpu",
+    "moduleId": "graphics-pipeline"
   }
 }

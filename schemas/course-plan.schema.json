@@ -16,7 +16,8 @@
     "learningOutcomes",
     "knowledgeNodes",
     "chapters",
-    "plannedChapters"
+    "plannedChapters",
+    "curriculum"
   ],
   "properties": {
     "schemaVersion": {
@@ -116,6 +117,9 @@
           "pattern": "^src/content/courses/[a-z][a-z0-9-]*/[a-z][a-z0-9-]*\\.md$"
         }
       }
+    },
+    "curriculum": {
+      "$ref": "#/$defs/curriculum"
     }
   },
   "$defs": {
@@ -372,6 +376,22 @@
           "items": {
             "$ref": "#/$defs/id"
           }
+        }
+      }
+    },
+    "curriculum": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trackId",
+        "moduleId"
+      ],
+      "properties": {
+        "trackId": {
+          "$ref": "#/$defs/id"
+        },
+        "moduleId": {
+          "$ref": "#/$defs/id"
         }
       }
     }

@@ -44,6 +44,15 @@ npm run build
 - SVG：首个二维线性代数实验
 - 后续按需引入 Three.js、代码沙箱、课程 Schema/生成器
 
+## 学习体验：先建立可迁移的心智模型
+
+课程可靠性由 Course Contract v2 保证，但学习设计还必须遵循 **[Learning Experience Contract](docs/LEARNING_EXPERIENCE_CONTRACT.md)**：区分学习者已知与假设、围绕一个具体卡点设计最小理解闭环，用最短主路径先帮助读者形成准确的因果模型，再按需深入推导、实现和边界。课程正文可以是自然流畅的技术博客，不强制展示固定栏目。
+
+- [透视校正插值：认知设计示例](docs/examples/perspective-cognitive-design.md)（对应现有课程）
+- [VAE 与 Diffusion：认知设计示例](docs/examples/vae-diffusion-cognitive-design.md)（仅设计稿，尚未实现课程）
+
+**边界**：Agent 的设计检查与 CI 不能证明学习者已经理解；无实际反馈时保持“理解效果未验证”。
+
 ## 核心教学理念与 Agent Skills
 
 KnowledgeLab **不是带动画的教科书**：先从值得追问的问题、已有解释的不足和认知转折自然引出知识，再用严格推导建立理解，并把概念放回知识网络中。图示与交互都是可选的解释手段；素材查找**优先一手官方/学术资料核验事实**，但图片嵌入必须另外核实版权/授权，无法复用时用可编辑的原创 SVG/数据图代替。

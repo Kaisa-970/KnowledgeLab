@@ -183,7 +183,7 @@
           ]
         },
         {
-          "id": "3d-generation",
+          "id": "three-d-generation",
           "title": "生成式三维资产",
           "focus": "三维表示、单图/多图生成、多视图一致性与几何材质生成",
           "dependsOnModuleIds": [

@@ -134,8 +134,9 @@ test('jump zoom changes the visible domain and resets with keyboard controls', a
 
 test('three-chapter learning path teaches motivation before mathematical projection', async ({ page }) => {
   await page.goto('/courses/fourier-analysis/why-frequency')
-  await expect(page.getByRole('heading', { name: '为什么我们需要“频率”这副眼镜？' })).toBeVisible()
-  await expect(page.getByRole('img', { name: /第 1 次谐波幅度为 1/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '为什么音乐播放器能单独调低高频？' })).toBeVisible()
+  await expect(page.locator('[data-lab-id="frequency-tone-demo"]')).toBeVisible()
+  await expect(page.getByRole('img', { name: /频率幅度谱：220 Hz 的基音强度为 1/ })).toBeVisible()
   await page.getByRole('link', { name: '继续第二节 →' }).click()
   await expect(page).toHaveURL(/\/courses\/fourier-analysis\/frequency-projection$/)
   await expect(page.getByRole('heading', { name: '如果只给你混合波形，能找回每个频率吗？' })).toBeVisible()
@@ -153,4 +154,19 @@ test('feature zoom follows the sawtooth seam and triangle corner', async ({ page
   await page.getByRole('button', { name: '三角波', exact: true }).click()
   await expect(page.getByRole('button', { name: '观察折角', exact: true })).toHaveAttribute('aria-pressed', 'true')
   await expect(plot).toHaveAttribute('aria-label', /观察 折角 t=0 左右各 π\/3/)
+})
+
+test('first lesson explores high-frequency removal before showing formulas', async ({ page }) => {
+  await page.goto('/courses/fourier-analysis/why-frequency')
+  const lesson = page.locator('[data-lab-id="frequency-tone-demo"]')
+  const spectrum = lesson.getByRole('img', { name: /频率幅度谱/ })
+  const wave = lesson.getByRole('img', { name: /时间波形/ })
+  await expect(spectrum).toHaveAttribute('aria-label', /660 Hz 的较快分量强度为 0\.45/)
+  await lesson.getByRole('button', { name: '关掉较快的振动' }).click()
+  await expect(spectrum).toHaveAttribute('aria-label', /660 Hz 的较快分量强度为 0\.00/)
+  await expect(wave).toHaveAttribute('aria-label', /第三次谐波振幅 0\.00/)
+  await expect(lesson).toContainText('只剩下缓慢、规则的基音')
+  await lesson.getByRole('slider', { name: '较快振动的强度' }).fill('0.65')
+  await expect(spectrum).toHaveAttribute('aria-label', /较快分量强度为 0\.65/)
+  await expect(lesson.getByRole('button', { name: '关掉较快的振动' })).toBeVisible()
 })

@@ -21,12 +21,17 @@ test('illustrations are close to principles, with no compulsory lab', async ({pa
   await page.goto(ARTICLE)
   for (const id of [
     'generation-overview','noise-supervision','score-field','diffusion-reverse',
-    'flow-paths','routes-contrast'
+    'flow-paths'
   ]) {
     const figure = page.locator('[data-concept-figure="' + id + '"]')
     await expect(figure).toBeVisible()
     await expect(figure.locator('figcaption')).toBeVisible()
   }
+  await expect(page.locator('[data-concept-figure="diffusion-reverse"]')).toContainText('分布')
+  await expect(page.locator('[data-concept-figure="diffusion-reverse"] [role="img"]')).toHaveCount(3)
+  await expect(page.locator('[data-concept-figure="flow-paths"]')).toContainText('解析')
+  const articleText = await page.locator('.lesson-article').innerText()
+  expect(articleText).not.toMatch(/你已经知道|你应该知道|你已经掌握|按照你的学习/)
   await expect(page.locator('.gen-lab')).toBeHidden()
   await expect(page.locator('.lesson-article h2')).toHaveCount(5)
   await expect(page.locator('.katex')).not.toHaveCount(0)

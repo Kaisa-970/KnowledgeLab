@@ -183,11 +183,11 @@ export default function App() {
                 <span className="toc-label">本文脉络</span>
                 <strong>从加噪训练，到反向生成</strong>
                 <nav className="essay-toc" aria-label="本文段落">
-                  <a href="#diffusion-training">先把问题变成有答案的训练任务</a>
-                  <a href="#score-connection">噪声预测为什么包含数据结构</a>
-                  <a href="#diffusion-sampling">怎么用预测完成反向生成</a>
-                  <a href="#flow-matching">另一种办法：直接学速度</a>
-                  <a href="#routes-compared">两条路线到底有什么联系</a>
+                  <a href="#diffusion-training">为什么可以靠人为加噪训练</a>
+                  <a href="#score-connection">噪声预测与 score 的联系</a>
+                  <a href="#diffusion-sampling">怎样构造反向转移</a>
+                  <a href="#flow-matching">Flow Matching 如何学速度</a>
+                  <a href="#routes-compared">两种局部规则的共同机制</a>
                 </nav>
               </>
             ) : (

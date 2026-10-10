@@ -18,19 +18,6 @@
     {
       "from": {
         "courseId": "graphics-rasterization",
-        "conceptId": "attribute-interpolation"
-      },
-      "to": {
-        "courseId": "fourier-analysis",
-        "conceptId": "partial-sum-convergence"
-      },
-      "kind": "contrasts-with",
-      "reason": "两者都涉及「有限手段能逼近到什么程度」，但失效机制相反：傅里叶截断误差随项数单调减小、只在跳变处留下不消失的过冲；透视插值的误差来自权重取自错误的坐标空间，它与三角形数量无关，细分三角形一步都不会改善。",
-      "boundary": "不要把「都叫逼近」当成同一类问题。这里没有跳变也没有过冲；而傅里叶增加项数是真正有效的改进手段，透视插值的有效手段只有换权重。"
-    },
-    {
-      "from": {
-        "courseId": "graphics-rasterization",
         "conceptId": "depth-buffer"
       },
       "to": {

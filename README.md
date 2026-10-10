@@ -44,6 +44,10 @@ npm run build
 - SVG：首个二维线性代数实验
 - 后续按需引入 Three.js、代码沙箱、课程 Schema/生成器
 
+## 全局课程体系
+
+先回答“这个问题属于哪条知识主线”，而不是自动新增课程。规则见 [Curriculum Contract](docs/CURRICULUM_CONTRACT.md)；可机检规划见 [全局课程知识树](src/content/curriculum/curriculum.json)。现有 5 条主线与 18 个模块，区分已实现课程和规划课程。新增 Course 必须唯一归属 Track/Module；网站课程目录展示规划，章节页显示知识位置。
+
 ## 学习体验：先建立可迁移的心智模型
 
 课程可靠性由 Course Contract v2 保证，但学习设计还必须遵循 **[Learning Experience Contract](docs/LEARNING_EXPERIENCE_CONTRACT.md)**：区分学习者已知与假设、围绕一个具体卡点设计最小理解闭环，用最短主路径先帮助读者形成准确的因果模型，再按需深入推导、实现和边界。课程正文可以是自然流畅的技术博客，不强制展示固定栏目。

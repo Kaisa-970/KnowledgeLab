@@ -2,6 +2,10 @@
 
 这是机器可读的课程生产中间产物协议，不是随意编辑的提示词示例。
 
+## 上游 Curriculum Contract
+
+全局规划 `src/content/curriculum/curriculum.json`（`schemas/curriculum.schema.json`）记录课程的 Track/Module 唯一归属、规划 ID、模块先修。所有正式 `course.plan.json` 必须增加 `curriculum:{trackId,moduleId}` 并匹配 manifest 的 `courseIds`。`npm run validate` 拒绝未登记、重复或冲突、未知模块和先修环。这是结构门禁，不是新建课程的语义许可；见 `docs/CURRICULUM_CONTRACT.md`。
+
 ## 两类 JSON
 
 - `src/content/courses/<course-id>/course.plan.json`：知识节点和依赖、真实章节、规划中的章节、学习目标、实验引用与 MDX 路径。
@@ -17,7 +21,7 @@ Schema 位于 `schemas/course-plan.schema.json` 和 `schemas/lab.schema.json`。
 3. 每个新交互需要一份 `.lab.json`，提供 invariant 和 edge case，并给每条断言绑定至少一个 oracle ID。
 4. 使用纯计算函数（`src/math`）与独立测试，确保 oracle 中的 `testFile` + `testName` 指向可实际执行的测试。
 5. 运行 `npm run validate`、`npm test`、`npm run build`、`npm run test:e2e`；最后单独进行数学与教学内容审查。
-6. 提交 PR，报告未通过或尚未执行的审核项目。不能直接将生成的代码部署。
+6. 按维护者要求提交（PR 或主分支），报告未通过或未执行的审核；未经审查不得作为已发布课程部署。
 
 `chapters` 与 `plannedChapters` 共用同一个 id 命名空间：章节从规划状态转为"真实"时 id 不变，因此两者的依赖边放在同一张图里检查环。
 

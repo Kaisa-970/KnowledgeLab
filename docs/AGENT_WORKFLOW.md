@@ -15,6 +15,10 @@
 
 ## 工作过程
 
+### Step 0 — 先定位已有课程体系
+
+按 `docs/CURRICULUM_CONTRACT.md` 检索 Track/Module/Course/Concept 与已有/规划章节；决定是直接解释、修章节、扩章节、加跨学科连接还是确需新课程。先说明知识位置。**任何新术语不自动获得独立 Course ID**；新课程必须解释现有课程为何不适合、长期范围和主归属。
+
 ### Step 1 — 读上下文
 
 先检查 `AGENTS.md`、`docs/LEARNING_EXPERIENCE_CONTRACT.md`、已有章节与组件。区分确认已知、暂时假设、当前卡点和本次目标；不得仅凭“中级开发者”标签推断知识掌握，未知状态标注假设。
@@ -59,7 +63,7 @@
 已学基础：{prerequisites}
 必须覆盖：{must_cover}
 
-先依据 docs/LEARNING_EXPERIENCE_CONTRACT.md 确认学习者已有模型、本次卡点和期望深度，设计最小理解闭环；再形成 Learning Brief、Knowledge Map 与课程计划。
+先依据 docs/CURRICULUM_CONTRACT.md 定位已有知识/复用课程，再依据 docs/LEARNING_EXPERIENCE_CONTRACT.md 确认学习者已有模型、本次卡点和期望深度，设计最小理解闭环；再形成 Learning Brief、Knowledge Map 与课程计划。
 经计划阶段确认后，先写一条短而可独立读完的主路径与迁移预测，再补深入证明/实现和边界，而不是一次展示全部正确内容。可用交互 Lab，也可用有根据的 coreTask，不能强迫每节有动画。
 每一张图片/示意必须回答学习疑问，按 docs/VISUAL_ASSETS.md 调研一手事实、查明再发布授权；需要操作变量时才制作交互，说明输入如何影响输出。
 不要跳过数学或运行时细节；不要杜撰事实、来源或测试结果。

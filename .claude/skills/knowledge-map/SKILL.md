@@ -5,10 +5,11 @@ description: 建立课程知识定位、先修依赖、概念对比与跨领域�
 
 # Knowledge Map — 将碎片连接为网络
 
-必读：`docs/LEARNING_DESIGN.md`、`docs/templates/learning-brief.md`、当前和相关课程的 `course.plan.json`。
+必读：**`docs/CURRICULUM_CONTRACT.md`、`src/content/curriculum/curriculum.json`**、`docs/LEARNING_DESIGN.md`、`docs/templates/learning-brief.md`、当前和相关课程的 `course.plan.json`。
 
 ## 过程
 
+0. **先定位 Track → Module → Course** 并检查已有/规划章节。普通问题仅需定位和解释，不必新建课程。
 1. 确认正在讨论的是 `Course`（课程）、`Lesson`（教学单元）还是 `Concept`（知识概念），不能混作一个 ID。
 2. 检索现有的概念和章节。避免重建同义概念；必须要引入新节点时说明其与已有节点的边界。
 3. 至少给出：上游知识及具体需要的能力、一个同层连接/比较、一个可迁移应用；有证据不足时明确不写。
@@ -18,6 +19,7 @@ description: 建立课程知识定位、先修依赖、概念对比与跨领域�
 
 ## 质量门槛
 
+- 新课程需有唯一全局归属及其独立必要性/范围依据，优先扩充已有课程。
 - 全部依赖无环、ID 不冲突，`npm run validate` 通过。
 - 一条连接至少回答：**为什么相连？哪里相同？什么条件下不同？**
 - 课程“下一步”能由当前问题自然引出，而不是随机推荐下一篇。
@@ -30,4 +32,3 @@ description: 建立课程知识定位、先修依赖、概念对比与跨领域�
 ## 输出
 
 课程级 `knowledge-map.json`（结构化关系的单一来源）、`knowledge-map.md` 中的教学桥梁与覆盖边界、需要修改的课程依赖与正文桥接段落、未确定关系清单。不另建需要手工同步的关系表。
-

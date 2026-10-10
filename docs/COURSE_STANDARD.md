@@ -4,6 +4,10 @@
 
 **认知设计前置：** `docs/LEARNING_EXPERIENCE_CONTRACT.md` 规定如何针对当前学习者建立理解；本文件与 Course Contract v2 负责知识正确性与可验证交付。
 
+## 0. 知识树归属先于课程计划
+
+新主题先按 `docs/CURRICULUM_CONTRACT.md` 定位全局主线、模块与已有/规划课程，优先改进已有章节；仅独立持续性主题才考虑新 Course。归属必须在 manifest 中唯一登记并通过机器校验，但语义上是否必要新课仍由维护者审查。
+
 ## A. 课程级交付物
 
 每门课建议产生（新课程或重大改稿时）：

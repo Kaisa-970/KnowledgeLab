@@ -17,7 +17,7 @@ test('realized generative course preserves module prerequisites and leaves the p
   const module = page.locator('#module-generative-models')
   await module.getByRole('link', { name: '机器学习基础' }).click()
   await expect(page).toHaveURL(/#module-machine-learning$/)
-  await expect(module.getByRole('link', { name: '生成模型：模型怎样从噪声生成新样本？ · 已收录' })).toBeVisible()
+  await expect(module.getByRole('link', { name: '生成模型：从噪声到图像 · 已收录' })).toBeVisible()
   await expect(module.locator('.curriculum-planned')).toHaveCount(0)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })

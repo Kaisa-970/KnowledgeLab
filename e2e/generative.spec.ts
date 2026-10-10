@@ -55,7 +55,11 @@ test('static causal diagrams appear near the mechanisms, not as optional interac
     for (const figureId of figureIds) {
       const figure = page.locator('[data-concept-figure="' + figureId + '"]')
       await expect(figure).toBeVisible()
-      await expect(figure.getByRole('img').first()).toBeVisible()
+      if (figureId !== 'routes-contrast') {
+        await expect(figure.getByRole('img').first()).toBeVisible()
+      } else {
+        await expect(figure.getByText('Diffusion · 典型噪声预测')).toBeVisible()
+      }
       await expect(figure.locator('figcaption')).toBeVisible()
     }
     expect(await page.locator('.katex-error').count()).toBe(0)

@@ -14,6 +14,7 @@ function compileSchema(fileName) {
 export const validatePlanShape = compileSchema('course-plan.schema.json')
 export const validateLabShape = compileSchema('lab.schema.json')
 export const validateKnowledgeMapShape = compileSchema('knowledge-map.schema.json')
+export const validateCurriculumShape = compileSchema('curriculum.schema.json')
 export function schemaErrors(validate) {
   return (validate.errors ?? []).map((e) => (e.instancePath || '/') + ' ' + e.message).join('; ')
 }
@@ -194,6 +195,50 @@ export function validateKnowledgeLinks(plans, maps) {
   return problems
 }
 
+
+/**
+ * Every realized course has exactly one primary track/module in the global
+ * curriculum. Cross-course concept links are free to cross this tree.
+ *
+ * This is a structural gate, not a semantic judge: an agent cannot prove that
+ * its proposed course is non-overlapping just by adding an entry to JSON.
+ */
+export function validateCurriculum(plans, curriculum) {
+  const problems = []
+  if (!validateCurriculumShape(curriculum)) return ['curriculum schema: ' + schemaErrors(validateCurriculumShape)]
+  const courseIds = new Set(plans.map((p) => p.id))
+  const trackIds = curriculum.tracks.map((t) => t.id)
+  checkUnique(trackIds, 'curriculum tracks', problems)
+  const modules = curriculum.tracks.flatMap((t) => t.modules.map((m) => ({...m, trackId: t.id, domain: t.domain})))
+  checkUnique(modules.map((m) => m.id), 'curriculum modules', problems)
+  detectCycles(modules, 'id', (m) => m.dependsOnModuleIds, 'curriculum module graph', problems)
+  const placements = new Map()
+  const planned = new Set()
+  for (const module of modules) {
+    for (const id of module.courseIds) {
+      if (!courseIds.has(id)) problems.push('curriculum: unknown realized course ' + id)
+      if (placements.has(id)) problems.push('curriculum: duplicate course placement ' + id)
+      else placements.set(id, module)
+    }
+    for (const item of module.plannedCourses) {
+      if (courseIds.has(item.id)) problems.push('curriculum: realized course still listed as planned ' + item.id)
+      if (planned.has(item.id)) problems.push('curriculum: duplicate planned course ' + item.id)
+      if (placements.has(item.id)) problems.push('curriculum: planned course clashes with realized placement ' + item.id)
+      planned.add(item.id)
+    }
+  }
+  for (const id of planned) if (placements.has(id)) problems.push('curriculum: course listed as both planned and realized ' + id)
+  for (const plan of plans) {
+    const module = placements.get(plan.id)
+    if (!module) { problems.push('curriculum: unplaced course ' + plan.id); continue }
+    if (plan.curriculum?.trackId !== module.trackId || plan.curriculum?.moduleId !== module.id) {
+      problems.push('curriculum: course placement mismatch ' + plan.id)
+    }
+    if (plan.domain !== module.domain) problems.push('curriculum: course domain mismatch ' + plan.id)
+  }
+  return problems
+}
+
 function discoverCourses() {
   return fs.readdirSync(path.join(root, 'src/content/courses'), { withFileTypes: true })
     .filter((e) => e.isDirectory()).map((e) => e.name)
@@ -228,6 +273,11 @@ export function validateRepository(read = defaultRead, courses = discoverCourses
     catch { problems.push(plan.id + ': missing/invalid structured knowledge map') }
   }
   problems.push(...validateKnowledgeLinks(validPlans, maps))
+  try {
+    problems.push(...validateCurriculum(validPlans, JSON.parse(read('src/content/curriculum/curriculum.json'))))
+  } catch {
+    problems.push('curriculum: missing/invalid global curriculum')
+  }
   return problems
 }
 

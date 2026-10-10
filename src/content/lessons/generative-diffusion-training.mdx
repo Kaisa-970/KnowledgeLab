@@ -1,65 +1,76 @@
-# 把数据弄坏，为什么能制造训练题目？
+import { NoiseSupervisionFigure, ScoreFieldFigure } from '../../components/GenerativePrincipleFigures'
 
-<div className="lead">从噪声直接画出一张图很难。但拿一张现成图，加上我们自己生成的噪声，很容易。这个容易的方向，能给难的方向提供什么？</div>
+# Diffusion：网络到底从加噪图像里学到了什么？
 
-先修是分布与平方误差。本节只追踪训练：网络看见什么、答案是什么、参数怎样被更新。生成留到下一节。
+<div className="lead">训练时我们知道原图，也知道加入了哪份噪声。生成时这两者都没有。**为什么只学会预测噪声，就有能力从随机数生成新的样本？**</div>
 
-## 答案是我们亲手加进去的
+## 首先看清：监督信号从哪里来
 
-取训练样本 $x_0$，采样同形状的标准高斯噪声 $\epsilon$，选择噪声程度 $t$，构造
+<NoiseSupervisionFigure />
+
+这张图的关键不是“图像变模糊”，而是：**答案由我们人为制造，无须人工标注。** 从数据集抽 $x_0$，随机生成同形状的噪声 $\epsilon$，按时间 $t$ 选择混合系数：
 
 $$
 x_t=\alpha_t x_0+\sigma_t\epsilon.
 $$
 
-$\alpha_t$ 是信号系数，$\sigma_t$ 是噪声标准差。常见 variance-preserving 设定满足 $\alpha_t^2+\sigma_t^2=1$；这不意味着真实数据方差必然为 1。
-
-网络只接收 $(x_t,t)$，输出与 $x_t$ 同形状的噪声预测 $\epsilon_\theta(x_t,t)$。训练目标是让它接近本次采样的 $\epsilon$：
+网络只看到 $(x_t,t)$，预测噪声 $\epsilon_\theta(x_t,t)$；真实噪声 $\epsilon$ 则是我们保留的监督标签。训练最小化
 
 $$
-L(\theta)=\mathbb E_{x_0,t,\epsilon}\!\left[\|\epsilon_\theta(x_t,t)-\epsilon\|^2\right].
+L(\theta)=\mathbb E_{x_0,t,\epsilon}
+\left[\|\epsilon_\theta(x_t,t)-\epsilon\|^2\right].
 $$
 
-$\theta$ 是网络参数；梯度训练调整它。这里 $t$ 是噪声程度，**不是参数更新了多少轮**。一次训练可随机抽一个 $t$，不需要先把完整生成链跑完。
+此时反向传播调整的是网络参数 $\theta$，而非执行一整条生成采样链。网络的输入不包含 $x_0$；否则它可以直接计算噪声，却在没有原图的生成阶段无法使用。
 
-这条链是：**数据和随机噪声 → 加噪输入与已知标签 → 网络预测 → 平方损失 → 参数更新**。真实图像是高维向量，代码通常用批次张量 `[B,C,H,W]`；时间通常是 `[B]`，网络输出仍为 `[B,C,H,W]`。潜空间模型的坐标另有含义。
+这里 $t$ 表示加噪程度，**不是优化器迭代次数**。常见 variance-preserving 参数化满足 $\alpha_t^2+\sigma_t^2=1$，但真实数据本身不必具有单位方差。
 
-## 它不可能总猜中
+## 但网络不可能知道“当时究竟加了哪份噪声”
 
-单个数的例子：$\alpha_t=0.6,\sigma_t=0.8$。若 $x_0=2,\epsilon=-1$，网络看到的是 $x_t=0.4$，标签是 −1。
+比如某个一维训练样本 $\alpha_t=0.6,\sigma_t=0.8$：
 
-但 $x_0=-2,\epsilon=2$ 也得到 $x_t=0.4$。相同输入有两个可能来源，网络无法仅凭输入确定本次发生了哪一个。
+- $x_0=2,\epsilon=-1$，得到 $x_t=0.4$；
+- $x_0=-2,\epsilon=2$，也得到 $x_t=0.4$。
 
-平方损失的最优预测是**给定当前输入与噪声程度后，噪声的条件平均**。它从训练数据中学到哪些来源更可能，而不是获得一次事件的完整记忆。这与第一节常数均值的区别在于：现在的平均取决于输入，会随位置改变。
+只看同样的 $x_t$ 和 $t$，你无法唯一还原本次噪声。这不是模型能力不足，而是**信息本来就丢失了**。
+
+MSE 的最优预测是 $\mathbb E[\epsilon\mid x_t,t]$，即**给定当前位置和噪声程度时的条件平均噪声**。所以网络学到的不是某个训练样本的随机种子，而是跨越大量样本的**统计结构**。
+
+## 为什么预测噪声包含了生成所需要的方向信息？
+
+<ScoreFieldFigure />
+
+固定一个噪声程度，想象带噪数据不是单个图片，而是一个复杂的概率密度 $p_t(x)$。不同位置对应不同的统计上合理的噪声预测。对于高斯加噪，可以推得
+
+$$
+\boxed{\nabla_x\log p_t(x)
+=-\frac{\mathbb E[\epsilon\mid x_t=x]}{\sigma_t}}
+\qquad(\sigma_t>0).
+$$
+
+左边是 **score**：对数密度随位置的变化方向。这个等式解释了看似反直觉的联系——**预测噪声的统计最优解携带着带噪数据分布的局部结构**。
+
+它不意味着每一步生成只需沿 score 箭头爬向概率峰值。完整反向过程还涉及随时间变化的噪声尺度、漂移与采样规则；这些在下一节讨论。
 
 <details className="answer">
-<summary>深入：条件平均为什么与 score 相连？</summary>
+<summary>深入推导：噪声预测、条件平均与 score 为什么相等？</summary>
 
-固定 $t$，假设 $\sigma_t>0$，加噪条件密度为高斯。对其边缘密度求梯度并交换积分与微分，可得
+固定 $t$，$p(x_t=x\mid x_0)$ 是均值 $\alpha_t x_0$、方差 $\sigma_t^2 I$ 的高斯分布。它的对数梯度为
 
 $$
-\nabla_x\log p_t(x)=-\frac{\mathbb E[\epsilon\mid x_t=x]}{\sigma_t}.
+\nabla_x\log p(x\mid x_0)
+=-\frac{x-\alpha_t x_0}{\sigma_t^2}
+=-\frac{\epsilon}{\sigma_t}.
 $$
 
-因为条件高斯的对数梯度为 $-(x-\alpha_t x_0)/\sigma_t^2=-\epsilon/\sigma_t$，按给定 $x$ 的后验加权就得到上式。这个对数密度梯度叫 **score**；它是局部概率结构信息，不是“图片质量评分”。交换运算需要适当可积性，不能在零噪声端直接除以 0。
+对所有可能的 $x_0$ 按后验概率 $p(x_0\mid x)$ 加权，并在适当的可积性/求导交换条件下，得到上面的边缘 score 等式。这常称为 Gaussian denoising score identity。平方损失的正交分解保证条件期望最小化期望 MSE。
 
-条件平方误差可以分解成条件方差加上预测值到条件均值的平方距离，因此均值最优。有限网络和有限训练只能近似它。上式不是所有非高斯加噪的通用公式。
+实际网络受到有限容量、训练数据与优化的限制，只能近似该条件期望。对于非高斯加噪或 $\sigma_t=0$ 的端点，不能直接套用这个分母。
 
 </details>
 
-## 重新检查训练链
+**到这里可以停下来的理解：** 我们制造标签训练噪声预测；尽管它猜不出每次的真实噪声，但条件平均预测编码了带噪数据的局部概率结构。还差最后一步：**如何把这种局部信息变成生成过程？**
 
-如果把真实 $x_0$ 也交给网络，让它计算噪声，会发生什么？
+<div className="next-card"><strong>下一节：为什么生成不需要原始图片？</strong><a href="/courses/generative-models/diffusion-sampling">查看从噪声出发的反向更新 →</a></div>
 
-<details className="answer">
-<summary>查看答案</summary>
-
-它可直接计算 $(x_t-\alpha_t x_0)/\sigma_t$，却依赖生成时拿不到的真实样本。这无法解决我们的任务。训练中的真实样本用于制造输入和标签，不作为无条件噪声预测网络的输入。
-
-</details>
-
-网络现在知道模糊状态里的统计规律，但还没有说明怎样生成。最重要的下一步是：**预测到噪声以后，该怎样更新状态？**
-
-<div className="next-card"><strong>下一节：没有原图的逆向生成</strong><a href="/courses/generative-models/diffusion-sampling">追踪采样过程 →</a></div>
-
-依据：[DDPM](https://arxiv.org/abs/2006.11239)；[Score-based SDE](https://arxiv.org/abs/2011.13456)。本节采用常见噪声预测参数化，实际模型也可预测干净样本或其他参数化。
+<small>参考：[DDPM](https://arxiv.org/abs/2006.11239)、[Score-based SDE](https://arxiv.org/abs/2011.13456)。这里描述常见噪声预测参数化，不代表所有 Diffusion 模型都采用同一预测目标。</small>

@@ -1,59 +1,67 @@
-# 没有原图，凭什么还能去噪？
+import { DiffusionSamplingFigure } from '../../components/GenerativePrincipleFigures'
 
-<div className="lead">训练时我们知道加入了什么噪声。生成时只有一份全新的随机数。网络不会知道它“原来是哪张图”，因为它原本就不是一张被弄坏的指定图。</div>
+# Diffusion：为什么局部去噪能生成完整样本？
 
-本节接着噪声预测训练，目标是区分“估计干净数据”和“向下一步状态采样”。
+<div className="lead">训练好的网络接收当前带噪状态，输出一个噪声预测。**但网络从来没有被直接训练成“输入纯噪声，输出完整图片”。那么生成的每一步究竟做了什么？**</div>
 
-## 反向过程解决的是条件推断
+<DiffusionSamplingFigure />
 
-训练的正向过程让数据逐步失去结构，最终分布接近容易采样的高斯。生成从这个近似终端分布取 $x_T$，再学着从当前状态采样前一个、噪声较少的状态。
+## 不是还原某一张原图，而是逐步改变样本的分布
 
-每一步问的是：“如果正向过程到达这里，前一步可能是什么？”可能有多个答案，反向过程需要描述其条件分布。它不需要指定某张原图，也不能唯一恢复加噪前发生的事件。
-
-因此，正确的反向条件分布作用于正确的当前分布时，能还原前一步的**整体分布**。这是生成成立的关键；网络预测误差和有限步近似会使实际结果偏离理想情况。
-
-## 为什么不能一次减完？
-
-噪声预测可以给出一个干净数据估计：
+正向训练过程逐步把真实数据分布变成接近简单高斯的分布。生成时我们从新的高斯噪声 $x_T$ 出发，按相反时间方向构造更新：
 
 $$
-\hat x_0=\frac{x_t-\sigma_t\epsilon_\theta(x_t,t)}{\alpha_t},\qquad\alpha_t>0.
+x_T \longrightarrow x_{T-1}\longrightarrow\cdots\longrightarrow x_0.
 $$
 
-但它不等于下一步状态。高噪声时来源很不确定，估计可能平均多种解释；若 $\alpha_t$ 很小，误差还会被放大。直接用它替代整个生成链，并没有保留所需的条件随机性和中间分布。
+关键是**整体分布的对应关系**：如果某一步的 $x_t$ 服从正确的带噪分布，并使用了正确的反向转移，那么 $x_{t-1}$ 就服从相应较低噪声程度的分布。如此连接起来，最终获得数据分布的样本，而不是指定某张被污染的图片。
 
-典型 DDPM 采样器把噪声预测用于反向转移的均值，再根据所用方差方案采样下一状态。逐步减少不确定性与一次取均值，是不同操作。
+训练中的真实 $x_0$ 仅用于构造监督；生成时既没有也不需要这张原图。模型学的是许多样本共享的统计规律。
+
+## 为什么不能直接拿预测的干净图片当最终结果？
+
+噪声预测确实允许我们估计当前状态可能对应的干净样本：
+
+$$
+\hat x_0=\frac{x_t-\sigma_t\epsilon_\theta(x_t,t)}{\alpha_t},
+\qquad\alpha_t>0.
+$$
+
+但 **$\hat x_0$ 是估计，不等于反向更新后的 $x_{t-1}$**。特别是在高噪声状态，同一观察可能来自多种不同干净样本，单次估计会合并不确定性。
+
+经典 DDPM 采用模型预测构造 $x_{t-1}$ 的反向条件高斯转移均值，再按选定方差方案采样。它不是简单执行“减去预测噪声”，也不是无条件保证每一步视觉上越来越清楚。
 
 <details className="answer">
-<summary>深入：经典离散 DDPM 的一步长什么样？</summary>
+<summary>深入：把预测噪声代入经典 DDPM 的反向均值</summary>
 
-设正向第 $t$ 步的噪声方差是 $\beta_t$，$a_t=1-\beta_t$，$\bar a_t=\prod_{s=1}^t a_s$。于是本课上一节的系数为 $\alpha_t=\sqrt{\bar a_t}$、$\sigma_t=\sqrt{1-\bar a_t}$。这里 $a_t$ 与 $\alpha_t$ 不同。
+记正向每步方差为 $\beta_t$，$a_t=1-\beta_t$，$\bar a_t=\prod_{s=1}^t a_s$。这与上一节的 $\alpha_t=\sqrt{\bar a_t}$、$\sigma_t=\sqrt{1-\bar a_t}$ 相对应，注意 $a_t\ne\alpha_t$。
 
-噪声参数化的反向均值写为
+经典噪声参数化使用的均值是
 
 $$
-\mu_\theta(x_t,t)=\frac{1}{\sqrt{a_t}}\left(x_t-\frac{\beta_t}{\sqrt{1-\bar a_t}}\epsilon_\theta(x_t,t)\right).
+\mu_\theta(x_t,t)=\frac{1}{\sqrt{a_t}}
+\left(x_t-\frac{\beta_t}{\sqrt{1-\bar a_t}}\epsilon_\theta(x_t,t)\right).
 $$
 
-它来自正向高斯后验均值，把未知的 $x_0$ 用噪声预测估计代入。采样写为 $x_{t-1}=\mu_\theta(x_t,t)+s_t\xi$，$\xi\sim\mathcal N(0,I)$，$s_t$ 由采样器的方差方案决定；经典实现最后一步通常不再加随机噪声。这个高斯反向模型是建模近似，不是任意真实数据的有限大步反向条件分布都恰好为高斯。
+按采样器的方差规则生成下一状态，例如
 
-生成的网络参数固定，更新的是 $x_t$。通常前向选足够强的累计噪声，让终端接近标准高斯；有限日程未必完全抹除信号。
+$$
+x_{t-1}=\mu_\theta(x_t,t)+s_t\xi,\qquad
+\xi\sim\mathcal N(0,I).
+$$
+
+这类反向高斯模型是对有限步反向条件分布的建模近似；不能把它误说成任意数据分布上有限大步的精确反向分布。经典实现最后一步通常不再加噪声。
 
 </details>
 
-## 试着判断一个改动
+## 预测同样准确，为什么减少采样步数仍可能变差？
 
-保持网络参数不变，把采样步数减少一半：我们重新训练了吗？输出分布一定不变吗？
+因为**学到的预测函数**和**用它执行的数值更新规则**是两回事。即使参数完全不变，改变时间步或采样器，仍可能改变数值误差，最终样本分布也可能发生变化。
 
-<details className="answer">
-<summary>查看原因</summary>
+同理，Diffusion 存在确定性采样路线，例如 probability flow ODE。**“Diffusion 必须随机，Flow Matching 必须确定性”不是正确的区分。**
 
-改变的是采样过程，参数没变。需要采用适配所选时间点的采样公式，不能随意跳过更新；即使使用合理求解器，有限步误差及网络误差也可能改变质量。连续理论中的等价分布不等于任意有限步实现完全等价。
+到这里，你已经能把训练和生成连起来：用人为加噪学习局部概率结构，用随时间变化的反向规则逐步构造样本分布。下一节换一个训练目标，看为什么可以直接学习速度。
 
-</details>
+<div className="next-card"><strong>换一条路线：Flow Matching</strong><a href="/courses/generative-models/flow-matching">为什么可以直接学会“往哪里移动”？ →</a></div>
 
-Diffusion 也有确定性采样路线，例如相应的 probability flow ODE。因而“随机是 Diffusion，确定性是 Flow Matching”不是可靠分类。接下来换一种监督目标，看看能否直接学速度。
-
-<div className="next-card"><strong>另一条路线：Flow Matching</strong><a href="/courses/generative-models/flow-matching">训练时如何获得速度标签 →</a></div>
-
-依据：[DDPM](https://arxiv.org/abs/2006.11239)，[Score-based SDE 与 probability flow ODE](https://arxiv.org/abs/2011.13456)。
+<small>参考：[DDPM](https://arxiv.org/abs/2006.11239)、[Score-based SDE 与 probability flow ODE](https://arxiv.org/abs/2011.13456)。</small>

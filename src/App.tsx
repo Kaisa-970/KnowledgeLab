@@ -5,7 +5,7 @@ import { chapterLabIds, chapterUrl, courses, curriculum, getCourseLocation, getL
 function CourseIndex() {
   return (
     <div className="lesson-article">
-      <h1>学习知识树</h1>
+      <h1>课程目录</h1>
       <p className="lead">先看知识所在的位置，再沿着一条主线深入。绿色链接是已实现课程；规划主题不是已发布内容。</p>
       {courses.map((entry) => (
         <section key={entry.id} className="index-course">

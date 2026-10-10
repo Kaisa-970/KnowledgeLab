@@ -343,8 +343,14 @@ function ZoomFigure() {
       x: g.b0 * projected[0].x + g.b1 * projected[1].x + g.b2 * projected[2].x,
       y: g.b0 * projected[0].y + g.b1 * projected[1].y + g.b2 * projected[2].y,
     })
-  const surfaceCentroid = flat({ b0: 1 / 3, b1: 1 / 3, b2: 1 / 3 })
-  const screenPosition = flat(CRUX.truth)
+  // These are positions of DIFFERENT points. Projecting the 3D centroid is
+  // not equivalent to averaging the three projected vertex positions.
+  const screenPosition = flat({ b0: 1 / 3, b1: 1 / 3, b2: 1 / 3 })
+  const surfaceCentroid = toCanvas(project({
+    x: (FAR.pos.x + NEAR_LEFT.pos.x + NEAR_TOP.pos.x) / 3,
+    y: (FAR.pos.y + NEAR_LEFT.pos.y + NEAR_TOP.pos.y) / 3,
+    z: (FAR.pos.z + NEAR_LEFT.pos.z + NEAR_TOP.pos.z) / 3,
+  }))
 
   // Magnify about the true centroid. Without this the two dots differ by about
   // one pixel and the panel says nothing.
@@ -360,15 +366,15 @@ function ZoomFigure() {
     <figure className="persp-panel">
       <figcaption>
         <strong>这两个点差在哪（放大 {MAGNIFY} 倍）</strong>
-        <span>它们本来只差 0.14 像素单位，放大后才看得见</span>
+        <span>真实表面重心投影与屏幕重心不是同一个点</span>
       </figcaption>
       <svg
         viewBox={`0 0 ${W} ${H + 40}`}
         className="persp-canvas"
         role="img"
         aria-label={
-          `放大 ${MAGNIFY} 倍的局部视图。绿点是曲面三等分的位置，橙点是屏幕面积三等分的位置` +
-          `在曲面上真正对应的地方。橙点偏向两个近处顶点一侧，也就是远处顶点被稀释的方向。`
+          `放大 ${MAGNIFY} 倍的局部视图。绿点是三维曲面重心经过透视投影后的屏幕位置；` +
+          `橙点是投影后的三个顶点的屏幕重心。两者不一致，橙点相对偏向近端。`
         }
       >
         {/* faint reference edges, magnified the same way */}
@@ -395,10 +401,10 @@ function ZoomFigure() {
         {/* Labels placed on opposite sides of their markers and stacked away from
             the connecting line, so the two texts cannot overlap each other. */}
         <text x={zoomCentre.x + 14} y={zoomCentre.y + 20} fontSize="10" fill="#0e7a70" textAnchor="start">
-          曲面三等分
+          真实表面重心
         </text>
         <text x={zoomScreen.x - 14} y={zoomScreen.y - 12} fontSize="10" fill="#a45a2b" textAnchor="end">
-          屏幕三等分
+          屏幕重心
         </text>
         <text x={zoomScreen.x - 14} y={zoomScreen.y - 24} fontSize="10" fill="#a45a2b" textAnchor="end">
           真正落在哪

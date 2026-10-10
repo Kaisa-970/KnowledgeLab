@@ -135,6 +135,24 @@ export function viewPointAtScreen(a: Vertex, b: Vertex, c: Vertex, screen: Point
   return { x: screen.x * w, y: screen.y * w, z: -w }
 }
 
+/**
+ * Screen position of an actual surface point selected by VIEW-SPACE barycentrics.
+ *
+ * Important: applying barycentric weights to projected 2D vertices is NOT the
+ * same operation. Under perspective projection only the three corners agree.
+ * This function is the geometric oracle for the lab's drawn texture cells.
+ */
+export function projectSurfaceBarycentric(
+  a: Vertex, b: Vertex, c: Vertex, g: Barycentric,
+): Point2 {
+  const p: Point3 = {
+    x: g.b0 * a.pos.x + g.b1 * b.pos.x + g.b2 * c.pos.x,
+    y: g.b0 * a.pos.y + g.b1 * b.pos.y + g.b2 * c.pos.y,
+    z: g.b0 * a.pos.z + g.b1 * b.pos.z + g.b2 * c.pos.z,
+  }
+  return project(p)
+}
+
 /** Exact attribute at a view-space point. The reference for both other paths. */
 export function interpolateExact(a: Vertex, b: Vertex, c: Vertex, p: Point3): number {
   const g = barycentric3D(a, b, c, p)
@@ -239,7 +257,7 @@ export function depthNaive(a: Vertex, b: Vertex, c: Vertex, screen: Point2, near
  * Largest interpolation error over the screen triangle, relative to the
  * attribute's total range.
  *
- * A grid, not the corners: the error vanishes at the corners and on every edge,
+ * A grid, not just the corners: the error vanishes at the vertices, but not in general along edges,
  * so probing only the vertices would report 0 for a visibly warped triangle.
  */
 export function maxRelativeError(a: Vertex, b: Vertex, c: Vertex, grid = 48): number {

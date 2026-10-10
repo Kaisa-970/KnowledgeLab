@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react'
 import {
   DEFAULT_SPREAD,
-  barycentric3D,
   clipW,
   interpolateCorrected,
   interpolateNaive,
   labTriangle,
   maxRelativeError,
   project,
+  projectSurfaceBarycentric,
   viewPointAtScreen,
   warpedAreaFraction,
   type Point2,
@@ -93,29 +93,23 @@ function Panel({
     const pb = project(b.pos)
     const pc = project(c.pos)
 
-    /** Screen position of the surface point with these barycentric coordinates. */
-    const onScreen = (u: number, v: number): Point2 => ({
-      x: u * pa.x + v * pb.x + (1 - u - v) * pc.x,
-      y: u * pa.y + v * pb.y + (1 - u - v) * pc.y,
-    })
-
     /**
-     * Where this panel places the surface cell whose far corner is (u, v).
+     * These (u,v,1-u-v) are barycentric coordinates ON THE ORIGINAL SURFACE,
+     * not already-divided screen barycentrics. A real surface-grid point must be
+     * formed in view space and THEN projected (correct path).
      *
-     * Corrected: at the projection of the surface point, so cells are the real
-     * surface cells seen in perspective.
-     *
-     * Naive: the path never sees the surface. It reads screen barycentrics as if
-     * they were surface coordinates, so the cell it believes sits at (u, v) is
-     * drawn where screen-side weights (u, v) actually land — which is the error
-     * made visible.
+     * If one mistakenly interpolates the projected vertex positions instead,
+     * the same surface parameter gets placed on a uniformly spaced screen grid.
+     * That is the naive texture warp. The endpoints still coincide.
      */
     const place = (u: number, v: number): Point2 => {
-      const screen = onScreen(u, v)
-      if (corrected) return toCanvas(screen)
-      const surface = viewPointAtScreen(a, b, c, screen)
-      const g = barycentric3D(a, b, c, surface)
-      return toCanvas(onScreen(g.b0, g.b1))
+      const g = { b0: u, b1: v, b2: 1 - u - v }
+      if (corrected) return toCanvas(projectSurfaceBarycentric(a, b, c, g))
+      const screen: Point2 = {
+        x: g.b0 * pa.x + g.b1 * pb.x + g.b2 * pc.x,
+        y: g.b0 * pa.y + g.b1 * pb.y + g.b2 * pc.y,
+      }
+      return toCanvas(screen)
     }
 
     // Corners are clipped in PARAMETER space, identically for both panels, so
@@ -221,7 +215,7 @@ export default function PerspectiveInterpLab() {
         <div>
           <span className="eyebrow">交互实验 · 透视校正</span>
           <h3 id="persp-lab-title">同一个三角形，两条插值路径</h3>
-          <p>先预测：左右两张图的四个角都一样，中间的格子也一样吗？</p>
+          <p>两张图的三个顶点完全一致。你能指出哪张棋盘格才像真正向远处延伸的地面吗？</p>
         </div>
         <button className="reset-button" type="button" onClick={() => setSpread(DEFAULT_SPREAD)}>↺ 重置</button>
       </div>
@@ -231,18 +225,18 @@ export default function PerspectiveInterpLab() {
             <Panel
               vertices={vertices}
               corrected={false}
-              title="屏幕空间权重（朴素）"
-              caption="格子被拉成楔形；边缘中点偏得最多"
+              title="直接插值屏幕重心坐标（错误）"
+              caption="格线按屏幕比例排布；看似规整，却不在真实纹理位置"
             />
             <Panel
               vertices={vertices}
               corrected
-              title="除以 w 后（正确）"
-              caption="格子保持正方形，间隔按 1/w 变化"
+              title="透视校正（正确）"
+              caption="表面纹理经过真实投影：近处更宽、远处更密"
             />
           </div>
           <div className="plot-legend">
-            <span><i className="legend-plain" />三个顶点位置两种做法完全一致</span>
+            <span><i className="legend-plain" />两张图仅三个顶点位置相同</span>
             <span><i className="legend-accent" />格子形状暴露差异</span>
           </div>
         </div>
@@ -285,7 +279,7 @@ export default function PerspectiveInterpLab() {
       <p className="lab-footnote">
         约定：视空间右手系，相机在原点朝 −z，所以 w = −z，三个顶点都在 z &lt; 0。
         屏幕坐标 u = x/w、v = y/w（y 向上）。属性在三个顶点取 0、1、0.5，量程恰好为 1，因此误差可直接读成百分比。
-        左图用屏幕重心坐标直接混合属性；右图先混合 attr/w 与 1/w 再相除。
+        左图直接在屏幕上均匀安放表面网格点；右图先在真实三维表面上放置网格点再投影，等价于按 attr/w 与 1/w 进行透视校正。正确投影本身仍会产生近大远小的形变。
       </p>
     </section>
   )

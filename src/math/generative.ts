@@ -65,3 +65,28 @@ export function noiseSamples(count = 80): number[] {
 export function linearTrainingPair(noise: number, data: number, time: number) {
   return { position: (1 - time) * noise + time * data, velocity: data - noise }
 }
+
+
+// Exact 1D distributions used in the static Diffusion figure.
+// p0 = .5 N(-1.45,.28²) + .5 N(+1.45,.28²)
+// xt = sqrt(1-t)*x0 + sqrt(t)*eps, 0 <= t <= 1.
+export function diffusionBridgeDensity(x: number, t: number): number {
+  const alpha = Math.sqrt(1 - t)
+  const variance = (1-t) * 0.28 ** 2 + t
+  return 0.5 * (normalDensity(x, -1.45 * alpha, variance)
+    + normalDensity(x, 1.45 * alpha, variance))
+}
+
+// Exact independent-Gaussian FM example for the training-vs-sampling figure.
+// Z~N(0,1), X~N(1,.5²), Xt=(1-t)Z+tX.
+export function gaussianBridgeSpread(t: number): number {
+  return Math.sqrt((1-t)**2 + 0.25*t*t)
+}
+export function gaussianBridgePosition(z: number, t: number): number {
+  return t + gaussianBridgeSpread(t) * z
+}
+export function gaussianBridgeVelocity(x: number, t: number): number {
+  const variance = (1-t)**2 + .25*t*t
+  const spreadDerivativeNumerator = -(1-t) + 0.25*t
+  return 1 + (spreadDerivativeNumerator / variance) * (x-t)
+}

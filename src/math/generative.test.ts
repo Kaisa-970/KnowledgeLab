@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { constantRisk, DATA_SPREAD, flowTrajectory, flowVelocity, leftPosterior, linearTrainingPair, mixtureMean, noiseSamples, normalDensity, pathDensity } from './generative.ts'
+import { constantRisk, DATA_SPREAD, diffusionBridgeDensity, gaussianBridgePosition, gaussianBridgeVelocity, flowTrajectory, flowVelocity, leftPosterior, linearTrainingPair, mixtureMean, noiseSamples, normalDensity, pathDensity } from './generative.ts'
 
 const close = (a: number, b: number, tolerance = 1e-6) => assert.ok(Math.abs(a - b) < tolerance, `${a} != ${b}`)
 const integrate = (fn: (x: number) => number) => {
@@ -65,4 +65,33 @@ test('training pair endpoints and fixed noise samples are reproducible', () => {
   close(linearTrainingPair(1, -2, 1).position, -2)
   assert.deepEqual(noiseSamples(), noiseSamples())
   assert.ok(noiseSamples().every(Number.isFinite))
+})
+
+
+test('illustrated reverse density path is normalized, with the correct Gaussian/noisy-mixture endpoints', () => {
+  for (const t of [0, 0.18, 0.55, 1]) {
+    close(integrate((x) => diffusionBridgeDensity(x, t)), 1)
+    close(integrate((x) => x * diffusionBridgeDensity(x, t)), 0, 1e-7)
+    close(integrate((x) => x*x*diffusionBridgeDensity(x,t)),
+      (1-t) * (1.45**2 + .28**2) + t, 0.00002)
+  }
+  for (const x of [-2.5, -.4, 0, 1.3]) {
+    close(diffusionBridgeDensity(x, 1), normalDensity(x))
+    close(diffusionBridgeDensity(x, 0), (normalDensity(x,-1.45,.28**2)+normalDensity(x,1.45,.28**2))/2)
+  }
+})
+
+test('illustrated Gaussian flow trajectories are exact ODE solutions for their conditional mean velocity', () => {
+  const h = 1e-5
+  for (const z of [-1, 0, 1]) {
+    close(gaussianBridgePosition(z,0),z)
+    close(gaussianBridgePosition(z,1),1+.5*z)
+    for (const t of [0, .15, .37, .66, .94, 1]) {
+      const derivative = (gaussianBridgePosition(z,t+h)-gaussianBridgePosition(z,t-h))/(2*h)
+      close(derivative,gaussianBridgeVelocity(gaussianBridgePosition(z,t),t),1e-8)
+    }
+  }
+  // Two independently sampled training pairs cross, yet demand distinct velocities.
+  close(linearTrainingPair(-1,1.5,2/3).position,linearTrainingPair(1,.5,2/3).position)
+  assert.notEqual(linearTrainingPair(-1,1.5,2/3).velocity,linearTrainingPair(1,.5,2/3).velocity)
 })

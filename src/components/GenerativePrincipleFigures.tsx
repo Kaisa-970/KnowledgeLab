@@ -1,3 +1,5 @@
+import { diffusionBridgeDensity, gaussianBridgePosition } from '../math/generative'
+
 /**
  * Original static teaching diagrams. Number glyphs and noise tiles are
  * conceptual illustrations, never represented as trained model outputs.
@@ -86,18 +88,15 @@ export function ScoreFieldFigure(){
  * This plots MARGINAL distributions, not a particular generated image.
  */
 export function DiffusionSamplingFigure(){
-  const normal=(x:number,m:number,s:number)=>
-    Math.exp(-.5*((x-m)/s)**2)/(Math.sqrt(2*Math.PI)*s)
   const states=[
     {t:1,label:'起点：t = 1',desc:'标准高斯噪声'},
     {t:.55,label:'中途：t = 0.55',desc:'结构逐渐可辨'},
     {t:0,label:'终点：t = 0',desc:'双峰数据分布'},
   ]
   const plot=(t:number)=>{
-    const a=Math.sqrt(1-t),sigma=Math.sqrt((1-t)*.28**2+t)
     return Array.from({length:160},(_,i)=>{
       const x=-3+i*6/159
-      const p=(normal(x,-1.45*a,sigma)+normal(x,1.45*a,sigma))*.5
+      const p=diffusionBridgeDensity(x,t)
       return (i===0?'M':'L')+(14+(x+3)/6*254).toFixed(2)+','+(116-p*64).toFixed(2)
     }).join(' ')
   }
@@ -133,7 +132,7 @@ export function FlowPathsFigure(){
   // is x(t)=t+sqrt((1-t)²+0.25t²)*z. No trained network is implied.
   const odePath=(z:number)=>poly(Array.from({length:55},(_,i)=>{
     const t=i/54
-    return [t,t+Math.sqrt((1-t)**2+.25*t*t)*z] as [number,number]
+    return [t,gaussianBridgePosition(z,t)] as [number,number]
   }))
   return <figure className="gen-story" data-concept-figure="flow-paths">
     <Header title="训练时有配对终点，生成时只有一个起点：中间靠什么连接？" subtitle="两种不同的轨迹"/>

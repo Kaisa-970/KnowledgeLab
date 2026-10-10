@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import curriculumData from './curriculum/curriculum.json'
 
 export type CourseDomain = 'mathematics' | 'programming' | 'graphics' | 'ai' | 'robotics' | 'other'
 export type Chapter = {
@@ -16,7 +17,10 @@ export type Chapter = {
   lessonPath: string
   status: 'prototype' | 'reviewed' | 'published'
 }
+export const curriculum = curriculumData
+
 export type CoursePlan = {
+  curriculum: { trackId: string; moduleId: string }
   schemaVersion: 2
   status: Chapter['status']
   design: { learningBriefPath: string; knowledgeMapPath: string; knowledgeLinksPath: string }
@@ -57,6 +61,12 @@ const lessonModules = import.meta.glob<LessonComponent>('./lessons/*.mdx', {
 })
 
 export const courses = Object.values(plans).sort((a, b) => a.title.localeCompare(b.title, 'zh-CN'))
+
+export function getCourseLocation(course: CoursePlan) {
+  const track = curriculum.tracks.find((t) => t.id === course.curriculum.trackId)
+  const module = track?.modules.find((m) => m.id === course.curriculum.moduleId)
+  return track && module ? {track, module} : undefined
+}
 
 export function getLessonComponent(chapter: Chapter): LessonComponent | undefined {
   const prefix = 'src/content/lessons/'

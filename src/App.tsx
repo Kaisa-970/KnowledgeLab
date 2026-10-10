@@ -1,20 +1,15 @@
-import { chapterLabIds, chapterUrl, courses, getLessonComponent, getRoute } from './content/registry'
+import { chapterLabIds, chapterUrl, courses, curriculum, getCourseLocation, getLessonComponent, getRoute } from './content/registry'
 
-const domains = [
-  { id: 'mathematics', name: '数学实验室', symbol: '∑' },
-  { id: 'programming', name: '编程与算法', symbol: '⌘' },
-  { id: 'graphics', name: '计算机图形学', symbol: '◈' },
-  { id: 'ai', name: 'AI 与机器人', symbol: '◎' },
-]
 
 /** The root path lists every course; it is not a redirect to whichever sorts first. */
 function CourseIndex() {
   return (
     <div className="lesson-article">
-      <h1>课程目录</h1>
-      <p className="lead">交互式课程：先看见现象，动手改变条件，再理解背后的数学与运行机制。</p>
+      <h1>学习知识树</h1>
+      <p className="lead">先看知识所在的位置，再沿着一条主线深入。绿色链接是已实现课程；规划主题不是已发布内容。</p>
       {courses.map((entry) => (
         <section key={entry.id} className="index-course">
+          <div className="index-position">知识位置：{getCourseLocation(entry)?.track.title} → {getCourseLocation(entry)?.module.title}</div>
           <h2>{entry.title}</h2>
           <p>{entry.summary}</p>
           <div className="index-facts">
@@ -35,6 +30,28 @@ function CourseIndex() {
           )}
         </section>
       ))}
+      <section className="curriculum-plan" aria-label="全局课程规划">
+        <h2>全局课程规划</h2>
+        <p>五条学习主线。展开可查看每个模块的课程与后续规划；同一知识也可以通过跨课程关系连接到其他领域。</p>
+        {curriculum.tracks.map((track) => (
+          <details className="curriculum-track" key={track.id} open={track.modules.some((module) => module.courseIds.length > 0)}>
+            <summary>{track.title} <span>{track.modules.length} 个模块</span></summary>
+            <ul className="curriculum-modules">
+              {track.modules.map((module) => (
+                <li key={module.id}>
+                  <strong>{module.title}</strong>
+                  <p>{module.focus}</p>
+                  {module.courseIds.map((id) => {
+                    const course = courses.find((item) => item.id === id)
+                    return course ? <a key={id} href={chapterUrl(id, course.chapters[0].id)}>{course.title} · 已收录</a> : null
+                  })}
+                  {module.plannedCourses.map((item) => <span className="curriculum-planned" key={item.id}>{item.title} · 规划中</span>)}
+                </li>
+              ))}
+            </ul>
+          </details>
+        ))}
+      </section>
     </div>
   )
 }
@@ -44,6 +61,7 @@ export default function App() {
   const course = route.kind === 'chapter' ? route.course : undefined
   const chapter = route.kind === 'chapter' ? route.chapter : undefined
   const Lesson = chapter ? getLessonComponent(chapter) : undefined
+  const location = course ? getCourseLocation(course) : undefined
 
   return (
     <div className="app-shell">
@@ -68,17 +86,17 @@ export default function App() {
             )))}
           </select>
         </nav>
-        <div className="sidebar-caption">学习领域</div>
-        {domains.map((domain) => (
-          <div className={'nav-domain ' + (course?.domain === domain.id ? 'active' : 'inactive')} key={domain.id}>
-            <span className="domain-symbol">{domain.symbol}</span>{domain.name}
-            <span className="nav-count">{courses.filter((entry) => entry.domain === domain.id).length || '—'}</span>
+        <div className="sidebar-caption">学习主线</div>
+        {curriculum.tracks.map((track) => (
+          <div className={'nav-domain ' + (course?.curriculum.trackId === track.id ? 'active' : 'inactive')} key={track.id}>
+            {track.title}
+            <span className="nav-count">{courses.filter((entry) => entry.curriculum.trackId === track.id).length || '—'}</span>
           </div>
         ))}
         <div className="sidebar-caption section-caption">课程目录</div>
         {courses.map((entry) => (
           <div key={entry.id}>
-            <div className="course-title">{entry.title}<small>{entry.summary}</small></div>
+            <div className="course-title">{entry.title}<small>{getCourseLocation(entry)?.module.title} · {entry.summary}</small></div>
             {entry.chapters.map((item, i) => (
               <a
                 className={'lesson-link ' + (course?.id === entry.id && chapter?.id === item.id ? 'selected' : '')}
@@ -97,14 +115,14 @@ export default function App() {
       </aside>
       <div className="main-panel" id="top">
         <header className="topbar">
-          <span className="topbar-path">学习 / {course?.title || '课程目录'} / <strong>{chapter?.title || '全部课程'}</strong></span>
+          <span className="topbar-path">知识树 / {location ? location.track.title + ' / ' + location.module.title + ' / ' : ''}{course?.title || '课程目录'}{chapter ? ' / ' + chapter.title : ''}</span>
           <a href="https://github.com/Kaisa-970/KnowledgeLab" target="_blank" rel="noreferrer">GitHub ↗</a>
         </header>
         <div className="layout">
           <main className="reading-column" id="lesson">
             {Lesson && chapter && course ? (
               <>
-                <div className="chapter-badge">{course.domain.toUpperCase()} <span>·</span> {chapter.id.toUpperCase()}</div>
+                <div className="chapter-badge">{location?.track.title} <span>›</span> {location?.module.title} <span>›</span> {course.title}</div>
                 <article className="lesson-article"><Lesson /></article>
               </>
             ) : route.kind === 'index' ? (

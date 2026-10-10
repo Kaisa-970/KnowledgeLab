@@ -1,25 +1,25 @@
 {
   "schemaVersion": 2,
   "id": "generative-models",
-  "title": "生成模型：模型怎样从噪声生成新样本？",
+  "title": "生成模型：从噪声到图像",
   "status": "prototype",
   "curriculum": {
     "trackId": "ai-models",
     "moduleId": "generative-models"
   },
   "domain": "ai",
-  "level": "foundation-to-intermediate",
-  "summary": "从真实图像训练与新噪声生成两条运行链入手，借助静态机制图理解 Diffusion 的监督信号、score 与反向更新，以及 Flow Matching 的条件路径和平均速度场。简单分布例子与交互实验按需展开。",
+  "level": "intermediate",
+  "summary": "一篇连贯的技术文章，借助关键原理图，从人为加噪的训练标签讲到 score 与反向生成，再自然引出 Flow Matching 的速度场和分布演化。",
   "prerequisites": [
-    "函数、随机数与平均值的基本直觉",
-    "知道模型训练会调整参数；条件概率在正文补充",
-    "深入推导需要向量、导数与积分"
+    "理解神经网络训练与推理、基本概率分布和均方误差",
+    "深入数学部分会用到条件期望、概率密度与常微分方程"
   ],
   "learningOutcomes": [
-    "从数据流图解释训练更新参数与生成更新样本的区别",
-    "说明高斯加噪产生的已知噪声标签为什么让网络学到带噪数据的局部概率结构",
-    "区分噪声预测、干净样本估计、反向条件转移与采样器",
-    "解释 Flow Matching 条件路径速度、条件平均速度场与真实生成轨迹的差别"
+    "能够沿着同一条因果线解释训练监督如何得到、生成时如何使用已学预测",
+    "理解高斯噪声条件平均与 score 的联系，以及为何不等于一次性还原原图",
+    "区分 DDPM 的反向采样状态与干净样本估计",
+    "解释 Flow Matching 为什么从训练配对学习平均速度场而生成时不需要配对终点",
+    "把路径、网络预测目标与求解器看作不同设计维度"
   ],
   "knowledgeNodes": [
     {
@@ -109,145 +109,38 @@
   ],
   "chapters": [
     {
-      "id": "sampling-not-averaging",
-      "title": "一份随机噪声，怎么生成一张从未见过的图？",
-      "coreQuestion": "训练用真实样本，生成却没有原图；模型参数与样本状态分别在什么时候更新？",
+      "id": "from-noise-to-image",
+      "title": "从一团噪声到一张图，生成模型究竟学会了什么？",
+      "coreQuestion": "一个只用真实图片和人造标签训练的预测网络，为什么能让新随机数变成合理的数据样本？",
       "learningObjectives": [
-        "读懂训练与生成并行数据流，定位网络参数 θ 与样本状态 xₜ 的更新位置",
-        "说明生成需要整体样本分布，区分一个预测值与可采样映射"
+        "能够沿着同一条因果线解释训练监督如何得到、生成时如何使用已学预测",
+        "理解高斯噪声条件平均与 score 的联系，以及为何不等于一次性还原原图",
+        "区分 DDPM 的反向采样状态与干净样本估计",
+        "解释 Flow Matching 为什么从训练配对学习平均速度场而生成时不需要配对终点",
+        "把路径、网络预测目标与求解器看作不同设计维度"
       ],
       "conceptIds": [
         "sampling-distribution",
-        "conditional-mean"
-      ],
-      "prerequisites": [
-        "平均值和平方"
-      ],
-      "dependsOnChapterIds": [],
-      "coreTask": "不看正文，按第一幅图解释训练和生成分别需要哪些输入，参数与样本状态哪个会更新；说明不提供原图时模型仍能生成的前提。",
-      "lessonPath": "src/content/lessons/generative-sampling-not-averaging.mdx",
-      "status": "prototype"
-    },
-    {
-      "id": "noise-to-distribution",
-      "title": "一条局部更新规则，为什么能改变整体分布？",
-      "coreQuestion": "一个样本只看当前位置，如何影响最终的整体分布；为何解析演示不等于训练网络？",
-      "learningObjectives": [
-        "区分单条样本轨迹与整体概率分布",
-        "说明实验的解析场与训练模型不同，实验属于可选机制演示"
-      ],
-      "conceptIds": [
-        "probability-path",
-        "data-vector"
-      ],
-      "prerequisites": [
-        "采样与分布"
-      ],
-      "dependsOnChapterIds": [
-        "sampling-not-averaging"
-      ],
-      "labIds": [
-        "generative-flow-lab"
-      ],
-      "lessonPath": "src/content/lessons/generative-noise-to-distribution.mdx",
-      "status": "prototype"
-    },
-    {
-      "id": "diffusion-training",
-      "title": "Diffusion：网络到底从加噪图像里学到了什么？",
-      "coreQuestion": "为什么网络不可能复原每次真实噪声，却能用噪声预测得到带噪数据分布的 score？",
-      "learningObjectives": [
-        "借数据流图追踪 x₀、ε、xₜ、网络输出与监督标签",
-        "解释条件平均噪声预测与带噪数据 score 的联系及高斯噪声的适用边界"
-      ],
-      "conceptIds": [
-        "diffusion-training",
         "conditional-mean",
-        "score"
-      ],
-      "prerequisites": [
-        "平方误差",
-        "分布视角"
-      ],
-      "dependsOnChapterIds": [
-        "sampling-not-averaging"
-      ],
-      "coreTask": "看图指出 x₀ 为什么不能作为噪声预测网络的输入；用两个不同样本产生同一个 xₜ 的反例解释条件平均预测为何可用，score 向量又不等同于完整采样路径。",
-      "lessonPath": "src/content/lessons/generative-diffusion-training.mdx",
-      "status": "prototype"
-    },
-    {
-      "id": "diffusion-sampling",
-      "title": "Diffusion：为什么局部去噪能生成完整样本？",
-      "coreQuestion": "一条局部噪声预测怎样参与逆向转移，为什么 x̂₀ 并不是下一步的 xₜ₋₁？",
-      "learningObjectives": [
-        "结合过程图指出 x̂₀ 与 xₜ₋₁ 的角色区别",
-        "解释反向转移如何逐步改变整个样本分布，以及采样步数与参数训练的区别"
-      ],
-      "conceptIds": [
+        "data-vector",
+        "probability-path",
+        "diffusion-training",
+        "score",
         "diffusion-sampling",
-        "score"
-      ],
-      "prerequisites": [
-        "噪声预测训练"
-      ],
-      "dependsOnChapterIds": [
-        "diffusion-training"
-      ],
-      "coreTask": "把同一噪声预测网络的生成步数改为更少，判断变的是训练标签还是采样过程，并解释无法保证质量相同的原因。",
-      "lessonPath": "src/content/lessons/generative-diffusion-sampling.mdx",
-      "status": "prototype"
-    },
-    {
-      "id": "flow-matching",
-      "title": "Flow Matching：知道训练终点，为什么生成时不需要终点？",
-      "coreQuestion": "当许多训练条件路径在同一位置给出不同速度标签时，网络学到的是什么，生成为什么无需知道任何训练终点？",
-      "learningObjectives": [
-        "结合训练交叉路径图解释条件平均速度为什么不是固定全局速度",
-        "区分训练直线路径与沿速度场积分的生成轨迹",
-        "解释 Diffusion/Flow Matching 预测目标、分布路径和采样器的区别"
-      ],
-      "conceptIds": [
         "flow-matching",
         "numerical-sampling",
-        "probability-path"
+        "shared-probability-paths"
       ],
       "prerequisites": [
-        "分布与条件平均"
+        "神经网络训练/推理、基本概率与梯度概念"
       ],
-      "dependsOnChapterIds": [
-        "sampling-not-averaging"
-      ],
-      "coreTask": "用两条交叉的训练路径说明同位置不同速度为何不能直接照抄；从条件平均速度场解释生成轨迹为何不绑定训练端点，再判断换采样积分步数会改变什么。",
-      "lessonPath": "src/content/lessons/generative-flow-matching.mdx",
+      "dependsOnChapterIds": [],
+      "coreTask": "解释一条完整训练—生成链；比较噪声预测与速度预测，说明为何学习的局部规则可以驱动整个样本分布，而不是直接背公式。",
+      "lessonPath": "src/content/lessons/generative-from-noise-to-image.mdx",
       "status": "prototype"
     }
   ],
-  "plannedChapters": [
-    {
-      "id": "generation-routes",
-      "title": "为什么有的逐个生成，有的一次解码？",
-      "dependsOnChapterIds": [
-        "noise-to-distribution"
-      ]
-    },
-    {
-      "id": "shared-probability-paths",
-      "title": "去噪与移动，究竟共享了什么？",
-      "dependsOnChapterIds": [
-        "diffusion-sampling",
-        "flow-matching"
-      ]
-    },
-    {
-      "id": "conditioning-and-latents",
-      "title": "文字怎样控制生成，为什么在潜空间运行？",
-      "dependsOnChapterIds": [
-        "generation-routes",
-        "shared-probability-paths"
-      ]
-    }
-  ],
+  "plannedChapters": [],
   "design": {
     "learningBriefPath": "src/content/courses/generative-models/learning-brief.md",
     "knowledgeMapPath": "src/content/courses/generative-models/knowledge-map.md",

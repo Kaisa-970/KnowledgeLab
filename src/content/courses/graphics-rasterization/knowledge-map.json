@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 2,
+  "courseId": "graphics-rasterization",
+  "links": [
+    {
+      "from": {
+        "courseId": "graphics-rasterization",
+        "conceptId": "perspective-divide"
+      },
+      "to": {
+        "courseId": "linear-algebra",
+        "conceptId": "linear-map"
+      },
+      "kind": "applied-in",
+      "reason": "透视投影矩阵是线性映射在齐次坐标下的具体实例：它把视空间的四维齐次向量映到裁剪空间，w 分量随后承担透视除法，这正是矩阵无法在三维仿射空间里表达透视的原因。",
+      "boundary": "矩阵本身只负责线性部分；非线性来自除法那一步。把投影矩阵当作「整个透视变换」，会让人误以为缩放与平移之外还有别的东西藏在矩阵里。"
+    },
+    {
+      "from": {
+        "courseId": "graphics-rasterization",
+        "conceptId": "attribute-interpolation"
+      },
+      "to": {
+        "courseId": "fourier-analysis",
+        "conceptId": "partial-sum-convergence"
+      },
+      "kind": "contrasts-with",
+      "reason": "两者都涉及「有限手段能逼近到什么程度」，但失效机制相反：傅里叶截断误差随项数单调减小、只在跳变处留下不消失的过冲；透视插值的误差来自权重取自错误的坐标空间，它与三角形数量无关，细分三角形一步都不会改善。",
+      "boundary": "不要把「都叫逼近」当成同一类问题。这里没有跳变也没有过冲；而傅里叶增加项数是真正有效的改进手段，透视插值的有效手段只有换权重。"
+    },
+    {
+      "from": {
+        "courseId": "graphics-rasterization",
+        "conceptId": "depth-buffer"
+      },
+      "to": {
+        "courseId": "graphics-rasterization",
+        "conceptId": "perspective-correct-interpolation"
+      },
+      "kind": "contrasts-with",
+      "reason": "深度与 uv 走同一条插值代码，但只有 uv 需要透视校正。原因是深度存的是 z/w（屏幕空间仿射），而 uv 在视空间线性。这个对比解释了为什么「纹理歪但深度对」不是矛盾。",
+      "boundary": "这只在深度以 z/w 存进缓冲时成立。若自己保存视空间 z 或线性深度再做屏幕空间插值，就需要单独处理。"
+    }
+  ]
+}

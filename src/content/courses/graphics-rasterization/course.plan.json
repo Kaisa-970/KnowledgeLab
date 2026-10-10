@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 2,
+  "id": "graphics-rasterization",
+  "title": "光栅化：像素是怎么算出来的",
+  "domain": "graphics",
+  "level": "intermediate",
+  "summary": "从软件光栅化器里真实会遇到的画面错误出发，把投影、插值、采样串成一条因果链：为什么纹理会被拉伸，为什么远处的纹理会闪，以及每一处该除以什么。",
+  "prerequisites": [
+    "齐次坐标与 4×4 变换矩阵",
+    "透视投影矩阵与裁剪空间的 w 分量",
+    "重心坐标与三角形填充的基本写法"
+  ],
+  "learningOutcomes": [
+    "解释屏幕中点为什么不是空间中点，并写出对应的参数 t",
+    "推导 1/w 在屏幕空间线性，并据此写出透视校正插值",
+    "解释深度缓冲为什么不需要透视校正，而 uv 需要",
+    "区分「插在哪」（插值）与「采多少」（过滤）两类错误"
+  ],
+  "knowledgeNodes": [
+    {
+      "id": "view-clip-space",
+      "title": "视空间、裁剪空间与 w 的含义",
+      "dependsOn": []
+    },
+    {
+      "id": "barycentric",
+      "title": "重心坐标与三角形填充",
+      "dependsOn": []
+    },
+    {
+      "id": "perspective-divide",
+      "title": "透视除法与屏幕空间",
+      "dependsOn": [
+        "view-clip-space"
+      ]
+    },
+    {
+      "id": "attribute-interpolation",
+      "title": "顶点属性插值",
+      "dependsOn": [
+        "barycentric",
+        "perspective-divide"
+      ]
+    },
+    {
+      "id": "perspective-correct-interpolation",
+      "title": "透视校正插值（1/w 与 attr/w）",
+      "dependsOn": [
+        "attribute-interpolation"
+      ]
+    },
+    {
+      "id": "depth-buffer",
+      "title": "深度缓冲与 z/w",
+      "dependsOn": [
+        "perspective-divide"
+      ]
+    },
+    {
+      "id": "texture-filtering",
+      "title": "纹理过滤与 mipmap",
+      "dependsOn": [
+        "perspective-correct-interpolation"
+      ]
+    }
+  ],
+  "chapters": [
+    {
+      "id": "perspective-correct-interpolation",
+      "title": "透视校正插值",
+      "coreQuestion": "三个角上的值已知，三角形内部每一点该取多少？为什么按屏幕面积算出的权重是错的，而 1/w 恰好能修好它？",
+      "learningObjectives": [
+        "说明屏幕面积与曲面面积不成比例，因而屏幕面积权重给出的是错误的空间位置",
+        "推导 1/w 与 s/w 在屏幕坐标上是仿射函数，从而说明相除能精确还原属性",
+        "解释 w 越大权重越小背后的几何含义：远处在屏幕上占的像素少",
+        "说明深度存的 z/w 本身在屏幕上线性，因此深度测试不受该缺陷影响"
+      ],
+      "conceptIds": [
+        "view-clip-space",
+        "perspective-divide",
+        "attribute-interpolation",
+        "perspective-correct-interpolation",
+        "depth-buffer"
+      ],
+      "prerequisites": [
+        "齐次坐标与 w 的含义",
+        "透视投影",
+        "三角形按面积加权的概念"
+      ],
+      "dependsOnChapterIds": [],
+      "labIds": [
+        "perspective-interp-lab"
+      ],
+      "lessonPath": "src/content/lessons/perspective-correct-interpolation.mdx",
+      "status": "prototype"
+    }
+  ],
+  "plannedChapters": [
+    {
+      "id": "texture-sampling",
+      "title": "为什么远处的纹理会闪？",
+      "dependsOnChapterIds": [
+        "perspective-correct-interpolation"
+      ]
+    },
+    {
+      "id": "depth-precision",
+      "title": "z-fighting 从哪里来？",
+      "dependsOnChapterIds": [
+        "texture-sampling"
+      ]
+    }
+  ],
+  "status": "prototype",
+  "design": {
+    "learningBriefPath": "src/content/courses/graphics-rasterization/learning-brief.md",
+    "knowledgeMapPath": "src/content/courses/graphics-rasterization/knowledge-map.md",
+    "knowledgeLinksPath": "src/content/courses/graphics-rasterization/knowledge-map.json"
+  }
+}

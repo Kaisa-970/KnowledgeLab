@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 1,
+  "id": "perspective-interp-lab",
+  "question": "三角形内部每一点的颜色/纹理坐标该怎么算？为什么按屏幕面积加权是错的，而 1/w 能修好它？",
+  "prediction": "把三个顶点的深度差从 0 拖到默认值 1.2，再试试上限 2.0：左右两张图在深度差为 0 时会一样吗？哪一张的棋盘格会被拉斜？被拉得最厉害的位置在三角形中间还是边上？",
+  "controls": [
+    {
+      "id": "depth-spread",
+      "label": "顶点深度差",
+      "description": "在 0 到 2 之间改变最远顶点与另外两个顶点的 w 差距；默认值为 1.2。0 表示三个顶点在同一深度，此时屏幕空间与视空间的比例关系恒定。",
+      "kind": "slider"
+    }
+  ],
+  "visibleOutputs": [
+    {
+      "id": "naive-panel",
+      "label": "朴素插值的三角形",
+      "description": "用屏幕重心坐标直接混合视空间属性画出的棋盘格，格子被拉成楔形"
+    },
+    {
+      "id": "corrected-panel",
+      "label": "透视校正的三角形",
+      "description": "先插值 attr/w 与 1/w 再相除得到的棋盘格，格子保持正方形"
+    },
+    {
+      "id": "midpoint-readout",
+      "label": "AB 边中点读数",
+      "description": "同一屏幕位置上，两条路径给出的属性值以及该处的真实表面 w"
+    },
+    {
+      "id": "error-metrics",
+      "label": "偏差统计",
+      "description": "偏差超过属性量程 2% 的采样点数量，以及整个三角形的最大相对误差"
+    }
+  ],
+  "invariants": [
+    {
+      "id": "vertices-exact",
+      "statement": "两条插值路径在三个顶点处给出完全相同的结果，误差恒为 0",
+      "oracleIds": [
+        "vertex-exact-test"
+      ]
+    },
+    {
+      "id": "reciprocal-affine",
+      "statement": "1/w 在屏幕空间是仿射函数，截图空间重心坐标混合它与由平面方程解出的 w 一致",
+      "oracleIds": [
+        "affine-test"
+      ]
+    },
+    {
+      "id": "corrected-exact",
+      "statement": "透视校正路径在整个三角形上与视空间参考值一致到浮点精度",
+      "oracleIds": [
+        "exactness-test"
+      ]
+    },
+    {
+      "id": "depth-unaffected",
+      "statement": "深度 z/w 用朴素屏幕空间权重插值本来就是精确的，不需要校正",
+      "oracleIds": [
+        "depth-test"
+      ]
+    }
+  ],
+  "edgeCases": [
+    {
+      "id": "zero-spread",
+      "setup": "把顶点深度差设为 0，三个顶点在同一平面、w 相同",
+      "expected": "两条路径结果一致，格子是正方形；这正是这个 bug 在简单测试里不出现的原因",
+      "oracleIds": [
+        "flat-w-test",
+        "monotone-test"
+      ]
+    },
+    {
+      "id": "degenerate",
+      "setup": "三角形退化（三顶点共线），面积为 0",
+      "expected": "返回重心处的确定值而不是 NaN，同时有独立的判定函数报告退化",
+      "oracleIds": [
+        "degenerate-test"
+      ]
+    },
+    {
+      "id": "large-spread",
+      "setup": "把顶点深度差拉到上限 2.0，远顶点 w 是近顶点的三倍",
+      "expected": "误差随深度差单调增大，但仍小于属性量程；误差在顶点处仍为 0",
+      "oracleIds": [
+        "monotone-test",
+        "vertex-exact-test"
+      ]
+    }
+  ],
+  "explanation": "屏幕面积权重给出的是「这一点在屏幕上离三个角多近」，而不是「在曲面上离三个角多近」，因为屏幕不是曲面的等比缩放。1/w 与 s/w 在屏幕坐标上都是仿射函数，所以先在屏幕上插值它们再相除，就能还原视空间线性的属性。w 越大权重越小，因为远处在屏幕上占的像素少。深度存的是 z/w，本身在屏幕上线性，因此不受该缺陷影响。",
+  "oracles": [
+    {
+      "id": "vertex-exact-test",
+      "kind": "property",
+      "description": "朴素路径在三个顶点处与真实属性一致，误差随位置在顶点为 0、边中段接近最大值",
+      "testFile": "src/math/perspective.test.ts",
+      "testName": "naive error vanishes at the vertices and is near-maximal along the edges"
+    },
+    {
+      "id": "affine-test",
+      "kind": "reference",
+      "description": "由三角形平面方程独立解出 w，与屏幕重心坐标混合 1/w 的结果逐点比对",
+      "testFile": "src/math/perspective.test.ts",
+      "testName": "1/w is affine in screen space, which is the whole reason the fix works"
+    },
+    {
+      "id": "exactness-test",
+      "kind": "reference",
+      "description": "在整个屏幕三角形上网格采样，校正路径与视空间参考值比对",
+      "testFile": "src/math/perspective.test.ts",
+      "testName": "the corrected path is exact everywhere, and the naive one is not"
+    },
+    {
+      "id": "depth-test",
+      "kind": "analytical",
+      "description": "深度 z/w 的朴素插值与按 1/w 校正后的结果逐点一致，说明深度不受该缺陷影响",
+      "testFile": "src/math/perspective.test.ts",
+      "testName": "depth is exact even through the naive path, which resolves the puzzle"
+    },
+    {
+      "id": "flat-w-test",
+      "kind": "analytical",
+      "description": "三个顶点 w 相同时两条路径完全一致，最大相对误差为零",
+      "testFile": "src/math/perspective.test.ts",
+      "testName": "the error vanishes when all three vertices share a w"
+    },
+    {
+      "id": "monotone-test",
+      "kind": "property",
+      "description": "最大相对误差与受影响面积随深度差单调不减，深度差为 0 时误差为 0",
+      "testFile": "src/math/perspective.test.ts",
+      "testName": "more depth spread means more visible warp, monotonically"
+    },
+    {
+      "id": "degenerate-test",
+      "kind": "analytical",
+      "description": "退化三角形的两条路径都返回有限值，判定函数正确识别共线",
+      "testFile": "src/math/perspective.test.ts",
+      "testName": "a degenerate triangle returns a defined value instead of NaN"
+    },
+    {
+      "id": "midpoint-test",
+      "kind": "analytical",
+      "description": "屏幕中点反解出的空间参数为 0.75 而非 0.5，两条路径给出不同结果",
+      "testFile": "src/math/perspective.test.ts",
+      "testName": "the screen midpoint of a near and a far vertex is not the surface midpoint"
+    },
+    {
+      "id": "inverse-test",
+      "kind": "reference",
+      "description": "屏幕点到视空间点的反解与投影互为逆映射，保证两条路径比较的是同一个表面位置",
+      "testFile": "src/math/perspective.test.ts",
+      "testName": "viewPointAtScreen really inverts project"
+    },
+    {
+      "id": "default-visible-test",
+      "kind": "regression",
+      "description": "默认滑块位置下实验确实显示出可见的变形，避免开场画面看不出问题",
+      "testFile": "src/math/perspective.test.ts",
+      "testName": "the default lab triangle actually shows the artifact"
+    }
+  ],
+  "implementation": {
+    "componentPath": "src/components/PerspectiveInterpLab.tsx",
+    "mathPath": "src/math/perspective.ts"
+  }
+}

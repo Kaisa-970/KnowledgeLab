@@ -186,3 +186,12 @@ button { cursor:pointer; }
   .sound-amplitude { flex-basis:100%; margin:3px 0 0; }
   .sound-explanation-grid { grid-template-columns:1fr; }
 }
+
+/* Perspective-correct interpolation lab: two panels, one screen triangle each. */
+.persp-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.persp-panel { margin:0; background:#fff; border:1px solid #e6ecf1; border-radius:10px; overflow:hidden; }
+.persp-panel figcaption { padding:9px 11px 8px; border-bottom:1px solid #eef2f6; }
+.persp-panel figcaption strong { display:block; font-size:12px; color:#233a50; }
+.persp-panel figcaption span { display:block; margin-top:3px; font-size:11px; line-height:1.6; color:#8a99a8; }
+.persp-canvas { display:block; width:100%; height:auto; background:#fbfdfe; }
+@media (max-width:820px) { .persp-grid { grid-template-columns:1fr; } }

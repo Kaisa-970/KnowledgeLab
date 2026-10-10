@@ -143,3 +143,46 @@ button { cursor:pointer; }
   .frequency-figure-panel { max-width:100%; }
   .frequency-figure-panel svg { max-width:450px; margin:auto; }
 }
+
+/* The first Fourier lesson is a guided, audible illustration, not a dense article. */
+.sound-mixer { margin:20px 0 30px; border:1px solid #dce8eb; border-radius:15px; overflow:hidden; background:white; box-shadow:0 12px 34px rgba(23,52,74,.06); }
+.sound-mixer-head { background:#eff8f7; padding:17px 21px 13px; }
+.sound-mixer-head h3 { color:#1c3b50; font-size:17px; line-height:1.5; margin:5px 0 3px; }
+.lesson-article .sound-mixer-head p { font-size:12px; color:#738899; margin:0; line-height:1.65; }
+.sound-mixer-controls { display:flex; gap:10px; padding:16px 19px; align-items:center; flex-wrap:wrap; border-bottom:1px solid #e7eef1; }
+.sound-mixer-controls button { border-radius:8px; padding:10px 13px; font-size:12px; font-weight:600; }
+.sound-primary { background:#167eae; color:white; border:1px solid #167eae; }
+.sound-primary:hover { background:#17678b; }
+.sound-secondary { background:white; color:#227768; border:1px solid #afcfc9; }
+.sound-secondary:hover { background:#e8f6f2; }
+.sound-amplitude { display:flex; min-width:170px; align-items:center; gap:9px; margin-left:auto; flex:1 1 220px; font-size:12px; color:#647c90; }
+.sound-amplitude input { flex:1; min-width:65px; accent-color:#c17c51; }
+.sound-amplitude output { min-width:34px; text-align:right; font-variant-numeric:tabular-nums; color:#2b4c62; font-weight:700; }
+.sound-mixer-plots { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(210px,1fr); }
+.sound-plot { min-width:0; padding:13px 14px 7px; border-right:1px solid #e8eef2; }
+.sound-spectrum-plot { min-width:0; padding:13px 14px 7px; }
+.sound-chart-title { display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 12px; }
+.sound-chart-title strong { color:#244b62; font-size:13px; }
+.sound-chart-title span { color:#8196a6; font-size:11px; }
+.sound-mixer-plots svg { display:block; width:100%; height:auto; }
+.sound-chart-legend { display:flex; justify-content:center; gap:16px; font-size:11px; color:#7b8fa0; }
+.sound-chart-legend span { display:flex; align-items:center; gap:5px; }
+.sound-dot { display:inline-block; width:13px; height:0; border-top:2px solid; }
+.sound-dot.current { border-color:#167eae; }
+.sound-dot.base { border-color:#a1aeba; border-top-style:dashed; }
+.sound-mixer-conclusion { padding:13px 19px; display:grid; gap:4px; background:#f3faf8; border-top:1px solid #dbece7; }
+.sound-mixer-conclusion strong { font-size:13px; color:#167566; }
+.sound-mixer-conclusion span { font-size:12px; color:#53796f; }
+.lesson-article .sound-status { padding:8px 19px 13px; font-size:11px; line-height:1.6; color:#8595a2; margin:0; }
+.sound-explanation-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:22px 0; }
+.sound-explanation-grid>div { background:#f4f8fb; padding:15px; border-radius:11px; border:1px solid #e2ebf1; }
+.sound-explanation-grid strong { color:#29536c; font-size:14px; }
+.lesson-article .sound-explanation-grid p { font-size:14px; line-height:1.7; margin:8px 0 3px; color:#3d5e75; }
+.sound-explanation-grid span { font-size:11px; color:#768d9d; }
+@media(max-width:700px) {
+  .sound-mixer-plots { grid-template-columns:1fr; }
+  .sound-plot { border-right:0; border-bottom:1px solid #e8eef2; }
+  .sound-spectrum-plot svg { max-width:270px; margin:auto; }
+  .sound-amplitude { flex-basis:100%; margin:3px 0 0; }
+  .sound-explanation-grid { grid-template-columns:1fr; }
+}

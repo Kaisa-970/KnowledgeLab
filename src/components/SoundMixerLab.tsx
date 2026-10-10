@@ -11,7 +11,7 @@ function linePath(high: number) {
   return Array.from({ length: POINTS + 1 }, (_, i) => {
     const t = (i / POINTS) * 2 * Math.PI
     return (i === 0 ? 'M' : 'L') + (36 + i / POINTS * 446).toFixed(2) + ',' +
-      (94 - tone(t, high) * 50).toFixed(2)
+      (78 - tone(t, high) * 36).toFixed(2)
   }).join(' ')
 }
 
@@ -80,7 +80,7 @@ export default function SoundMixerLab() {
         <div className="sound-plot">
           <div className="sound-chart-title"><strong>时间视角</strong><span>两种振动混合成一条曲线</span></div>
           <svg viewBox="0 0 510 154" role="img" aria-label={'时间波形：基音振幅 1、第三次谐波振幅 ' + high.toFixed(2) + '；蓝色曲线随滑块变化，灰色虚线是不含第三次谐波的基音'}>
-            <line x1="36" y1="94" x2="482" y2="94" stroke="#d5e0e7"/>
+            <line x1="36" y1="78" x2="482" y2="78" stroke="#d5e0e7"/>
             {[0,1,2].map(n=><line key={n} x1={36+223*n} y1="18" x2={36+223*n} y2="138" stroke="#e5edf1" strokeDasharray="3 5"/>)}
             <path d={linePath(0)} stroke="#a1aeba" strokeWidth="2" strokeDasharray="5 5" fill="none"/>
             <path d={linePath(high)} stroke="#167eae" strokeWidth="3" fill="none"/>

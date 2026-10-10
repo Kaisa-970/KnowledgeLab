@@ -4,10 +4,10 @@ const LESSON = '/courses/graphics-rasterization/perspective-correct-interpolatio
 
 test('the note starts from the question, not from terminology', async ({ page }) => {
   await page.goto(LESSON)
-  await expect(page.getByRole('heading', { name: '透视校正插值', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '重心坐标没算错，为什么纹理还是被拉歪了？', exact: true })).toBeVisible()
   // The wrong rule must be stated, and named as wrong, before any fix appears.
-  await expect(page.getByText('这个规则是错的').first()).toBeVisible()
-  await expect(page.getByRole('heading', { name: '为什么偏偏是 1/w' })).toBeVisible()
+  await expect(page.getByText('屏幕权重没算错，只是用错了地方').first()).toBeVisible()
+  await expect(page.getByRole('heading', { name: '为什么 GPU 偏偏要除以 w？' })).toBeVisible()
   // Implementation guidance is deliberately absent from a principle note.
   await expect(page.getByText('float l0 = edge')).toHaveCount(0)
 })
@@ -129,14 +129,36 @@ test('the depth reconciliation stays in the main thread, not folded away', async
   // "texture warped but depth fine" is the part readers most often get wrong, so
   // it must be visible prose rather than hidden in a <details>.
   await page.goto(LESSON)
-  await expect(page.getByRole('heading', { name: '顺带解开一个疑问' })).toBeVisible()
-  await expect(page.getByText(/深度缓冲里存的不是/).first()).toBeVisible()
+  await expect(page.getByRole('heading', { name: '为什么深度测试没一起歪？' })).toBeVisible()
+  await expect(page.getByText(/深度缓冲使用的是/).first()).toBeVisible()
 })
 
 test('the three courses are all reachable from the index', async ({ page }) => {
   await page.goto('/')
   const index = page.locator('.index-course')
-  await expect(index.getByRole('link', { name: '透视校正插值', exact: true })).toBeVisible()
+  await expect(index.getByRole('link', { name: '重心坐标没算错，为什么纹理还是被拉歪了？', exact: true })).toBeVisible()
   await expect(index.getByRole('link', { name: '为什么音乐播放器能单独调低高频？', exact: true })).toBeVisible()
   await expect(index.getByRole('link', { name: '矩阵究竟是什么？', exact: true })).toBeVisible()
+})
+
+
+test('the corrected panel positions its checker cells using REAL 3D surface points', async ({ page }) => {
+  await page.goto(LESSON)
+  const panels = page.locator('#lab .persp-panel')
+  // For cell i=6,j=3 (barycentrics .5,.25,.25 on the real surface),
+  // the triangle fixture is A=(.9,-.7,-2.2), B=(-.9,-.7,-1),
+  // C=(0,.9,-1). The correct projected point is (.225/1.6,-.3/1.6).
+  // Old code erroneously put this point at the linear screen blend.
+  const pair = (s: string) => s.split(',').map(Number)
+  const corners = (await panels.nth(1).locator('polygon[data-cell-id="6-3"]').getAttribute('points'))!
+  const [x, y] = pair(corners.split(' ')[0])
+  const expectedU = .225 / 1.6
+  const expectedV = -.3 / 1.6
+  const expectedX = 16 + (expectedU + 1.35) / 2.7 * (300 - 32)
+  const expectedY = 210 - 16 - (expectedV + 1.35) / 2.7 * (210 - 32)
+  expect(x).toBeCloseTo(expectedX, 1)
+  expect(y).toBeCloseTo(expectedY, 1)
+  const naiveCorners = (await panels.nth(0).locator('polygon[data-cell-id="6-3"]').getAttribute('points'))!
+  const [wrongX, wrongY] = pair(naiveCorners.split(' ')[0])
+  expect(Math.hypot(x - wrongX, y - wrongY)).toBeGreaterThan(5)
 })

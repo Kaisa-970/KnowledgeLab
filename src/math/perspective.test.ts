@@ -13,6 +13,7 @@ import {
   labTriangle,
   maxRelativeError,
   project,
+  projectSurfaceBarycentric,
   reciprocalWAt,
   viewPointAtScreen,
   warpedAreaFraction,
@@ -239,4 +240,53 @@ test('the default lab triangle actually shows the artifact', () => {
   const displacementInCells = maxRelativeError(a, b, c, 32) * 12
   assert.ok(displacementInCells > 1, `should displace at least a cell, got ${displacementInCells}`)
   assert.ok(warpedAreaFraction(a, b, c, 0.02, 32) > 0.6, 'most of the triangle should be off')
+})
+
+
+test('the real surface checker grid projects the 3D point, not averaged 2D vertices', () => {
+  const [a, b, c] = labTriangle(1.2)
+  const g = { b0: 0.5, b1: 0.25, b2: 0.25 }
+  const actual = projectSurfaceBarycentric(a, b, c, g)
+  const world = {
+    x: g.b0 * a.pos.x + g.b1 * b.pos.x + g.b2 * c.pos.x,
+    y: g.b0 * a.pos.y + g.b1 * b.pos.y + g.b2 * c.pos.y,
+    z: g.b0 * a.pos.z + g.b1 * b.pos.z + g.b2 * c.pos.z,
+  }
+  assert.ok(close(actual.x, world.x / -world.z, 1e-12))
+  assert.ok(close(actual.y, world.y / -world.z, 1e-12))
+  const pa = project(a.pos), pb = project(b.pos), pc = project(c.pos)
+  const naive = { x: g.b0 * pa.x + g.b1 * pb.x + g.b2 * pc.x,
+    y: g.b0 * pa.y + g.b1 * pb.y + g.b2 * pc.y }
+  assert.ok(Math.hypot(actual.x - naive.x, actual.y - naive.y) > 0.05,
+    'surface projection and screen-linear grid must be visibly different')
+  const flat = labTriangle(0)
+  const projectedFlat = projectSurfaceBarycentric(flat[0], flat[1], flat[2], g)
+  const flatNaive = {
+    x: g.b0 * project(flat[0].pos).x + g.b1 * project(flat[1].pos).x + g.b2 * project(flat[2].pos).x,
+    y: g.b0 * project(flat[0].pos).y + g.b1 * project(flat[1].pos).y + g.b2 * project(flat[2].pos).y,
+  }
+  assert.ok(close(projectedFlat.x, flatNaive.x, 1e-12))
+  assert.ok(close(projectedFlat.y, flatNaive.y, 1e-12))
+})
+
+test('adding a real 3D edge midpoint reduces naive perspective interpolation error', () => {
+  // Far point w=3, attr=0; near point w=1, attr=1.
+  // The screen midpoint reads 0.5 with the original edge but the exact answer
+  // is 0.75. Splitting the true 3D edge at attribute 0.5 gives ~2/3.
+  const far: Vertex = { pos: { x: 60, y: 30, z: -3 }, attr: 0 }
+  const near: Vertex = { pos: { x: 0, y: 0, z: -1 }, attr: 1 }
+  const screen = {
+    x: (project(far.pos).x + project(near.pos).x) / 2,
+    y: (project(far.pos).y + project(near.pos).y) / 2,
+  }
+  const middle: Vertex = { pos: { x: 30, y: 15, z: -2 }, attr: 0.5 }
+  const f = project(far.pos), n = project(near.pos), m = project(middle.pos)
+  const t = (screen.x - m.x) / (n.x - m.x)
+  assert.ok(close(t, 1 / 3))
+  const original = 0.5
+  const afterSplit = (1 - t) * middle.attr + t * near.attr
+  const exact = 0.75
+  assert.ok(close(afterSplit, 2 / 3, 1e-12))
+  assert.ok(Math.abs(afterSplit - exact) < Math.abs(original - exact))
+  assert.ok(Math.abs(afterSplit - exact) > 0.08)
 })

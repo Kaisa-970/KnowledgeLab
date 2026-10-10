@@ -158,7 +158,7 @@ function Panel({
       >
         {cells.map((cell) =>
           cell.filled ? (
-            <polygon key={cell.key} points={cell.points} fill="#1d6f8f" opacity="0.9" />
+            <polygon key={cell.key} data-cell-id={cell.key} points={cell.points} fill="#1d6f8f" opacity="0.9" />
           ) : null,
         )}
         <polygon

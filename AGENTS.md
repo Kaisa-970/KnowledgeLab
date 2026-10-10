@@ -25,7 +25,7 @@
 
 ## Agent Skills 与工具使用入口
 
-仓库中的 Skill 放在 `.claude/skills/<name>/SKILL.md`；其他编码 Agent 即使不能自动发现，也**必须按本表显式打开对应文件**。Skill 文件是工作说明，不会自动安装网络、浏览器、图像生成等工具。
+仓库中的 Skill 以 `.claude/skills/<name>/SKILL.md` 为单一来源；`.agents/skills/<name>` 通过相对路径符号链接提供 Codex 的自动发现入口。更新技能时只修改源文件，不维护两份副本；新增技能时同步添加对应链接。其他编码 Agent 即使不能自动发现，也**必须按本表显式打开对应文件**。Skill 文件是工作说明，不会自动安装网络、浏览器、图像生成等工具。
 
 - 新课程规划／重构叙事：`.claude/skills/learning-journey/SKILL.md`
 - 加入概念或章节／补充知识网络：`.claude/skills/knowledge-map/SKILL.md`

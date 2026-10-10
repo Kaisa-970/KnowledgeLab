@@ -1,7 +1,7 @@
 
 # Learning Brief — <course / chapter id>
 
-> **Agent 内部设计工件，不是网页栏目模板。** 新课程/重大认知主线改版时完成；局部修复沿用已有文件。规则见 `docs/LEARNING_EXPERIENCE_CONTRACT.md`。保持简洁，未知写“假设/待确认”，不可向公开仓库写入个人敏感信息。
+> **Agent 内部设计工件，不是网页栏目模板。** 默认参照 `docs/TEACHING_STYLE_BASELINE.md` 的已校准风格；因主题差异允许修改，不强制内容结构。 新课程/重大认知主线改版时完成；局部修复沿用已有文件。规则见 `docs/LEARNING_EXPERIENCE_CONTRACT.md`。保持简洁，未知写“假设/待确认”，不可向公开仓库写入个人敏感信息。
 
 ## Learner State · 学习者状态
 
@@ -25,6 +25,14 @@
 - 新模型怎样解释：
 - **Transfer Check**：一个没有在正文直接演示的新情形及参考理由：
 - 自然退出点：现在能解释什么、哪里仍不能：
+
+## Natural Narrative & Core Bridges · 自然叙事与核心跳步
+
+- 能否一篇文章讲完？如需拆篇，独立先修与任务依据是什么：
+- 最重要、最不能跳过的 1–3 个推理环节：
+- 读者背景哪些只供内部参考、不能直接写成正文：
+- 哪个复杂机制需要准确图示、可核算的输入/输出和数学依据：
+- 检查过哪些模板化转场、冗余复习、强行互动：
 
 ## Progressive Disclosure · 渐进深入
 

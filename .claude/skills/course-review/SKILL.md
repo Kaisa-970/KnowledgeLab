@@ -5,7 +5,7 @@ description: 独立审查课程叙事、知识连接、事实数学正确性、�
 
 # Course Review — 两条相互独立的验收线
 
-必读：`AGENTS.md`、**`docs/LEARNING_EXPERIENCE_CONTRACT.md`**、`docs/LEARNING_DESIGN.md`、`docs/COURSE_STANDARD.md`、`docs/VISUAL_ASSETS.md`、`docs/templates/learning-brief.md`。
+必读：`AGENTS.md`、**`docs/TEACHING_STYLE_BASELINE.md`**、**`docs/LEARNING_EXPERIENCE_CONTRACT.md`**、`docs/LEARNING_DESIGN.md`、`docs/COURSE_STANDARD.md`、`docs/VISUAL_ASSETS.md`、`docs/templates/learning-brief.md`。
 
 ## A. 认知效果与叙事审查（不以 CI 代替）
 
@@ -15,6 +15,9 @@ description: 独立审查课程叙事、知识连接、事实数学正确性、�
 4. **渐进路径**：关键公式是否出现在当前需要时？次要代数/实现能否深入查到，而不会阻断主线？有自然退出点？
 5. **知识联系**：只保留帮助本次解释的先修、对比与迁移；不为图谱丰富强凑关系。
 6. **学习证据分级**：Agent 评估的是“教学设计”，真实理解必须靠学习者自己解释、预测和反馈；没有数据记录**未验证**。
+
+7. **基线对照与核心难点**：参照 8.5/10 生成模型文章的*讲解方法*，逐段寻找缺失的因果桥梁，而非要求图片与结构相似；重要原理是否真正解释透？
+8. **文字与媒介**：查“你已经知道……”等读者能力宣告、重复反问、硬性分篇、过量基础和强制交互；核查图示的解析/实验依据。只能报告风格审核，不能给未试读文章自动打 8.5 分。
 
 ## B. 数学与工程审查（不以主观觉得好学代替）
 

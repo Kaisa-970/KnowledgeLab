@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { chapterLabIds, chapterUrl, courses, curriculum, getCourseLocation, getLessonComponent, getRoute } from './content/registry'
 
 
@@ -84,13 +85,31 @@ export default function App() {
   const chapter = route.kind === 'chapter' ? route.chapter : undefined
   const Lesson = chapter ? getLessonComponent(chapter) : undefined
   const location = course ? getCourseLocation(course) : undefined
+  const isGenerativeEssay = course?.id === 'generative-models' && chapter?.id === 'from-noise-to-image'
+
+  useEffect(() => {
+    const legacy = window.location.pathname.match(/^\/courses\/generative-models\/([a-z-]+)\/?$/)
+    if (!legacy || legacy[1] === 'from-noise-to-image') return
+    const anchors: Record<string, string> = {
+      'sampling-not-averaging': '',
+      'noise-to-distribution': 'distribution-appendix',
+      'diffusion-training': 'diffusion-training',
+      'diffusion-sampling': 'diffusion-sampling',
+      'flow-matching': 'flow-matching',
+    }
+    const target = anchors[legacy[1]]
+    if (target === undefined) return
+    const url = chapterUrl('generative-models', 'from-noise-to-image') + (target ? '#' + target : '')
+    window.history.replaceState(null, '', url)
+    if (target) document.getElementById(target)?.scrollIntoView({block: 'start'})
+  }, [])
 
   return (
     <div className="app-shell">
       <aside className="sidebar" aria-label="课程导航">
         <a className="brand" href="/">
           <span className="brand-symbol">K<span>·</span></span>
-          <span>KnowledgeLab<small>INTERACTIVE LEARNING</small></span>
+          <span>KnowledgeLab<small>UNDERSTANDING FIRST</small></span>
         </a>
         <nav className="mobile-course-nav" aria-label="移动端课程导航">
           <label htmlFor="mobile-lesson">选择课程章节</label>
@@ -156,15 +175,31 @@ export default function App() {
                 <a href="/">返回课程目录 →</a>
               </div>
             )}
-            <footer className="page-footer">KnowledgeLab · 用实验建立理解 · 当前为课程样板，不是 AI 自动生成服务</footer>
+            <footer className="page-footer">KnowledgeLab · 用清晰的图和扎实的推理建立理解 · 内容仍在持续审稿</footer>
           </main>
-          <aside className="toc" aria-label="课程学习提示">
-            <span className="toc-label">课程进度</span>
-            <strong>{chapter?.title || '请选择课程'}</strong>
-            {chapter && <p>核心问题：{chapter.coreQuestion}</p>}
-            {chapter && chapterLabIds(chapter).map((id) => <a key={id} href="#lab">交互实验：{id}</a>)}
-            {chapter?.coreTask && <p>核心任务：{chapter.coreTask}</p>}
-            <div className="toc-tip"><strong>学习建议</strong><p>先预测变化，再动手实验，最后阅读推导。结果与预测不一致时，追问原因。</p></div>
+          <aside className="toc" aria-label={isGenerativeEssay ? '文章导航' : '课程学习提示'}>
+            {isGenerativeEssay ? (
+              <>
+                <span className="toc-label">本文脉络</span>
+                <strong>从加噪训练，到反向生成</strong>
+                <nav className="essay-toc" aria-label="本文段落">
+                  <a href="#diffusion-training">先把问题变成有答案的训练任务</a>
+                  <a href="#score-connection">噪声预测为什么包含数据结构</a>
+                  <a href="#diffusion-sampling">怎么用预测完成反向生成</a>
+                  <a href="#flow-matching">另一种办法：直接学速度</a>
+                  <a href="#routes-compared">两条路线到底有什么联系</a>
+                </nav>
+              </>
+            ) : (
+              <>
+                <span className="toc-label">课程进度</span>
+                <strong>{chapter?.title || '请选择课程'}</strong>
+                {chapter && <p>核心问题：{chapter.coreQuestion}</p>}
+                {chapter && chapterLabIds(chapter).map((id) => <a key={id} href="#lab">交互实验：{id}</a>)}
+                {chapter?.coreTask && <p>核心任务：{chapter.coreTask}</p>}
+                <div className="toc-tip"><strong>学习建议</strong><p>先预测变化，再动手实验，最后阅读推导。结果与预测不一致时，追问原因。</p></div>
+              </>
+            )}
           </aside>
         </div>
       </div>

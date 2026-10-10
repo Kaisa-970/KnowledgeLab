@@ -281,3 +281,10 @@ button { cursor:pointer; }
  .gen-flow-diagrams,.gen-route-compare { grid-template-columns:1fr; }.gen-flow-diagrams>div:first-child,.gen-route-compare>div:first-child { border-right:0; border-bottom:1px solid #e3ecef; }
  .gen-story-distinction { gap:7px; padding:10px; margin:0 8px 16px; }.gen-story-distinction strong { font-size:21px; }.gen-story-distinction div span { font-size:10px; }
 }
+
+/* Long-form articles have a reading map instead of exercise/progress prompts. */
+.essay-toc { display:flex; flex-direction:column; gap:13px; margin-top:17px; }
+.essay-toc a { font-size:12px; line-height:1.65; color:#658092; text-decoration:none; border-left:2px solid #d9e5e9; padding:2px 0 2px 12px; }
+.essay-toc a:hover, .essay-toc a:focus-visible { color:#188579; border-left-color:#188579; }
+.lesson-article h2[id] { scroll-margin-top:35px; }
+#distribution-appendix { scroll-margin-top:45px; }

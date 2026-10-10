@@ -126,7 +126,12 @@ export function getRoute(pathname: string): Route {
   const match = /^\/courses\/([a-z0-9-]+)\/([a-z0-9-]+)\/?$/.exec(pathname)
   if (!match) return { kind: 'missing' }
   const course = courses.find((item) => item.id === match[1])
-  const chapter = course?.chapters.find((item) => item.id === match[2])
+  // All five original generative lessons are now sections of one long-form
+  // article. Preserve old bookmarks while the canonical route is updated.
+  const legacyGenerative = course?.id === 'generative-models' &&
+    ['sampling-not-averaging', 'noise-to-distribution', 'diffusion-training', 'diffusion-sampling', 'flow-matching'].includes(match[2])
+  const chapter = course?.chapters.find((item) => item.id === match[2]) ??
+    (legacyGenerative ? course?.chapters[0] : undefined)
   if (!course || !chapter) return { kind: 'missing' }
   return { kind: 'chapter', course, chapter }
 }

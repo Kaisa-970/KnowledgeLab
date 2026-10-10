@@ -288,3 +288,18 @@ button { cursor:pointer; }
 .essay-toc a:hover, .essay-toc a:focus-visible { color:#188579; border-left-color:#188579; }
 .lesson-article h2[id] { scroll-margin-top:35px; }
 #distribution-appendix { scroll-margin-top:45px; }
+
+
+/* A true distribution-level diagram, replacing misleading "recovering image" frames. */
+.gen-distribution-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; padding:16px 19px 13px; }
+.gen-distribution-panel { position:relative; min-width:0; text-align:center; display:flex; flex-direction:column; gap:4px; }
+.gen-distribution-panel svg { display:block; width:100%; height:auto; }
+.gen-distribution-panel strong { color:#2d5866; font-size:12px; }
+.gen-distribution-panel small { color:#708795; font-size:11px; }
+.gen-distribution-separator { position:absolute; right:-15px; top:38%; color:#b17c58; font-size:21px; z-index:1; }
+@media(max-width:600px) {
+  .gen-distribution-grid { gap:5px; padding:12px 8px 10px; }
+  .gen-distribution-panel strong { font-size:10px; }
+  .gen-distribution-panel small { font-size:9px; }
+  .gen-distribution-separator { right:-9px; top:35%; font-size:14px; }
+}

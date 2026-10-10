@@ -79,49 +79,91 @@ export function ScoreFieldFigure(){
     <figcaption>曲线来自可计算的双峰高斯混合示例；箭头表示局部 score 方向，并非生成轨迹。对高斯加噪，最优噪声预测与带噪分布的 score 成比例——所以它包含概率结构，而不是在记忆每次加噪的随机种子。</figcaption>
   </figure>
 }
+/**
+ * A single analytically known family:
+ * p0 = 0.5 N(-1.45,0.28²) + 0.5 N(1.45,0.28²)
+ * xt = sqrt(1-t) x0 + sqrt(t) eps.
+ * This plots MARGINAL distributions, not a particular generated image.
+ */
 export function DiffusionSamplingFigure(){
+  const normal=(x:number,m:number,s:number)=>
+    Math.exp(-.5*((x-m)/s)**2)/(Math.sqrt(2*Math.PI)*s)
+  const states=[
+    {t:1,label:'起点：t = 1',desc:'标准高斯噪声'},
+    {t:.55,label:'中途：t = 0.55',desc:'结构逐渐可辨'},
+    {t:0,label:'终点：t = 0',desc:'双峰数据分布'},
+  ]
+  const plot=(t:number)=>{
+    const a=Math.sqrt(1-t),sigma=Math.sqrt((1-t)*.28**2+t)
+    return Array.from({length:160},(_,i)=>{
+      const x=-3+i*6/159
+      const p=(normal(x,-1.45*a,sigma)+normal(x,1.45*a,sigma))*.5
+      return (i===0?'M':'L')+(14+(x+3)/6*254).toFixed(2)+','+(116-p*64).toFixed(2)
+    }).join(' ')
+  }
   return <figure className="gen-story" data-concept-figure="diffusion-reverse">
-    <Header title="每一次预测只帮助决定下一步状态，不是直接“擦出原图”" subtitle="反向生成的状态变化"/>
-    <div className="gen-story-track gen-story-stages"><Card mode="noise" title="xT" desc="新抽的高斯噪声"/><Arrow/><Card mode="noisy" title="xₜ" desc="当前带噪状态"/><Arrow/><Card mode="middle" title="xₜ₋₁" desc="采样器更新后的状态"/><Arrow/><Card mode="almost" title="x₀" desc="最终形成新样本"/></div>
+    <Header title="别只看一张图像：反向采样真正改变的是整批样本的分布" subtitle="可以用概率计算的一维例子"/>
+    <div className="gen-distribution-grid">
+      {states.map((s,i)=><div className="gen-distribution-panel" key={s.t}>
+        <svg viewBox="0 0 282 145" role="img" aria-label={s.label+'的概率密度曲线：'+s.desc}>
+          <rect x="5" y="7" width="272" height="128" rx="7" fill="#f5f9fa"/>
+          <path d="M14 15 V116 H268" fill="none" stroke="#aabfc6" strokeWidth="1.1"/>
+          <path d={plot(s.t)} stroke="#188586" strokeWidth="3.2" fill="none"/>
+          <text x="18" y="130" fontSize="11" fill="#718694">x</text>
+          <text x="257" y="130" textAnchor="end" fontSize="11" fill="#718694">pₜ(x)</text>
+        </svg>
+        <strong>{s.label}</strong><small>{s.desc}</small>
+        {i<2&&<span className="gen-distribution-separator" aria-hidden="true">→</span>}
+      </div>)}
+    </div>
     <div className="gen-story-distinction">
-      <div><b>网络帮助估计</b><strong>x̂₀</strong><span>从当前状态估计干净样本</span></div>
+      <div><b>网络给出预测</b><strong>ε̂ 或 x̂₀</strong><span>描述当前状态的统计信息</span></div>
       <span className="gen-not-equal">≠</span>
-      <div><b>采样器实际计算</b><strong>xₜ₋₁</strong><span>构造反向转移；可能包含随机性</span></div>
+      <div><b>采样器抽取下一步</b><strong>xₜ₋₁</strong><span>根据反向条件转移改变样本状态</span></div>
     </div>
-    <figcaption>每张数字都只是过程示意，非训练好的网络生成图片。真实 Diffusion 由学到的反向更新或相应采样器，逐步把初始随机分布变成样本分布。</figcaption>
+    <figcaption>三条密度曲线由同一双峰高斯混合的加噪公式严格计算，按 <b>生成时间从 t=1 到 t=0</b> 反向排列；它们说明各时刻应有的分布，不代表实际网络已训练或单张图片的恢复过程。</figcaption>
   </figure>
 }
+
 export function FlowPathsFigure(){
-  const x=(a:number)=>232+a*80, y=(t:number)=>25+t*166
-  const poly=(p:[number,number][])=>p.map(([t,z],i)=>(i?'L':'M')+x(z).toFixed(1)+','+y(t).toFixed(1)).join(' ')
+  const x=(a:number)=>232+a*80,y=(t:number)=>25+t*166
+  const poly=(points:[number,number][])=>points.map(([t,a],i)=>(i?'L':'M')+x(a).toFixed(2)+','+y(t).toFixed(2)).join(' ')
+  // Independent Gaussian coupling z~N(0,1), x~N(1, 0.5²).
+  // Marginal pt=N(t, (1-t)²+0.25t²). The exact probability-flow ODE solution
+  // is x(t)=t+sqrt((1-t)²+0.25t²)*z. No trained network is implied.
+  const odePath=(z:number)=>poly(Array.from({length:55},(_,i)=>{
+    const t=i/54
+    return [t,t+Math.sqrt((1-t)**2+.25*t*t)*z] as [number,number]
+  }))
   return <figure className="gen-story" data-concept-figure="flow-paths">
-    <Header title="训练用的是一对一的直线；生成用的是全局速度场" subtitle="为什么不需要指定每个样本的终点？"/>
+    <Header title="训练时有配对终点，生成时只有一个起点：中间靠什么连接？" subtitle="两种不同的轨迹"/>
     <div className="gen-flow-diagrams">
-      <div><h4>训练：两条条件路径可以交叉</h4>
-        <svg viewBox="0 0 464 218" role="img" aria-label="两条从左到右和从右到左的训练直线路径，在过程进度二分之一的中心处交叉，此处存在相反的速度标签">
+      <div><h4>训练：随机配对得到速度标签</h4>
+        <svg viewBox="0 0 464 218" role="img" aria-label="两条条件训练直线从负一至一点五和从正一至零点五，在三分之二进度处交叉，速度标签分别为正二点五与负零点五">
           <rect x="24" y="18" width="416" height="183" rx="8" fill="#f6fafb" stroke="#dfe9ee"/>
-          <path d={poly([[0,-1],[.5,0],[1,1]])} stroke="#168b89" strokeWidth="4" fill="none"/>
-          <path d={poly([[0,1],[.5,0],[1,-1]])} stroke="#d18459" strokeWidth="4" fill="none"/>
-          <circle cx={x(0)} cy={y(.5)} r="7" fill="#334d67"/>
-          <text x="242" y="100" fill="#536d7e" fontSize="12">此处速度标签相反</text>
-          <text x="26" y="14" fill="#6a8293" fontSize="12">t = 0</text><text x="26" y="216" fill="#6a8293" fontSize="12">t = 1</text>
+          <path d={poly([[0,-1],[1,1.5]])} stroke="#168b89" strokeWidth="4" fill="none"/>
+          <path d={poly([[0,1],[1,.5]])} stroke="#d18459" strokeWidth="4" fill="none"/>
+          <circle cx={x(2/3)} cy={y(2/3)} r="6" stroke="#fff" strokeWidth="1.5" fill="#334d67"/>
+          <text x={x(2/3)+13} y={y(2/3)-7} fill="#536d7e" fontSize="12">同一位置，不同速度标签</text>
+          <text x="26" y="14" fill="#6a8293" fontSize="12">t = 0</text>
+          <text x="26" y="216" fill="#6a8293" fontSize="12">t = 1</text>
         </svg>
       </div>
-      <div><h4>生成：每个位置查询平均速度</h4>
-        <svg viewBox="0 0 464 218" role="img" aria-label="不同随机起点在平均速度场作用下分向左右，恰在中心的对称初值维持不动，这些轨迹不是原先的端点配对直线">
+      <div><h4>生成：沿平均速度场积分</h4>
+        <svg viewBox="0 0 464 218" role="img" aria-label="独立高斯配对的一维解析例子，初始值负一、零、正一对应的三条真实概率流 ODE 轨迹均随时间向均值正一附近移动，轨迹不是训练的随机配对直线">
           <rect x="24" y="18" width="416" height="183" rx="8" fill="#f6fafb" stroke="#dfe9ee"/>
-          <path d={poly([[0,-1],[.3,-1.04],[.6,-1.45],[1,-2]])} stroke="#168b89" strokeWidth="4" fill="none"/>
-          <path d={poly([[0,1],[.3,1.04],[.6,1.45],[1,2]])} stroke="#d18459" strokeWidth="4" fill="none"/>
-          <path d={poly([[0,0],[1,0]])} stroke="#879aaa" strokeWidth="2.5" strokeDasharray="5 5" fill="none"/>
-          <circle cx={x(0)} cy={y(.5)} r="5" fill="#879aaa"/>
-          <text x="241" y="100" fill="#536d7e" fontSize="12">中心平均速度为零</text>
-          <text x="26" y="14" fill="#6a8293" fontSize="12">t = 0</text><text x="26" y="216" fill="#6a8293" fontSize="12">t = 1</text>
+          <path d={odePath(-1)} stroke="#168b89" strokeWidth="4" fill="none"/>
+          <path d={odePath(1)} stroke="#d18459" strokeWidth="4" fill="none"/>
+          <path d={odePath(0)} stroke="#879aaa" strokeWidth="2.5" strokeDasharray="5 5" fill="none"/>
+          <text x="26" y="14" fill="#6a8293" fontSize="12">t = 0</text>
+          <text x="26" y="216" fill="#6a8293" fontSize="12">t = 1</text>
         </svg>
       </div>
     </div>
-    <figcaption>左图是严格的简单线性路径示例；右图是说明“沿平均速度场积分”的定性草图，<b>不是</b>指定训练网络的数值轨迹。生成轨迹不绑定某个训练终点，真实 ODE 求解还需正则性与数值精度条件。</figcaption>
+    <figcaption>左边的两条直线是独立高斯配对中可能抽到的训练样本，交点处可有不同的速度标签。右边不是手绘猜测，而是对 <b>z~N(0,1) → x~N(1,0.5²)</b> 的同一独立配对构造，按解析平均速度场精确积分得到的三条轨迹。生成从不需要事先指定训练配对中的终点。</figcaption>
   </figure>
 }
+
 export function RouteComparisonFigure(){
   return <figure className="gen-story" data-concept-figure="routes-contrast">
     <Header title="真正不同的是监督目标和路径规则，不是“随机 vs 确定性”" subtitle="Diffusion / Flow Matching"/>

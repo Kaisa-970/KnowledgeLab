@@ -13,9 +13,9 @@ test('generative course opens with the training and sampling mechanism, and keep
 
 test('flow experiment computes endpoints, counterexample and reset with keyboard controls', async ({page}) => {
   await page.goto('/courses/generative-models/noise-to-distribution')
-  await expect(page.getByText('解析速度场 · 未训练网络')).toBeVisible()
   await expect(page.locator('.gen-lab')).toBeHidden()
   await page.getByText('可选实验：查看分布、样本和轨迹如何一起变化').click()
+  await expect(page.getByText('解析速度场 · 未训练网络')).toBeVisible()
   await page.getByRole('button', {name: '走到终点', exact: true}).click()
   expect(Number(await page.getByTestId('flow-position').textContent())).toBeGreaterThan(1.5)
   await page.getByRole('button', {name: '对称中心反例'}).click()

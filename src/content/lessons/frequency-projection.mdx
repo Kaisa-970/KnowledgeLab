@@ -8,9 +8,9 @@ import FrequencyLensFigure from '../../components/FrequencyLensFigure'
 
 ## 先借用一个你熟悉的方法：向量投影
 
-在二维平面里，如果 $\mathbf v=x\mathbf e_1+y\mathbf e_2$，想知道它沿 $\mathbf e_1$ 的分量，可以把它投影到那个方向上。当两条基向量彼此正交，求第一个坐标不会受到第二个坐标干扰。
+二维向量 $\mathbf v=x\mathbf e_1+y\mathbf e_2$ 可以投影到基向量上，单独求出坐标。**如果整个波形也能像向量一样投影呢？**
 
-<div className="objectives"><strong>知识连接 · 从向量到函数</strong><p>线性代数里，向量是被表示的对象，基向量是“参照方向”，坐标说明各方向占多少。在这里，**整个函数**变成被表示的对象，正弦和余弦成为参照函数，傅里叶系数就是它沿各个频率方向的坐标。与 <a href="/courses/linear-algebra/linear-transformations">矩阵与基的课程</a> 共享线性结构，但函数空间还需要内积、完备性和收敛等额外条件。</p></div>
+<div className="objectives"><strong>知识连接 · 从向量到函数</strong><p>向量 → 函数；基向量 → 正弦/余弦；点积 → 积分。<a href="/courses/linear-algebra/linear-transformations">回看矩阵与基</a>。现在试着把这个思路真正算出来。</p></div>
 
 我们先不急着计算傅里叶系数。要让上面这段类比成立，需要回答两个问题：**函数怎么做内积？不同频率真的正交吗？**
 
@@ -23,25 +23,32 @@ $$
 \qquad \|u\|^2=\langle u,u\rangle.
 $$
 
-这不是唯一可能的函数内积，但对于当前 $2\pi$ 周期模型，它恰好合适。不同频率正弦的乘积会在周期内正负抵消。利用积化和差，
+对当前的完整周期，**不同正整数频率的正弦互相正交**；同频率的正弦与余弦也互相正交。这样我们才能像向量投影一样，一个频率、一个频率地提取系数。
 
-$$
+<details className="answer">
+<summary>展开证明：正交性为什么成立？</summary>
+
+利用积化和差，
+
+$
 \sin(nt)\sin(mt)=\tfrac12\big[\cos((n-m)t)-\cos((n+m)t)\big].
-$$
+$
 
-对正整数 $m,n\ge1$ 积分，可以得到
+对正整数 $m,n\ge1$，
 
-$$
+$
 \begin{aligned}
-\langle \sin nt,\sin mt\rangle&=\pi\delta_{mn},\\
-\langle \cos nt,\cos mt\rangle&=\pi\delta_{mn},\\
-\langle \sin nt,\cos mt\rangle&=0.
+\langle\sin nt,\sin mt\rangle&=\pi\delta_{mn},\\
+\langle\cos nt,\cos mt\rangle&=\pi\delta_{mn},\\
+\langle\sin nt,\cos mt\rangle&=0.
 \end{aligned}
-$$
+$
 
-$\delta_{mn}$ 在 $m=n$ 时为 1，否则为 0。因为 $\int_{-\pi}^{\pi}\cos(kt)\,dt=0$（非零整数 $k$），不同整数频率相互正交；同频率时积分为 $\pi$。正弦与余弦的乘积是奇函数，积分也为零。
+这是因为非零整数 $k$ 的 $\int_{-\pi}^{\pi}\cos(kt)\,dt=0$，而同频率时出现常数项；正弦与余弦的乘积是奇函数。这里 $\delta_{mn}$ 为 Kronecker delta，在 $m=n$ 时为 1，否则为 0。
 
-**注意一个例外：** $\sin0t=0$，而 $\cos0t=1$ 的平方积分是 $2\pi$，不是 $\pi$。这个零频分量稍后解释为什么要单独写成平均值。
+**零频不能照搬上式**：$\sin0t=0$，而 $\cos0t=1$ 的平方积分是 $2\pi$。这也解释了后面常数项的单独归一化。
+
+</details>
 
 ## 从“不知道配方”变成一个明确的优化问题
 
@@ -57,19 +64,27 @@ $$
 E=\int_{-\pi}^{\pi}\big(f(t)-S_N(t)\big)^2dt.
 $$
 
-为什么选平方误差？因为它不会让正负误差互相抵消，而且与正交投影有直接关系。将所选基函数记作 $\phi_j$、系数记作 $d_j$，在有限和中展开：
+平方误差不会让正负偏差抵消。由于频率基函数正交，我们能像求向量投影那样，**单独确定每一个最优系数**：
 
-$$
-E=\|f\|^2-2\sum_j d_j\langle f,\phi_j\rangle+\sum_jd_j^2\|\phi_j\|^2.
-$$
-
-这里没有交叉项，因为**这些基函数在刚才定义的内积下正交**。每个系数的二次项可以独立配方，最小值在
-
-$$
+$
 \boxed{d_j=\frac{\langle f,\phi_j\rangle}{\|\phi_j\|^2}}
-$$
+$
 
-取得。你熟悉的向量投影公式，在这里并没有改变本质。分母除以基函数的平方范数，是因为基函数并不一定被归一化成长度 1。
+这里 $\phi_j$ 是选定的基函数，$d_j$ 是它的系数。**这个公式不是凭空规定的**，而是让上面平方误差最小的结果。
+
+<details className="answer">
+<summary>展开推导：平方误差为什么会给出投影系数？</summary>
+
+对有限个彼此正交的 $\phi_j$，令 $S_N=\sum_j d_j\phi_j$，展开：
+
+$
+E=\|f\|^2-2\sum_jd_j\langle f,\phi_j\rangle
++\sum_jd_j^2\|\phi_j\|^2.
+$
+
+交叉项全部为零。将每个 $d_j$ 的二次项分别配方，极小值出现在 $d_j=\langle f,\phi_j\rangle/\|\phi_j\|^2$。这只证明了**给定有限基函数集合**里的最优平方误差解；无穷展开需要另外讨论完备性和收敛性。
+
+</details>
 
 于是，对 $n\ge1$，
 

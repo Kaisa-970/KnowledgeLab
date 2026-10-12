@@ -243,6 +243,17 @@ test('the default lab triangle actually shows the artifact', () => {
 })
 
 
+test('the lab screen midpoint reproduces the prose example and keeps the attribute range', () => {
+  for (const [spread, expected] of [[0, 0.5], [1.2, 2.2 / 3.2], [2, 0.75]]) {
+    const [a, b, c] = labTriangle(spread)
+    const pa = project(a.pos), pb = project(b.pos)
+    const midpoint = { x: (pa.x + pb.x) / 2, y: (pa.y + pb.y) / 2 }
+    assert.deepEqual([a.attr, b.attr, c.attr], [0, 1, 0.5])
+    assert.ok(close(interpolateCorrected(a, b, c, midpoint), expected, 1e-12))
+    assert.ok(close(interpolateNaive(a, b, c, midpoint), 0.5, 1e-12))
+  }
+})
+
 test('the real surface checker grid projects the 3D point, not averaged 2D vertices', () => {
   const [a, b, c] = labTriangle(1.2)
   const g = { b0: 0.5, b1: 0.25, b2: 0.25 }

@@ -1,5 +1,13 @@
-import { useEffect } from 'react'
+import { Suspense, useEffect, type ReactNode } from 'react'
 import { chapterLabIds, chapterUrl, courses, curriculum, getCourseLocation, getLessonComponent, getRoute } from './content/registry'
+
+function LoadedLesson({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    const anchor = window.location.hash.slice(1)
+    if (anchor) document.getElementById(anchor)?.scrollIntoView({ block: 'start' })
+  }, [])
+  return children
+}
 
 
 /** The root path lists every course; it is not a redirect to whichever sorts first. */
@@ -164,7 +172,11 @@ export default function App() {
             {Lesson && chapter && course ? (
               <>
                 <div className="chapter-badge">{location?.track.title} <span>›</span> {location?.module.title} <span>›</span> {course.title}</div>
-                <article className="lesson-article"><Lesson /></article>
+                <article className="lesson-article">
+                  <Suspense fallback={<p role="status">正在加载正文…</p>}>
+                    <LoadedLesson><Lesson /></LoadedLesson>
+                  </Suspense>
+                </article>
               </>
             ) : route.kind === 'index' ? (
               <CourseIndex />

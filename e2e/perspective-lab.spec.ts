@@ -14,7 +14,7 @@ test('the note starts from the question, not from terminology', async ({ page })
 
 test('the lab panels render the same triangle outline at the same vertices', async ({ page }) => {
   await page.goto(LESSON)
-  // Scope to the LAB. The page also carries four static figures, whose panels
+  // Scope to the LAB. The page also carries two static figures, whose panels
   // share the .persp-panel class but have a different purpose; an earlier
   // version of this test counted all of them and broke when the figures were
   // added.
@@ -107,13 +107,12 @@ test('turning the spread up separates the two paths, and the error stays a fract
   // The naive answer is always the plain average of the two corner attributes,
   // which is exactly why it is wrong: it ignores where the midpoint really sits.
   expect(Number(spread[1])).toBeCloseTo(0.5, 5)
-  // The far vertex (attr 1) is deeper, so the screen midpoint leans toward the
-  // NEAR vertex (attr 0). The true value is therefore BELOW the average, not above.
-  expect(Number(spread[0])).toBeLessThan(0.5)
-  // Measured 0.3125 at spread 1.2: w = (2.2, 1), so t = 2.2/3.2 = 0.6875 and the
-  // attribute is 1 - t. Asserting 1/2.2 (or 1/3, from the old spread of 0.35)
-  // here was simply the wrong formula for this fixture.
-  expect(Number(spread[0])).toBeCloseTo(1 - 2.2 / 3.2, 3)
+  // The near vertex has attribute 1, matching the prose's convention.
+  expect(Number(spread[0])).toBeCloseTo(2.2 / 3.2, 3)
+  await slider.fill('2')
+  const example = await values()
+  expect(Number(example[0])).toBeCloseTo(0.75, 3)
+  expect(Number(example[1])).toBeCloseTo(0.5, 5)
 })
 
 test('the reset button restores the default spread', async ({ page }) => {

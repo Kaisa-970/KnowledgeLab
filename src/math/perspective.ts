@@ -336,8 +336,8 @@ export function warpedAreaFraction(a: Vertex, b: Vertex, c: Vertex, tolerance = 
 export function labTriangle(spread: number): readonly [Vertex, Vertex, Vertex] {
   const near = 1
   return [
-    { pos: { x: 0.9, y: -0.7, z: -(near + spread) }, attr: 1 },
-    { pos: { x: -0.9, y: -0.7, z: -near }, attr: 0 },
+    { pos: { x: 0.9, y: -0.7, z: -(near + spread) }, attr: 0 },
+    { pos: { x: -0.9, y: -0.7, z: -near }, attr: 1 },
     { pos: { x: 0, y: 0.9, z: -near }, attr: 0.5 },
   ] as const
 }

@@ -4,7 +4,7 @@
 
 ## 基准作品与反馈证据
 
-- **当前参考作品**：[《从一团噪声到一张图，生成模型究竟学会了什么？》](../src/content/lessons/generative-from-noise-to-image.mdx)，Course \`generative-models\`，Chapter \`from-noise-to-image\`，对应版本至少包含提交 \`b886a5ea6f19c95eb1edcb6b23d0f965b03bb3ed\` 的解释和原理图。
+- **当前参考作品**：[《从一团噪声到一张图，生成模型究竟学会了什么？》](../src/content/lessons/generative-from-noise-to-image.mdx)，Course \`generative-models\`，Chapter \`from-noise-to-image\`。版本锚点为 \`b886a5ea6f19c95eb1edcb6b23d0f965b03bb3ed\`；其中反向核与条件流的关键解释来自其前置提交 \`5ba3c9b\`。
 - **真实主观反馈**：初版 **2/10**（问题引入薄弱、近乎没有关键图，像教科书）；分章节配图版 **5/10**（有进步但割裂且文字模板化）；合成长文版 **7.5/10**（连续性好，但重点仍不突出、反向采样等机制跳步，并出现“你知道……”）；补足关键因果解释和可计算图后的当前版本 **8.5/10**。仅反映一位学习者对该具体版本的评价，不代表独立数学审核或其他课程必然同分。
 - 这篇文章是**写作/讲授方法的参考**，不是固定的 Diffusion 章节结构。线性代数、Vulkan、机器人学习等主题应围绕各自最难的机制组织。
 

@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react'
+import { lazy, type ComponentType } from 'react'
 import curriculumData from './curriculum/curriculum.json'
 
 export type CourseDomain = 'mathematics' | 'programming' | 'graphics' | 'ai' | 'robotics' | 'other'
@@ -74,15 +74,17 @@ export type CoursePlan = {
 }
 type LessonComponent = ComponentType<Record<string, unknown>>
 
-// Static build-time imports: only audited local MDX is bundled. No runtime compilation.
+// Repository MDX is compiled at build time; chapter code is loaded on demand.
 const plans = import.meta.glob<CoursePlan>('./courses/*/course.plan.json', {
   eager: true,
   import: 'default',
 })
 const lessonModules = import.meta.glob<LessonComponent>('./lessons/*.mdx', {
-  eager: true,
   import: 'default',
 })
+const lessonComponents = Object.fromEntries(
+  Object.entries(lessonModules).map(([path, load]) => [path, lazy(async () => ({ default: await load() }))]),
+)
 
 export const courses = Object.values(plans).sort((a, b) => a.title.localeCompare(b.title, 'zh-CN'))
 
@@ -97,7 +99,7 @@ export function getLessonComponent(chapter: Chapter): LessonComponent | undefine
   if (!chapter.lessonPath.startsWith(prefix)) return undefined
   const filename = chapter.lessonPath.slice(prefix.length)
   if (!/^[a-z0-9-]+\.mdx$/.test(filename)) return undefined
-  return lessonModules['./lessons/' + filename]
+  return lessonComponents['./lessons/' + filename]
 }
 
 export function chapterLabIds(chapter: Chapter): string[] {

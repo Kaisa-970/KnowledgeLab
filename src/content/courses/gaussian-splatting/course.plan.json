@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 2,
+  "id": "gaussian-splatting",
+  "title": "3D Gaussian Splatting：椭球怎么变成像素",
+  "status": "prototype",
+  "curriculum": {
+    "trackId": "graphics-gpu",
+    "moduleId": "neural-rendering"
+  },
+  "domain": "graphics",
+  "level": "intermediate",
+  "summary": "从 NeRF 每像素采样上百次的代价出发，说明为什么要把场景换成可投影的显式椭球；随后把一篇教程最容易跳过的一步讲透——三维高斯投影到屏幕的足迹由 Σ' = J W Σ Wᵀ Jᵀ 给出，而「只取协方差左上 2×2 块」在光轴外会低估 25 倍。再由此解释排序混合与自适应增密的必要性，并量化一阶近似在什么时候失效。",
+  "prerequisites": [
+    "投影矩阵、齐次坐标与透视除法",
+    "屏幕空间重心坐标与属性插值",
+    "对称矩阵的特征分解与二次型"
+  ],
+  "learningOutcomes": [
+    "用一个可手算的数字说明朴素「丢掉深度分量」的规则在光轴外错多少，并指出它在哪两种情形下恰好正确",
+    "写出透视投影的雅可比矩阵，解释第三列为何把深度尺度折进屏幕横向展宽",
+    "推导 Σ' = J W Σ Wᵀ Jᵀ 的半轴与特征分解的关系，并说明它为什么是线性化而不是恒等式",
+    "解释半透明图元为什么必须排序混合、透射率为何与顺序无关而颜色与顺序有关",
+    "指出一阶近似在深度尺度接近其自身深度时失效，并说明这对训练出的高斯形状意味着什么"
+  ],
+  "knowledgeNodes": [
+    {
+      "id": "explicit-primitives",
+      "title": "隐式场与显式图元",
+      "dependsOn": []
+    },
+    {
+      "id": "covariance-parameterization",
+      "title": "协方差参数化 Σ = R S Sᵀ Rᵀ",
+      "dependsOn": []
+    },
+    {
+      "id": "projection-jacobian",
+      "title": "透视投影的雅可比矩阵",
+      "dependsOn": [
+        "explicit-primitives"
+      ]
+    },
+    {
+      "id": "projected-covariance",
+      "title": "投影协方差 Σ' = J Σ Jᵀ",
+      "dependsOn": [
+        "projection-jacobian",
+        "covariance-parameterization"
+      ]
+    },
+    {
+      "id": "naive-block-drop",
+      "title": "朴素规则：只取左上 2×2 块",
+      "dependsOn": [
+        "projected-covariance"
+      ]
+    },
+    {
+      "id": "footprint-ellipse",
+      "title": "屏幕足迹的椭圆半轴与朝向",
+      "dependsOn": [
+        "projected-covariance"
+      ]
+    },
+    {
+      "id": "local-affine-limit",
+      "title": "局部仿射近似及其失效边界",
+      "dependsOn": [
+        "projected-covariance"
+      ]
+    },
+    {
+      "id": "front-to-back-blending",
+      "title": "前向 α 合成与深度排序",
+      "dependsOn": [
+        "footprint-ellipse"
+      ]
+    },
+    {
+      "id": "adaptive-densification",
+      "title": "可微光栅化与自适应增密",
+      "dependsOn": [
+        "front-to-back-blending",
+        "local-affine-limit"
+      ]
+    },
+    {
+      "id": "analytic-limit",
+      "title": "显式图元的适用边界与可编辑性",
+      "dependsOn": [
+        "adaptive-densification"
+      ]
+    }
+  ],
+  "chapters": [
+    {
+      "id": "gaussian-splatting-projection",
+      "title": "一堆椭球为什么能拼出一张照片？",
+      "coreQuestion": "三维高斯投影到屏幕上占多大、朝哪个方向？为什么把协方差的深度分量「丢掉」这条看似自然的规则，在光轴以外会给出 25 倍的错误？",
+      "learningObjectives": [
+        "用可手算的数字比较朴素与校正足迹，并指出朴素规则在光轴上与局部仿射结果精确一致，而各向同性离轴时仍有误差",
+        "从 pi(p)=(x/z,y/z) 写出雅可比并解释第三列的几何含义",
+        "说明屏幕足迹的半轴是投影协方差特征值的平方根，边界是透视的一阶线性化只在局部有效",
+        "解释排序为什么是正确性的一部分，以及透射率为何与顺序无关",
+        "指出一阶近似在深长高斯上失效，并据此说明训练出的高斯为何必须紧凑"
+      ],
+      "conceptIds": [
+        "explicit-primitives",
+        "covariance-parameterization",
+        "projection-jacobian",
+        "projected-covariance",
+        "naive-block-drop",
+        "footprint-ellipse",
+        "local-affine-limit",
+        "front-to-back-blending",
+        "adaptive-densification",
+        "analytic-limit"
+      ],
+      "prerequisites": [
+        "齐次坐标与透视除法",
+        "协方差与特征分解的基本含义",
+        "不透明光栅化与深度缓冲的工作方式"
+      ],
+      "dependsOnChapterIds": [],
+      "labIds": [
+        "gaussian-splatting-projection-lab"
+      ],
+      "lessonPath": "src/content/lessons/gaussian-splatting-projection.mdx",
+      "status": "prototype"
+    }
+  ],
+  "plannedChapters": [
+    {
+      "id": "splat-training",
+      "title": "参数究竟是怎样学出来的？",
+      "dependsOnChapterIds": [
+        "gaussian-splatting-projection"
+      ]
+    },
+    {
+      "id": "splat-compression",
+      "title": "几百万个高斯怎么装进显存？",
+      "dependsOnChapterIds": [
+        "splat-training"
+      ]
+    },
+    {
+      "id": "splat-semantics",
+      "title": "从一个重建场景到一个可编辑资产",
+      "dependsOnChapterIds": [
+        "splat-compression"
+      ]
+    }
+  ],
+  "design": {
+    "learningBriefPath": "src/content/courses/gaussian-splatting/learning-brief.md",
+    "knowledgeMapPath": "src/content/courses/gaussian-splatting/knowledge-map.md",
+    "knowledgeLinksPath": "src/content/courses/gaussian-splatting/knowledge-map.json"
+  }
+}

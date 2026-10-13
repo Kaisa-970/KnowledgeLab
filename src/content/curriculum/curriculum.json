@@ -120,14 +120,10 @@
           "dependsOnModuleIds": [
             "graphics-pipeline"
           ],
-          "courseIds": [],
-          "plannedCourses": [
-            {
-              "id": "gaussian-splatting",
-              "title": "3D Gaussian Splatting",
-              "scope": "表示、训练、排序、渲染、质量与扩展"
-            }
-          ]
+          "courseIds": [
+            "gaussian-splatting"
+          ],
+          "plannedCourses": []
         }
       ]
     },

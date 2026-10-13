@@ -36,6 +36,8 @@ test('the two panels draw the same cell grid at measurably different positions',
   // only thing that can differ is where each one is drawn. If these counts ever
   // diverge, the two panels are no longer showing the same surface region and
   // the comparison below would be meaningless.
+  // Wait for the lazy lesson to mount before reading the DOM synchronously.
+  await expect(panels).toHaveCount(2)
   const counts = await panels.evaluateAll((nodes) =>
     nodes.map((n) => n.querySelectorAll('svg polygon[fill="#1d6f8f"]').length),
   )

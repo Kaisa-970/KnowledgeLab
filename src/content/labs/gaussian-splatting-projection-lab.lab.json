@@ -1,0 +1,365 @@
+{
+  "schemaVersion": 1,
+  "id": "gaussian-splatting-projection-lab",
+  "question": "一个三维高斯在屏幕上究竟占多大、朝哪个方向？为什么「丢掉协方差的深度分量」这条看似自然的规则，在光轴以外会给出几十倍的错误？",
+  "prediction": "把「深度方向尺度」从 0.01 拉到 0.5，再做同样的横向偏移：屏幕足迹会变大、变小，还是不变？朴素结果与校正结果哪一个跟着变？把横向偏移归零之后，两者还会不一致吗？",
+  "controls": [
+    {
+      "id": "lateral-offset",
+      "label": "横向偏移 x",
+      "description": "高斯中心偏离光轴的横向距离，0 到 3，默认 1.0。相机坐标系中深度固定为 2.0，因此它等价地改变无量纲的横向角 x/z。",
+      "kind": "slider"
+    },
+    {
+      "id": "depth-scale",
+      "label": "深度方向尺度 σ_along",
+      "description": "协方差沿视线方向的标准差，0 到 1.2，默认 0.5。0 表示高斯退化成一张垂直于视线的薄片。",
+      "kind": "slider"
+    },
+    {
+      "id": "cross-scale",
+      "label": "横向尺度 σ_cross",
+      "description": "协方差在垂直于视线平面内的标准差，0.003 到 0.15，默认 0.01。与深度尺度一起决定各向异性比例。",
+      "kind": "slider"
+    },
+    {
+      "id": "show-naive",
+      "label": "显示朴素足迹",
+      "description": "切换「只取协方差左上 2×2 块」的朴素结果，用于与校正足迹直接叠加比较；默认开启。",
+      "kind": "toggle"
+    }
+  ],
+  "visibleOutputs": [
+    {
+      "id": "corrected-panel",
+      "label": "J Σ Jᵀ 局部仿射足迹",
+      "description": "由投影雅可比与协方差计算出的椭圆，其半轴为投影协方差特征值的平方根，读数以像素给出"
+    },
+    {
+      "id": "naive-panel",
+      "label": "朴素足迹（仅左上 2×2 块）",
+      "description": "丢弃协方差第三行第三列、只做 1/z² 缩放得到的椭圆；在光轴上与校正结果重合"
+    },
+    {
+      "id": "ratio-readout",
+      "label": "展宽倍数",
+      "description": "校正足迹长轴与朴素足迹长轴之比 sqrt(1 + (x/z)²(σ_along/σ_cross)²)"
+    },
+    {
+      "id": "pixel-readout",
+      "label": "两法各自的横向半轴（像素）",
+      "description": "按 1000 像素对应归一化屏幕宽度 2 换算，用于直接比较视觉规模"
+    },
+    {
+      "id": "insight-line",
+      "label": "因果说明行",
+      "description": "根据当前状态给出文字解释：两法为何一致、或差异来自第三列的哪个系数"
+    }
+  ],
+  "invariants": [
+    {
+      "id": "on-axis-exact",
+      "statement": "横向偏移为 0 时，朴素足迹与校正足迹逐元素完全相等，误差在浮点精度内为零",
+      "oracleIds": [
+        "on-axis-test",
+        "axis-consistency-test"
+      ]
+    },
+    {
+      "id": "planar-exact",
+      "statement": "深度尺度为 0 时投影在支撑集上真正仿射，校正足迹与朴素足迹相等",
+      "oracleIds": [
+        "planar-test"
+      ]
+    },
+    {
+      "id": "ratio-form",
+      "statement": "展宽倍数只由横向角 x/z 与尺度比 σ_along/σ_cross 决定，与绝对深度和绝对尺度无关",
+      "oracleIds": [
+        "ratio-scale-invariance-test",
+        "ratio-formula-test"
+      ]
+    },
+    {
+      "id": "positive-definite",
+      "statement": "校正协方差在整个可调范围内都半正定，两个半轴非负且长轴不小于短轴",
+      "oracleIds": [
+        "psd-test"
+      ]
+    },
+    {
+      "id": "monotone-smearing",
+      "statement": "固定深度尺度时，展宽倍数随横向偏移单调不减；固定偏移时随各向异性比例单调不减",
+      "oracleIds": [
+        "monotone-test"
+      ]
+    },
+    {
+      "id": "representation-valid",
+      "statement": "尺度与旋转的表示始终给出对称半正定协方差，尺度是半轴长度而非方差",
+      "oracleIds": [
+        "exponential-map-test",
+        "scale-is-length-test"
+      ]
+    },
+    {
+      "id": "falloff-wellformed",
+      "statement": "alpha 衰减在中心取最大值、向四周单调下降，退化协方差不产生 NaN",
+      "oracleIds": [
+        "falloff-wellformed-test",
+        "alpha-mahalanobis-test"
+      ]
+    },
+    {
+      "id": "visible-anisotropy",
+      "statement": "两个横向尺度相同、深度尺度不同的高斯，朴素路径给出同一个点，校正路径给出显著不同的长条",
+      "oracleIds": [
+        "anisotropy-visible-test"
+      ]
+    },
+    {
+      "id": "compositing-closure",
+      "statement": "每个像素的颜色贡献与最终剩余透射率之和恒为 1，不透明层终止光线",
+      "oracleIds": [
+        "transmittance-closure-test",
+        "empty-stack-test"
+      ]
+    },
+    {
+      "id": "ui-matches-math",
+      "statement": "界面显示的两个足迹与底层两条协方差路径逐项一致，不存在第二套计算来源",
+      "oracleIds": [
+        "helper-consistency-test"
+      ]
+    }
+  ],
+  "edgeCases": [
+    {
+      "id": "on-axis",
+      "setup": "预设「光轴上」：横向偏移 0，深度尺度 0.5，横向尺度 0.01",
+      "expected": "两法给出完全相同的足迹；此时雅可比第三列的系数 x/z 为零，朴素规则恰好正确",
+      "oracleIds": [
+        "on-axis-test",
+        "axis-consistency-test"
+      ]
+    },
+    {
+      "id": "isotropic",
+      "setup": "预设「各向同性」：深度尺度与横向尺度都取 0.01，横向偏移 1",
+      "expected": "两法仍然不同，但仅相差 sqrt(1+(x/z)²) 量级，而不是几十倍；差异来自横向角而非各向异性",
+      "oracleIds": [
+        "isotropic-test",
+        "ratio-formula-test"
+      ]
+    },
+    {
+      "id": "zero-depth-scale",
+      "setup": "预设「沿深度的薄片」：深度尺度 0",
+      "expected": "高斯退化为平面薄片，投影是精确仿射映射，两法一致，且不产生 NaN",
+      "oracleIds": [
+        "planar-test",
+        "degenerate-cross-test"
+      ]
+    },
+    {
+      "id": "degenerate-cross",
+      "setup": "把横向尺度拉到下限附近（≈0.003），或退化到 0",
+      "expected": "足迹趋于零宽而非 NaN；界面给出退化提示，协方差仍被判为半正定或被显式拒绝",
+      "oracleIds": [
+        "degenerate-cross-test",
+        "psd-test"
+      ]
+    },
+    {
+      "id": "over-stretched",
+      "setup": "预设「过度拉长」：深度尺度 1.2，横向 0.01，偏移 1",
+      "expected": "公式仍给出有限的展宽倍数，但此时一阶线性化已经明显低估真实足迹；界面不应把公式结果当作精确解",
+      "oracleIds": [
+        "linearization-limit-test"
+      ]
+    },
+    {
+      "id": "behind-camera",
+      "setup": "把深度设到相机平面或其后方（z ≤ 0）",
+      "expected": "高斯被显式标记为不可投影，两条路径都返回零矩阵而不是发出 NaN 或一个镜像的椭圆",
+      "oracleIds": [
+        "degenerate-cross-test"
+      ]
+    }
+  ],
+  "explanation": "透视投影 pi(p)=(x/z, y/z) 不是仿射映射，因此三维高斯投影后一般不再是高斯。在每一点取它的一阶导数 J=[[1/z,0,-x/z²],[0,1/z,-y/z²]]，就得到局部仿射近似，其协方差为 Sigma'=J Sigma Jᵀ。关键是 J 的第三列：两个系数分别含 x/z² 与 y/z²，在光轴上为零，各向同性离轴时仍非零。因此沿视线方向的深度尺度会被折进屏幕横向的展宽，而「只取协方差左上 2×2 块」等于显式假设这一列为零。朴素规则在光轴上与局部仿射路径精确一致；各向同性离轴时仍有误差，在深度尺度接近其自身深度时明显失效——这也解释了为什么训练出的高斯必须保持紧凑。",
+  "oracles": [
+    {
+      "id": "on-axis-test",
+      "kind": "analytical",
+      "description": "在 (0,0,2) 处逐元素比较两条路径的协方差，要求差值在 1e-15 内",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "on the optical axis the naive footprint is exact, not merely close"
+    },
+    {
+      "id": "axis-consistency-test",
+      "kind": "analytical",
+      "description": "光轴上深度尺度 0.5 的高斯与同尺度球体投影结果完全相同，说明该处深度信息确实不进入屏幕足迹",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "the 2x2 Jacobian block alone is what makes the projection look depth-blind"
+    },
+    {
+      "id": "planar-test",
+      "kind": "analytical",
+      "description": "深度尺度为 0 时校正协方差等于 1/z² 缩放的横向协方差",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "a Gaussian flattened onto a depth plane projects exactly, not approximately"
+    },
+    {
+      "id": "ratio-formula-test",
+      "kind": "analytical",
+      "description": "展宽倍数等于 sqrt(1+(x/z)²(σ_along/σ_cross)²)；默认参数下为 sqrt(626)≈25.02",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "a needle along the view axis smears 25x further off-axis than the naive footprint"
+    },
+    {
+      "id": "ratio-scale-invariance-test",
+      "kind": "analytical",
+      "description": "把横向偏移与深度同时加倍，展宽倍数不变，而朴素足迹按 1/z 减半",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "the smearing ratio depends only on two dimensionless angles"
+    },
+    {
+      "id": "isotropic-test",
+      "kind": "analytical",
+      "description": "各向同性时比值退化为 sqrt(1+(x/z)²)，在 1:1 与 2:1 处分别等于 sqrt(2) 与 sqrt(1.25)",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "an isotropic Gaussian is smeared by exactly sqrt(1 + (x/z)^2)"
+    },
+    {
+      "id": "psd-test",
+      "kind": "property",
+      "description": "在一组横向偏移、深度与深度尺度上，校正协方差的对角线非负、行列式非负、长轴不小于短轴",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "the corrected footprint is positive semi-definite for every admissible input"
+    },
+    {
+      "id": "monotone-test",
+      "kind": "property",
+      "description": "展宽倍数随横向偏移单调不减，偏移为零时恰为 1",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "the footprint stretches monotonically with lateral offset, and vanishes on-axis"
+    },
+    {
+      "id": "jacobian-derivative-test",
+      "kind": "reference",
+      "description": "用中心差分独立求 pi 的导数，与闭式雅可比逐项比对",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "the projection Jacobian is the exact derivative of the perspective divide"
+    },
+    {
+      "id": "monte-carlo-test",
+      "kind": "reference",
+      "description": "从三维高斯采样、经精确透视除法投影，实测二阶矩与 J Σ Jᵀ 预测比对（紧凑高斯，相对误差 <15%）",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "the local-affine footprint matches the covariance of exactly projected samples"
+    },
+    {
+      "id": "linearization-limit-test",
+      "kind": "reference",
+      "description": "深度尺度 0.5 时实测展宽是公式预测的两倍以上；随深度尺度减小，实测迅速收敛到预测，且误差单调下降",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "the linearization is a tangent-space scale, and deep Gaussians break it"
+    },
+    {
+      "id": "convergence-test",
+      "kind": "property",
+      "description": "深度尺度从 0.4 降到 0.01 时相对协方差误差按数量级下降，最小值落在蒙特卡洛噪声地板内",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "shrinking the depth extent converges the measured spread onto the prediction"
+    },
+    {
+      "id": "degenerate-cross-test",
+      "kind": "analytical",
+      "description": "退化的足迹（奇异或非正定协方差）返回 0 而不是 NaN；深度在相机平面之后的高斯被显式标记",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "a Gaussian behind the camera is reported, not projected to nonsense"
+    },
+    {
+      "id": "default-visible-test",
+      "kind": "regression",
+      "description": "默认参数下朴素足迹小于 3 px 而校正足迹大于 60 px，保证开场就能看出差异",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "the default lab configuration shows a visible artifact"
+    },
+    {
+      "id": "alpha-falloff-test",
+      "kind": "reference",
+      "description": "alpha 的二次型与显式逆矩阵计算的 Mahalanobis 距离一致，钉住非对角符号约定",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "the falloff matches the closed-form bivariate Gaussian on a well-conditioned ellipse"
+    },
+    {
+      "id": "compositing-order-test",
+      "kind": "analytical",
+      "description": "同一组图元换序后透射率不变、颜色改变，与手算的 0.8/0.16/0.012 一致",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "front-to-back compositing depends on order, which is why splats get sorted"
+    },
+    {
+      "id": "exponential-map-test",
+      "kind": "property",
+      "description": "单位四元数经归一化后给出正交旋转矩阵，协方差 Sigma = R S S^T R^T 因此对称且行列式等于三个尺度平方之积，与旋转无关",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "a covariance built from scale and rotation is symmetric by construction"
+    },
+    {
+      "id": "scale-is-length-test",
+      "kind": "analytical",
+      "description": "轴向协方差的对角线等于尺度的平方，半轴长度而不是方差直接对应学到的尺度参数",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "an axis-aligned covariance keeps its scales as variances"
+    },
+    {
+      "id": "falloff-wellformed-test",
+      "kind": "analytical",
+      "description": "falloff 在中心为 1、随距离递减，对奇异协方差返回 0 而不是 NaN",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "the falloff is a valid unnormalized Gaussian density"
+    },
+    {
+      "id": "alpha-mahalanobis-test",
+      "kind": "reference",
+      "description": "alpha 在 σ=2 等值线上恰为 exp(-2)，且相同屏幕距离在长轴与短轴上的衰减不同",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "alpha depends on the Mahalanobis distance, not on screen distance"
+    },
+    {
+      "id": "anisotropy-visible-test",
+      "kind": "analytical",
+      "description": "横向尺度相同、深度尺度不同（0.05 与 0.5）的两个高斯朴素结果完全一样，校正结果相差 9 倍以上",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "the naive footprint ignores anisotropy entirely, the corrected one does not"
+    },
+    {
+      "id": "transmittance-closure-test",
+      "kind": "analytical",
+      "description": "不透明层把透射率清零，颜色贡献与剩余透射率之和恒为 1",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "transmittance closes and fully opaque layers terminate the ray"
+    },
+    {
+      "id": "empty-stack-test",
+      "kind": "analytical",
+      "description": "空图元列表透射率为 1、颜色为黑，是混合循环的边界初值",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "an empty layer stack transmits everything"
+    },
+    {
+      "id": "helper-consistency-test",
+      "kind": "reference",
+      "description": "实验组件调用的封装函数与两条协方差路径逐项一致，防止界面显示与底层计算分家",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "the comparison helper agrees with the two covariance paths it wraps"
+    }
+  ],
+  "implementation": {
+    "componentPath": "src/components/GaussianProjectionLab.tsx",
+    "mathPath": "src/math/gaussian-splatting.ts"
+  }
+}

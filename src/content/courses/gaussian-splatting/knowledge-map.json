@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 2,
+  "courseId": "gaussian-splatting",
+  "links": [
+    {
+      "from": { "courseId": "gaussian-splatting", "conceptId": "projected-covariance" },
+      "to": { "courseId": "gaussian-splatting", "conceptId": "naive-block-drop" },
+      "kind": "contrasts-with",
+      "reason": "两条路径都从同一个三维协方差出发，只在是否保留投影雅可比的第三列上不同：朴素路径取左上 2×2 分块，校正路径保留 J Σ Jᵀ 的完整同余变换。正是这个差异决定了边缘视场下 25 倍的足迹误差。",
+      "boundary": "两条路径在光轴上两条局部仿射路径完全一致；各向同性离轴时仍有 sqrt(1+(x/z)^2) 的展宽。各向异性会放大误差，但不是误差出现的必要条件。"
+    },
+    {
+      "from": { "courseId": "gaussian-splatting", "conceptId": "projected-covariance" },
+      "to": { "courseId": "graphics-rasterization", "conceptId": "perspective-correct-interpolation" },
+      "kind": "same-principle",
+      "reason": "两者处理的是同一个事实：透视除法让屏幕空间线性的是 1/z 类量，而不是视空间的量。那节用它校正顶点属性插值，本节用它变换二阶统计量，背后都是 pi(p)=(x/z,y/z) 的导数结构。",
+      "boundary": "那节的结论只涉及标量属性的仿射插值，不能直接推广到协方差；协方差还要经过一次同余变换 J Σ Jᵀ，并因此引入线性化误差。"
+    },
+    {
+      "from": { "courseId": "gaussian-splatting", "conceptId": "projected-covariance" },
+      "to": { "courseId": "linear-algebra", "conceptId": "eigenvectors" },
+      "kind": "derives-from",
+      "reason": "屏幕足迹是一块椭圆，它的两个半轴长度正是投影协方差特征值的平方根，朝向是特征向量方向；协方差必然对称，所以特征分解给出正交的主方向。",
+      "boundary": "这里只用二维对称矩阵的特征分解，不涉及 PCA 的数据统计含义；把特征值解释为数据方差会偏离本节的几何语境。"
+    },
+    {
+      "from": { "courseId": "gaussian-splatting", "conceptId": "covariance-parameterization" },
+      "to": { "courseId": "linear-algebra", "conceptId": "pca" },
+      "kind": "generalizes",
+      "reason": "协方差的参数化 Σ=R S Sᵀ Rᵀ 与 PCA 的 Σ=Q Λ Qᵀ 是同一套正交分解，只是角色相反：PCA 从数据估计出 Q 与 Λ，这里把旋转与尺度当作可学参数直接写进分解。",
+      "boundary": "PCA 分解的对象是观测数据的样本协方差，本节的 Σ 是先验参数而非统计量，不能说「优化 Σ 就是在做 PCA」。"
+    },
+    {
+      "from": { "courseId": "gaussian-splatting", "conceptId": "front-to-back-blending" },
+      "to": { "courseId": "graphics-rasterization", "conceptId": "depth-buffer" },
+      "kind": "contrasts-with",
+      "reason": "不透明三角形只需要深度缓冲保留最近的一个片元，而半透明高斯的每一层都对像素有贡献，必须按深度完整排序后逐个混合。这个对比解释了为什么 3DGS 不能复用深度缓冲这条硬件快路。",
+      "boundary": "深度缓冲在多数学 3DGS 实现里仍然存在，但作用只是剔除被不透明前景完全遮挡的图元，不承担混合排序。"
+    }
+  ]
+}

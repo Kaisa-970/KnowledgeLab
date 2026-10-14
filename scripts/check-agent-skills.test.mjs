@@ -27,3 +27,23 @@ test('misnamed skills are rejected', () => {
     'description: Describes knowledge relations and prerequisites\n---\n# Knowledge').join(' '), /mismatched name/)
 })
 
+
+
+test('tutorial-authoring is an entrypoint with concrete examples, evals and capture recipe', () => {
+  const tutorial = read('.claude/skills/tutorial-authoring/SKILL.md')
+  assert.deepEqual(inspectSkill('tutorial-authoring', tutorial), [])
+  for (const token of ['Gate A', 'Gate B', 'Gate C', 'references/cases.md', 'references/review.md', 'evals/cases.json']) {
+    assert.ok(tutorial.includes(token), 'Missing executable skill step or reference: ' + token)
+  }
+  const cases = read('.claude/skills/tutorial-authoring/references/cases.md')
+  assert.match(cases, /8\.5/)
+  assert.match(cases, /6\/10/)
+  const evals = JSON.parse(read('.claude/skills/tutorial-authoring/evals/cases.json'))
+  assert.ok(evals.cases.length >= 3)
+  assert.ok(evals.cases.every(x => x.mustExplain.length >= 2 && x.verification.length))
+})
+
+test('tutorial-authoring missing a reference blocks skill validation', () => {
+  const badRead = p => p.endsWith('tutorial-authoring/references/review.md') ? (() => {throw new Error('missing')})() : read(p)
+  assert.match(checkSkillFiles(badRead).join(' '), /missing tutorial skill asset/)
+})

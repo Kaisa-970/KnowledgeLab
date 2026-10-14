@@ -3,7 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const skillNames = ['learning-journey', 'knowledge-map', 'visual-research', 'diagram-authoring', 'course-review']
+const skillNames = ['tutorial-authoring', 'learning-journey', 'knowledge-map', 'visual-research', 'diagram-authoring', 'course-review']
 
 export function inspectSkill(name, source) {
   const errors = []
@@ -34,6 +34,15 @@ export function checkSkillFiles(read, names = skillNames) {
     }
     if (!index.includes(skillPath)) errors.push('AGENTS.md does not route to ' + skillPath)
   }
+  // The primary tutorial skill is a working package, not a stand-alone prompt.
+  for (const file of [
+    '.claude/skills/tutorial-authoring/references/cases.md',
+    '.claude/skills/tutorial-authoring/references/review.md',
+    '.claude/skills/tutorial-authoring/evals/cases.json',
+    'scripts/capture-lesson.mjs',
+  ]) {
+    try { read(file) } catch { errors.push('missing tutorial skill asset ' + file) }
+  }
   for (const file of ['docs/LEARNING_DESIGN.md', 'docs/VISUAL_ASSETS.md', 'docs/AGENT_TOOLKIT.md']) {
     try { read(file) } catch { errors.push('missing policy ' + file) }
   }
@@ -50,4 +59,3 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     console.log('Agent Skill policy validated:', skillNames.length, 'skills routed')
   }
 }
-

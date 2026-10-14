@@ -9,3 +9,6 @@ dist/
 *.tsbuildinfo
 test-results/
 playwright-report/
+
+# Local tutorial screenshot evidence (never publish automatically)
+.tutorial-review/

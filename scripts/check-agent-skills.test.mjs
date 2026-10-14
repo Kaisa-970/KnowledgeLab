@@ -47,3 +47,12 @@ test('tutorial-authoring missing a reference blocks skill validation', () => {
   const badRead = p => p.endsWith('tutorial-authoring/references/review.md') ? (() => {throw new Error('missing')})() : read(p)
   assert.match(checkSkillFiles(badRead).join(' '), /missing tutorial skill asset/)
 })
+
+
+
+
+test('Codex can resolve the tutorial skill through the routed symlink', () => {
+  const link = path.join(root, '.agents/skills/tutorial-authoring')
+  assert.equal(fs.readlinkSync(link), '../../.claude/skills/tutorial-authoring')
+  assert.equal(fs.realpathSync(link), path.join(root, '.claude/skills/tutorial-authoring'))
+})

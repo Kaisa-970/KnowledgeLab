@@ -38,14 +38,44 @@ test('tutorial-authoring is an entrypoint with concrete examples, evals and capt
   const cases = read('.claude/skills/tutorial-authoring/references/cases.md')
   assert.match(cases, /8\.5/)
   assert.match(cases, /6\/10/)
+  // The walkthrough is the only feedback-anchored production record, so the skill
+  // must route to it; a skill that cites it nowhere is back to citing only results.
+  for (const token of ['references/walkthrough.md', 'audit-figures.mjs', 'audit:figures']) {
+    assert.ok(tutorial.includes(token), 'Missing executable skill step or reference: ' + token)
+  }
   const evals = JSON.parse(read('.claude/skills/tutorial-authoring/evals/cases.json'))
   assert.ok(evals.cases.length >= 3)
-  assert.ok(evals.cases.every(x => x.mustExplain.length >= 2 && x.verification.length))
+  // Technical and teaching assessment must stay separate: merging them lets
+  // structural proxies (has a derivation, cites a figure) pass as teaching proof,
+  // which is precisely how a 6/10 article shipped with every gate green.
+  for (const item of evals.cases) {
+    assert.ok(item.technical?.mustExplain?.length >= 2, item.id + ': technical layer too thin')
+    assert.ok(item.technical.commands?.length, item.id + ': technical layer needs runnable commands')
+    assert.ok(item.technical.zeroTolerance?.length, item.id + ': technical layer needs zero-tolerance items')
+    assert.ok(item.teaching?.ask?.length, item.id + ': teaching layer needs questions for a real reader')
+    assert.ok(item.teaching.evidenceInText, item.id + ': teaching layer must ask where the answer is supported')
+    assert.ok(item.teaching.pass, item.id + ': teaching layer needs a pass condition')
+    assert.equal(item.mustExplain, undefined, item.id + ': layers were merged back into one flat list')
+  }
 })
 
 test('tutorial-authoring missing a reference blocks skill validation', () => {
-  const badRead = p => p.endsWith('tutorial-authoring/references/review.md') ? (() => {throw new Error('missing')})() : read(p)
-  assert.match(checkSkillFiles(badRead).join(' '), /missing tutorial skill asset/)
+  for (const missing of [
+    'tutorial-authoring/references/review.md',
+    'tutorial-authoring/references/walkthrough.md',
+    'scripts/audit-figures.mjs',
+  ]) {
+    const badRead = p => p.endsWith(missing) ? (() => {throw new Error('missing')})() : read(p)
+    assert.match(checkSkillFiles(badRead).join(' '), /missing tutorial skill asset/,
+      'removing ' + missing + ' must fail skill validation')
+  }
+})
+
+test('an evals file with merged layers is rejected', () => {
+  const merged = JSON.stringify({ cases: [{ id: 'x', mustExplain: ['a', 'b'] }] })
+  const badRead = p => p.endsWith('evals/cases.json') ? merged : read(p)
+  const problems = checkSkillFiles(badRead).join(' ')
+  assert.match(problems, /must separate technical and teaching assessment/)
 })
 
 

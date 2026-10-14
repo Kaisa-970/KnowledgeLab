@@ -11,7 +11,7 @@
 
 ## 默认教程制作入口：tutorial-authoring
 
-**凡创建/重写正式技术教程、课程文章或重大教学设计改稿，先读取并执行 `.claude/skills/tutorial-authoring/SKILL.md`，而不是让多个专项 Skill 各自独立决定产物。** 它是整个制作和审核流程的唯一主入口，包含：从用户题目确认关键机制、用可验证证据作图、直接阅读实际网页、对错误案例返工的 Gate A/B/C，以及正反面案例和跨学科 evals。它调用现有的 `learning-journey` / `knowledge-map` / `diagram-authoring` / `course-review` 等专项能力，不重造这些工具。
+**凡创建/重写正式技术教程、课程文章或重大教学设计改稿，先读取并执行 `.claude/skills/tutorial-authoring/SKILL.md`，而不是让多个专项 Skill 各自独立决定产物。** 它是整个制作和审核流程的唯一主入口，包含：从用户题目确认关键机制、用可验证证据作图、先试做最难解释片段、用源码提示辅助排查风险、直接阅读实际网页、对错误案例返工的 Gate A/B/C，以及[一个带真实反馈锚点的制作过程](.claude/skills/tutorial-authoring/references/walkthrough.md)（包含可定位的改稿提交与学习者反馈）、正反面案例和跨学科 evals。它调用现有的 `learning-journey` / `knowledge-map` / `diagram-authoring` / `course-review` 等专项能力，不重造这些工具。
 
 **禁止**“形式满足 Skill = 课程已成功”的结论。若读者题目没回答、关键机制被局部反例替代，或核心图的时序/方向/数学错误，必须退回重构；测试通过不抵消问题，作者自己的打勾不等于独立审稿。旧 3DGS 原型的真实学习者反馈为 **6/10**，是需要吸取的反例；8.5 分生成模型文章仍是当前正向基准，不是自动评分标准。
 
@@ -45,6 +45,8 @@
 
 **在需要时先做内部设计工件，再写正文**：新课程、改变课程主线的重大改稿，或新增跨章节知识连接时，使用 Learning Brief（学习动机、认知转折、自然叙事）和 Knowledge Map（前置/对比/应用及具体理由）。格式见 `docs/templates/learning-brief.md`，按 `docs/LEARNING_DESIGN.md` 评审。局部修正、测试修复和视觉/实现调整不要求重新填写整套工件；应复用已有设计并在交付说明中注明影响范围。
 
+**制作方法先于审计工具。** 新课先按 tutorial-authoring 试做最难的一段，用具体算例或执行过程解释关键连接并检验新情况，再扩展正文；真实试读不可用时记录未验证。`npm run audit:figures` 仅提供源码级 risk/manual 提示，不运行组件、不检查真实裁切和运行时数值。报告需记录提示的核实结果；零提示不代表视觉通过。因果完整性需要阅读成稿，理解效果需要真实反馈；可以为具体图的方向/时序写领域性质测试，但不能以结构代理指标替代教学判断。
+
 **图示与素材来源**：先看 `docs/VISUAL_ASSETS.md` 和 `visual-research` Skill；一手资料优先用于事实核查，但官方/博客公开发布不代表图片可复用。无明确许可只能链接或独立原创绘制；图片必须有图注、替代文字和可追踪许可/原创来源。
 
 ## Agent Skills 与工具使用入口
@@ -58,7 +60,7 @@
 - 需要原创数学/流程/算法示意：`.claude/skills/diagram-authoring/SKILL.md`
 - 提交课程 PR／修改主要教学内容：`.claude/skills/course-review/SKILL.md`
 
-工具选择、证据和能力缺失回退规则见 `docs/AGENT_TOOLKIT.md`。即使没有自动调用 Skill 的环境，也必须手动执行相应步骤并交付审查记录。**此要求目前主要靠 Agent 和人工审查，尚无可以证明教学叙事正确的自动校验器。**
+工具选择、证据和能力缺失回退规则见 `docs/AGENT_TOOLKIT.md`。即使没有自动调用 Skill 的环境，也必须手动执行相应步骤并交付审查记录。**`scripts/audit-figures.mjs` 是源码启发式提示，不能证明渲染或领域语义正确；实际页面、独立技术审核和真实理解反馈分别记录。**
 
 ## 0. 目标与边界
 

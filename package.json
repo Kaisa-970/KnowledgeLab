@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "validate": "node scripts/validate-content.mjs",
+    "validate": "node scripts/validate-content.mjs && node scripts/audit-figures.mjs",
+    "audit:figures": "node scripts/audit-figures.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test src/math/*.test.ts scripts/*.test.mjs",
     "test:e2e": "playwright test",

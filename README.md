@@ -103,7 +103,8 @@ KnowledgeLab **不是带动画的教科书**：先从值得追问的问题、已
 每门课程还需提供课程级 `learning-brief.md`、`knowledge-map.md` 和 `knowledge-map.json`，由计划的 `design` 引用；局部修复复用现有设计。跨课程关系与 `prototype/reviewed/published` 状态证据按 [内容契约](docs/CONTENT_CONTRACTS.md) 校验，校验通过不代表内容已独立审核或获得发布授权。
 
 ```bash
-npm run validate     # JSON Schema + 课程/实验依赖、文件和测试引用校验
+npm run validate        # 内容契约 + 图示源码提示
+npm run audit:figures   # 单跑源码提示（risk / manual；不代替视觉审核）
 npm run typecheck
 npm test             # 数学 + 校验器的反例测试
 npm run build

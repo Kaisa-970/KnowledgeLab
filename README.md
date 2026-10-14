@@ -57,6 +57,10 @@ npm run build
 
 **边界**：Agent 的设计检查与 CI 不能证明学习者已经理解；无实际反馈时保持“理解效果未验证”。
 
+## 教程制作 Skill（新主入口）
+
+正式新课与重大教程改写默认执行 **[`tutorial-authoring`](.claude/skills/tutorial-authoring/SKILL.md)**。它不是接入其他绘图 Skill，而是结合 KnowledgeLab 真实 **8.5/10 正向案例**与 **6/10 反向案例**，让 Agent 先检查用户的核心问题和因果链，再制作有依据的图，最后在浏览器截图中核查结果，重大缺口必须返工；配有[验收要求](.claude/skills/tutorial-authoring/references/review.md)与[跨学科回归任务](.claude/skills/tutorial-authoring/evals/cases.json)。现有专项 Skills 继续为它服务。
+
 ## 默认教学风格 · 已校准基线
 
 新课程与重大改稿默认执行 **[教学风格基线 v1](docs/TEACHING_STYLE_BASELINE.md)**。参照[生成模型单篇长文](src/content/lessons/generative-from-noise-to-image.mdx)的*讲授方法*：问题自然引入、因果链连续、困难机制解释透、关键原理图数学上可核验、公式不过度遮挡正文、简单内容简述、没有无价值的强制交互。这篇文章获得真实读者 **8.5/10**，评分仅适用于该版本，后续文章不自动继承分数，风格允许随反馈改进。

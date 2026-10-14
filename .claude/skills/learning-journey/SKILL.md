@@ -5,6 +5,8 @@ description: 设计或重构 KnowledgeLab 课程的学习叙事。当用户要�
 
 # Learning Journey — 从问题而不是定义开始
 
+**定位**：本 Skill 是 `tutorial-authoring` 的 **Gate A 教学设计专项能力**，不独立决定整篇教程是否验收通过。新课程默认先调用 `.claude/skills/tutorial-authoring/SKILL.md`；只调整开场/认知路线时可独立使用。特别检查“局部反例”有没有篡夺用户真正需要的主机制。
+
 **调用时机**：设计新课程、改变课程主线的重大改稿、新增跨章节知识连接、审查或重写开场、处理“公式清楚但学习不自然”的反馈。局部修正、测试修复和纯视觉/实现调整通常复用已有设计，不必重新生成整套 Brief。
 
 必读：`AGENTS.md`、**`docs/TEACHING_STYLE_BASELINE.md`**、**`docs/LEARNING_EXPERIENCE_CONTRACT.md`**、`docs/LEARNING_DESIGN.md`、`docs/COURSE_STANDARD.md`、`docs/templates/learning-brief.md`。

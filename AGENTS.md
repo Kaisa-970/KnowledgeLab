@@ -9,6 +9,12 @@
 
 **唯一主归属**：课程必须声明 `curriculum.trackId/moduleId` 并与全局目录匹配；`npm run validate` 检查结构。机器无法判断是否语义重复，新课必要性仍需 Agent 论证和维护者审查；目录不强制个人学习顺序。
 
+## 默认教程制作入口：tutorial-authoring
+
+**凡创建/重写正式技术教程、课程文章或重大教学设计改稿，先读取并执行 `.claude/skills/tutorial-authoring/SKILL.md`，而不是让多个专项 Skill 各自独立决定产物。** 它是整个制作和审核流程的唯一主入口，包含：从用户题目确认关键机制、用可验证证据作图、直接阅读实际网页、对错误案例返工的 Gate A/B/C，以及正反面案例和跨学科 evals。它调用现有的 `learning-journey` / `knowledge-map` / `diagram-authoring` / `course-review` 等专项能力，不重造这些工具。
+
+**禁止**“形式满足 Skill = 课程已成功”的结论。若读者题目没回答、关键机制被局部反例替代，或核心图的时序/方向/数学错误，必须退回重构；测试通过不抵消问题，作者自己的打勾不等于独立审稿。旧 3DGS 原型的真实学习者反馈为 **6/10**，是需要吸取的反例；8.5 分生成模型文章仍是当前正向基准，不是自动评分标准。
+
 ## 默认教学风格基线（来自真实 8.5/10 反馈）
 
 以后新生成的技术讲解和重大课程改稿，**默认先按照 [`docs/TEACHING_STYLE_BASELINE.md`](docs/TEACHING_STYLE_BASELINE.md) 设计和撰写**，以 [生成模型单篇文章](src/content/lessons/generative-from-noise-to-image.mdx) 为具体参照。优先复用它的**自然因果过渡、把核心跳步讲透、静态图承担解释、数学准确且深入可选**，而不是照搬其开头、章节标题、公式数量、六张图或话题结构。
@@ -45,7 +51,8 @@
 
 仓库中的 Skill 以 `.claude/skills/<name>/SKILL.md` 为单一来源；`.agents/skills/<name>` 通过相对路径符号链接提供 Codex 的自动发现入口。更新技能时只修改源文件，不维护两份副本；新增技能时同步添加对应链接。其他编码 Agent 即使不能自动发现，也**必须按本表显式打开对应文件**。Skill 文件是工作说明，不会自动安装网络、浏览器、图像生成等工具。
 
-- 新课程规划／重构叙事：`.claude/skills/learning-journey/SKILL.md`
+- **正式教程生成／重大改稿默认入口**：`.claude/skills/tutorial-authoring/SKILL.md`
+- 需要专项设计认知主线时：`.claude/skills/learning-journey/SKILL.md`
 - 加入概念或章节／补充知识网络：`.claude/skills/knowledge-map/SKILL.md`
 - 需要引用外部素材或寻找插图：`.claude/skills/visual-research/SKILL.md`
 - 需要原创数学/流程/算法示意：`.claude/skills/diagram-authoring/SKILL.md`

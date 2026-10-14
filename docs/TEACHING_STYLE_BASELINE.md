@@ -2,6 +2,8 @@
 
 > **默认用于今后新增和重大改写的技术学习文章**。这是经过实际读者反馈校准的**起点**，不是统一题材模板、排版配方或保证高分的证书。用户后续对具体文章的反馈优先，基线应继续迭代。
 
+**实际制作与返工请从 `.claude/skills/tutorial-authoring/SKILL.md` 进入**。本基线描述教学风格；主 Skill 进一步提供操作步骤、正反两例、P0 退回规则、真实页面截图及跨学科评估样本。单独“阅读此文档”不等于已经走完生产流程。
+
 ## 基准作品与反馈证据
 
 - **当前参考作品**：[《从一团噪声到一张图，生成模型究竟学会了什么？》](../src/content/lessons/generative-from-noise-to-image.mdx)，Course \`generative-models\`，Chapter \`from-noise-to-image\`。版本锚点为 \`b886a5ea6f19c95eb1edcb6b23d0f965b03bb3ed\`；其中反向核与条件流的关键解释来自其前置提交 \`5ba3c9b\`。

@@ -5,6 +5,8 @@ description: 当课程需要原创的数学几何图、算法运行图、数据�
 
 # Diagram Authoring — 图本身是一段可核验的解释
 
+**定位**：被 `tutorial-authoring` 的 Gate B/C 调用。先确认图是解释哪个**核心因果断点**，而不是用图来美化一个错误的教学中心。图的源码数学同源不等于语义正确：例如 **front-to-back 合成必须按近→远计算权重**，不允许因为顺序列表画错而通过测试。完成后需实际截图阅读并检查箭头、深度方向、轴、公式、文本剪裁；参见 `../tutorial-authoring/references/review.md` 和 `scripts/capture-lesson.mjs`。
+
 必读：`docs/VISUAL_ASSETS.md`、`docs/LEARNING_DESIGN.md`、相关 `math` 源码与 `Visual Brief`。
 
 ## 流程
@@ -28,4 +30,3 @@ description: 当课程需要原创的数学几何图、算法运行图、数据�
 ## 输出
 
 可编辑图源、可见用途描述、caption/alt、核验方法与实际测试结果、未验收项。
-

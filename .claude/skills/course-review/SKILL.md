@@ -5,6 +5,8 @@ description: 独立审查课程叙事、知识连接、事实数学正确性、�
 
 # Course Review — 两条相互独立的验收线
 
+**主验收协议**：正式课程先执行 `tutorial-authoring` 的 Gate C 和 [逐页审核与返工要求](../tutorial-authoring/references/review.md)。**先在不看作者 Learning Brief 的情况下阅读最终页面**：对照用户真正的问题、找出最难机制是否遗漏或主次被反例带偏，再检查独立数学/图示语义。需要实际打开桌面和手机截图；仅报告 DOM 存在、E2E 绿灯或“图取自同一数学模块”，都不是视觉/教学验收。若审稿者与作者同一个 Agent，只能称“作者自检”，不能写独立已验收。
+
 必读：`AGENTS.md`、**`docs/TEACHING_STYLE_BASELINE.md`**、**`docs/LEARNING_EXPERIENCE_CONTRACT.md`**、`docs/LEARNING_DESIGN.md`、`docs/COURSE_STANDARD.md`、`docs/VISUAL_ASSETS.md`、`docs/templates/learning-brief.md`。
 
 ## A. 认知效果与叙事审查（不以 CI 代替）
@@ -43,7 +45,7 @@ description: 独立审查课程叙事、知识连接、事实数学正确性、�
 | Visual rights and accuracy | ... | | |
 | Build and browser | ... | | |
 
-**硬性拒绝**：开篇无有效动机、错误公式、误导图示、将无许可图直接嵌入、虚报测试或版权结论。允许无图、无交互，但必须能交付相应的可验证学习任务；不得以 CI、点击或 Agent 自评宣称读者已经理解。审查范围应与改动风险匹配：新课程和重大改稿执行完整审查；局部修正只复核受影响的叙事、数学、媒介或交互部分，并明确未覆盖项。
+**硬性拒绝**：偏离用户的真正主问题、核心因果桥梁遗漏、开篇无有效动机、错误公式、误导图示、将无许可图直接嵌入、虚报测试/视觉审稿或版权结论。允许无图、无交互，但必须能交付相应的可验证学习任务；不得以 CI、点击或 Agent 自评宣称读者已经理解。审查范围应与改动风险匹配：新课程和重大改稿执行完整审查；局部修正只复核受影响的叙事、数学、媒介或交互部分，并明确未覆盖项。
 
 
 状态升级时按 `docs/CONTENT_CONTRACTS.md` 记录报告、审核版本、作者/独立审稿人、覆盖章节与分项结论。局部修复复用已有报告，只更新受影响证据；内容、数学或交互变化使旧结论失效时改回 pending，必要时降为 prototype。不得仅凭文件存在宣称 reviewed。

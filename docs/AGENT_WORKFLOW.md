@@ -2,6 +2,8 @@
 
 这里描述**目标流程与当前手工执行规则**。仓库目前没有自治 Agent 后端，不得将其当成已经实现的功能。
 
+**生产主入口**：`.claude/skills/tutorial-authoring/SKILL.md`（含 Gate A 核心选题、Gate B 内容/图示制作、Gate C 独立审稿和真实截图）。本文件只描述系统角色/可组合阶段，**不替代主 Skill 的实际操作流程**。正式教程任务优先使用主 Skill；专项 Skills 按需调用。不能仅凭 Brief 填写完整或 CI 通过宣布课程合格。
+
 ## 角色 / 逻辑阶段
 
 1. **Cognitive Designer / Planner**：先识别已有心智模型、具体理解障碍和期望深度，设计最短理解闭环；随后产出课程大纲、先修图与验收口径。
@@ -66,7 +68,7 @@
 
 ```text
 你是 KnowledgeLab 的课程生产 Agent。
-严格遵循仓库 AGENTS.md、docs/COURSE_STANDARD.md、docs/AGENT_WORKFLOW.md 与 docs/TEACHING_STYLE_BASELINE.md。参考已获 8.5/10 反馈的生成模型文章的讲法，但不复制其结构。
+首先完整运行 `.claude/skills/tutorial-authoring/SKILL.md` 的 Gate A/B/C 与正反案例审查。并遵循 AGENTS.md、docs/COURSE_STANDARD.md 和 docs/TEACHING_STYLE_BASELINE.md。参考已获 8.5/10 反馈的生成模型文章的讲法，但不复制其结构。
 任务：{topic}
 目标读者：{audience}
 期望深度：{depth}
@@ -75,14 +77,14 @@
 
 先依据 docs/CURRICULUM_CONTRACT.md 定位已有知识/复用课程，再依据 docs/LEARNING_EXPERIENCE_CONTRACT.md 确认学习者已有模型、本次卡点和期望深度，设计最小理解闭环；再形成 Learning Brief、Knowledge Map 与课程计划。
 经计划阶段确认后，先写一条可连续阅读的因果主线，重点补齐 1–3 个真正困难的原理桥梁，再补证明/实现和边界。学习者能力画像只影响选材和深度，不直接出现在文案中。可用交互 Lab，也可用有根据的 coreTask，不能强迫每节有动画。
-每一张图片/示意必须回答学习疑问，按 docs/VISUAL_ASSETS.md 调研一手事实、查明再发布授权；静态图无法有效表达而且交互提供明确额外理解价值时才制作交互，说明输入如何影响输出。
+每一张图片/示意必须回答学习疑问；先核实数值/轴/时间/深度排序等语义，并在浏览器真实截图逐张审查。按 docs/VISUAL_ASSETS.md 调研一手事实、查明再发布授权；静态图无法有效表达而且交互提供明确额外理解价值时才制作交互，说明输入如何影响输出。
 不要跳过数学或运行时细节；不要杜撰事实、来源或测试结果。
 输出文件改动、实际执行的验证、未完成项；不可宣称未执行的检查已通过。
 ```
 
 ## 各阶段 Skill 调用（未提供自动 Agent 服务）
 
-按 `docs/AGENT_TOOLKIT.md` 执行路由：`learning-journey` / `knowledge-map` → （需要素材时）`visual-research` 或 `diagram-authoring` → `course-review`。Skill 文件位于 `.claude/skills`；没有自动发现机制的 Agent 应在开工前主动读取。**Skills 是明确的操作规范，并不意味着图片检索、网络下载、图像生成等工具已接入。**
+按 `docs/AGENT_TOOLKIT.md` 执行路由：**`tutorial-authoring` 为主 Skill** → 需要时调用 `learning-journey`、`knowledge-map`、`visual-research`、`diagram-authoring` → `course-review` 独立复核。Skill 文件位于 `.claude/skills`；没有自动发现机制的 Agent 应在开工前主动读取。**Skills 是明确的操作规范，并不意味着图片检索、网络下载、图像生成等工具已接入。**
 
 新课程和重大改稿至少提供：叙事设计摘要、知识连接、实际视觉素材的权利记录（若有），以及独立于构建测试的教学质量检查。局部改动只需说明复用的设计依据和受影响范围。最终变更报告必须写明工具不可用/未完成验证的地方，且不得虚报学习者理解程度。
 

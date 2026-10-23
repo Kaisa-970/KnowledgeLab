@@ -173,9 +173,6 @@ export function PerspectiveDivideFigure() {
   const far = { z: 3.0, x: 0.60 }
   const uNear = near.x / near.z
   const uFar = far.x / far.z
-  // The ray leaves the camera at x = 0 and reaches the plane at x / z.
-  const cast = (point: { z: number; x: number }) => ({ x: point.x / point.z })
-
   return <Panel
     anchor="perspective-divide"
     title="同样的横向偏移，为什么近处的更靠外"
@@ -191,17 +188,17 @@ export function PerspectiveDivideFigure() {
       <text x={worldX(zMax)} y={worldY(0) + 17} textAnchor="end" fill={MUTED} fontSize="10">视线（x = 0）</text>
 
       {/* Image plane at world z = 1: the surface the projection lands on. */}
-      <line x1={worldX(planeZ)} y1="40" x2={worldX(planeZ)} y2="212" stroke={INK} strokeWidth="1.6" />
+      <line data-image-plane x1={worldX(planeZ)} y1="40" x2={worldX(planeZ)} y2="212" stroke={INK} strokeWidth="1.6" />
       <text x={worldX(planeZ)} y="230" textAnchor="middle" fill={MUTED} fontSize="11">成像平面（z = 1）</text>
 
-      {[{ p: near, u: uNear, tone: WARN, label: '近' },
-        { p: far, u: uFar, tone: ACCENT, label: '远' }].map(({ p, u, tone, label }) => <g key={label}>
-        {/* Ray from the camera, through the world point, onto the image plane. */}
-        <line x1={worldX(cameraZ)} y1={worldY(0)} x2={worldX(planeZ)} y2={worldY(u)} stroke={tone} strokeWidth="1.5" />
+      {[{ p: near, u: uNear, tone: WARN, depth: 'near' },
+        { p: far, u: uFar, tone: ACCENT, depth: 'far' }].map(({ p, u, tone, depth }) => <g key={depth}>
+        {/* A complete ray: camera → image-plane intersection → world point. */}
+        <line data-projection-ray={depth} x1={worldX(cameraZ)} y1={worldY(0)} x2={worldX(p.z)} y2={worldY(p.x)} stroke={tone} strokeWidth="1.5" />
         {/* The point's own lateral offset, drawn from the optical axis. */}
         <line x1={worldX(p.z)} y1={worldY(0)} x2={worldX(p.z)} y2={worldY(p.x)} stroke={tone} strokeWidth="3" strokeLinecap="round" opacity="0.7" />
-        <circle cx={worldX(p.z)} cy={worldY(p.x)} r="5.5" fill={tone} />
-        <circle cx={worldX(planeZ)} cy={worldY(u)} r="5" fill={tone} />
+        <circle data-world-point={depth} cx={worldX(p.z)} cy={worldY(p.x)} r="5.5" fill={tone} />
+        <circle data-projection={depth} cx={worldX(planeZ)} cy={worldY(u)} r="5" fill={tone} />
         {/* Point label sits above its own marker, so it never runs off an edge. */}
         <text x={worldX(p.z)} y={worldY(p.x) - 13} textAnchor="middle" fill={tone} fontSize="11">
           z = {p.z.toFixed(0)}，x = {p.x.toFixed(2)}
@@ -212,7 +209,7 @@ export function PerspectiveDivideFigure() {
         </text>
       </g>)}
 
-      <circle cx={worldX(cameraZ)} cy={worldY(0)} r="5" fill={INK} />
+      <circle data-camera cx={worldX(cameraZ)} cy={worldY(0)} r="5" fill={INK} />
       <text x={worldX(cameraZ) - 2} y={worldY(0) + 22} fill={MUTED} fontSize="11">相机</text>
       <text x="14" y="258" fill={MUTED} fontSize="11">x 向上为横向偏移；z 向右增大（相机前方），相机在左端</text>
     </svg>
@@ -229,15 +226,14 @@ export function FootprintAxesFigure() {
   const footprint = compareFootprints(NEEDLE.x, NEEDLE.z, NEEDLE.sigmaCross, NEEDLE.sigmaAlong)
   const axes = footprint.correctedAxes
   const centre = footprint.mean.x / footprint.mean.z
-  // The footprint is 0.125 x 0.005 in normalized screen units: a 25:1 ellipse that
-  // is invisible at 1:1 in a 560 px figure. The viewBox is narrowed and the
-  // magnification stated, so the shape stays legible without pretending to be a
-  // screen capture. Only the sigma = 1 contour is drawn: at this aspect ratio the
+  // Semi-axes are about 0.125 and 0.005 in normalized screen units (25:1).
+  // Narrow the viewBox to show the thin ellipse; its displayed scale depends on
+  // the SVG's CSS width, so there is no fixed magnification. This is not a screen
+  // capture. Only the sigma = 1 contour is drawn: at this aspect ratio the
   // sigma = 2 outline runs off the frame and reads as a stray grey oval, which
   // muddles the one thing the figure has to say.
   const HALF_W = 0.205
   const HALF_H = 0.062
-  const magnification = NDC_TO_PIXELS / (2 * HALF_W)
   const stroke = HALF_H * 0.016
   const label = HALF_H * 0.185
 
@@ -245,10 +241,10 @@ export function FootprintAxesFigure() {
     anchor="footprint-axes"
     title="到达屏幕的协方差，画出来是这个椭圆"
     subtitle="解析数据 · 取 Σ′ 的特征值平方根作半轴"
-    caption={`同一个针状高斯在屏幕上的足迹：${(axes.major * NDC_TO_PIXELS).toFixed(1)} px × ${(axes.minor * NDC_TO_PIXELS).toFixed(2)} px，轴比约 ${(axes.major / axes.minor).toFixed(0)}。半轴是 Σ′ 两个特征值的平方根，长轴方向是该特征值对应的特征向量。横纵用同一比例尺，画面横向放大约 ${magnification.toFixed(0)} 倍，所以这条"线"的厚度（${(axes.minor * NDC_TO_PIXELS).toFixed(1)} px）在图里被放大到看得见——它在真实画面上只有两个像素宽。轴比这么大，说明按圆形包围盒把这个高斯分给像素会同时浪费算力并漏掉实际受影响的像素。`}
+    caption={`按输出图像宽 1000 px（归一化坐标 u∈[-1,1]）换算，同一个针状高斯的 1σ 椭圆长半轴约 ${(axes.major * NDC_TO_PIXELS).toFixed(1)} px、短半轴约 ${(axes.minor * NDC_TO_PIXELS).toFixed(2)} px，完整长、短轴约 ${(2 * axes.major * NDC_TO_PIXELS).toFixed(1)} px × ${(2 * axes.minor * NDC_TO_PIXELS).toFixed(1)} px，轴比约 ${(axes.major / axes.minor).toFixed(0)}。半轴是 Σ′ 两个特征值的平方根，长轴方向由对应的特征向量给出。图中横纵同尺度；为看清细长形状收窄了坐标范围，显示比例随页面宽度变化，不是原始像素截图。1σ 只是等值线，高斯在其外仍有权重。若选定一个用于计算的有限椭圆区域，完整包住它的外接圆不会漏掉区域内的像素，但会多处理椭圆外的像素；把圆缩得过小，才可能漏掉需要计算的部分。`}
   >
     <svg viewBox={`${centre - HALF_W} ${-HALF_H} ${HALF_W * 2} ${HALF_H * 2}`} role="img"
-      aria-label={`屏幕空间中的椭圆足迹，长轴约 ${(axes.major * NDC_TO_PIXELS).toFixed(0)} 像素，短轴约 ${(axes.minor * NDC_TO_PIXELS).toFixed(1)} 像素`}
+      aria-label={`屏幕空间中的 1σ 椭圆，按输出宽 1000 像素换算时长半轴约 ${(axes.major * NDC_TO_PIXELS).toFixed(1)} 像素、短半轴约 ${(axes.minor * NDC_TO_PIXELS).toFixed(1)} 像素，完整短轴约 ${(2 * axes.minor * NDC_TO_PIXELS).toFixed(1)} 像素；横纵同尺度`}
       style={{ width: '100%', height: 'auto', display: 'block', background: '#fbfdfe' }}>
       <line x1={centre - HALF_W} y1="0" x2={centre + HALF_W} y2="0" stroke="#e3ecf0" strokeWidth={stroke} />
       <line x1={centre} y1={-HALF_H} x2={centre} y2={HALF_H} stroke="#e3ecf0" strokeWidth={stroke} />
@@ -265,15 +261,15 @@ export function FootprintAxesFigure() {
         y2={axes.major * Math.sin(axes.angle)}
         stroke={WARN} strokeWidth={stroke * 1.25} />
       <circle cx={centre} cy="0" r={stroke * 2} fill={INK} />
-      {/* Labels sit on their own rows so none of them can be clipped by an edge. */}
-      <text x={centre - HALF_W * 0.965} y={-HALF_H * 0.60} fill={MUTED} fontSize={label}>
-        归一化屏幕坐标 u · 横纵同尺度
+      {/* Keep all labels clear of the very thin contour and inside the viewBox. */}
+      <text data-footprint-label="coordinates" x={centre - HALF_W * 0.965} y={-HALF_H * 0.66} fill={MUTED} fontSize={label}>
+        u 坐标 · 横纵同尺度 · 输出宽 1000 px
       </text>
-      <text x={centre - HALF_W * 0.965} y={-HALF_H * 0.06} fill={WARN} fontSize={label}>
-        σ₁ = {(axes.major * NDC_TO_PIXELS).toFixed(1)} px
+      <text data-footprint-label="major-axis" x={centre - HALF_W * 0.965} y={-HALF_H * 0.34} fill={WARN} fontSize={label}>
+        长半轴 σ₁ = {(axes.major * NDC_TO_PIXELS).toFixed(1)} px
       </text>
-      <text x={centre - HALF_W * 0.965} y={HALF_H * 0.66} fill={MUTED} fontSize={label}>
-        σ₂ = {(axes.minor * NDC_TO_PIXELS).toFixed(2)} px（在真实画面上只有两个像素宽）
+      <text data-footprint-label="minor-axis" x={centre - HALF_W * 0.965} y={HALF_H * 0.66} fill={MUTED} fontSize={label}>
+        短半轴 σ₂ = {(axes.minor * NDC_TO_PIXELS).toFixed(2)} px
       </text>
     </svg>
   </Panel>

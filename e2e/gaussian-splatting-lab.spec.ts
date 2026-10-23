@@ -27,6 +27,116 @@ test('the lesson opens on the Gaussian-to-pixel question, not on a glossary', as
   await expect(page.getByRole('heading', { name: '一个高斯在屏幕上占多大' })).toBeVisible()
 })
 
+test('the perspective figure draws complete camera-to-point rays through the image plane', async ({ page }) => {
+  await page.goto(LESSON, { waitUntil: 'domcontentloaded' })
+  const figure = page.locator('[data-concept-figure="perspective-divide"]')
+  await expect(figure.locator('[data-image-plane]')).toHaveCount(1)
+
+  const geometry = await figure.locator('svg').evaluate((svg) => {
+    const point = (selector: string) => {
+      const node = svg.querySelector(selector)
+      if (!node) throw new Error(`missing ${selector}`)
+      return { x: Number(node.getAttribute('cx')), y: Number(node.getAttribute('cy')) }
+    }
+    const line = (selector: string) => {
+      const node = svg.querySelector(selector)
+      if (!node) throw new Error(`missing ${selector}`)
+      return {
+        x1: Number(node.getAttribute('x1')), y1: Number(node.getAttribute('y1')),
+        x2: Number(node.getAttribute('x2')), y2: Number(node.getAttribute('y2')),
+      }
+    }
+    return {
+      camera: point('[data-camera]'),
+      planeX: Number(svg.querySelector('[data-image-plane]')!.getAttribute('x1')),
+      rays: Object.fromEntries(['near', 'far'].map((depth) => [depth, {
+        ray: line(`[data-projection-ray="${depth}"]`),
+        projection: point(`[data-projection="${depth}"]`),
+        world: point(`[data-world-point="${depth}"]`),
+      }])),
+    } as {
+      camera: { x: number; y: number }
+      planeX: number
+      rays: Record<string, {
+        ray: { x1: number; y1: number; x2: number; y2: number }
+        projection: { x: number; y: number }
+        world: { x: number; y: number }
+      }>
+    }
+  })
+
+  expect(geometry.camera.x).toBeLessThan(geometry.planeX)
+  for (const depth of ['near', 'far']) {
+    const { ray, projection, world } = geometry.rays[depth]
+    expect(ray.x1).toBeCloseTo(geometry.camera.x, 6)
+    expect(ray.y1).toBeCloseTo(geometry.camera.y, 6)
+    // The visible ray must finish at the actual 3D point, not stop at z = 1.
+    expect(ray.x2).toBeCloseTo(world.x, 6)
+    expect(ray.y2).toBeCloseTo(world.y, 6)
+    expect(world.x).toBeGreaterThan(geometry.planeX)
+    expect(projection.x).toBeCloseTo(geometry.planeX, 6)
+
+    // The projection marker is on the same segment, between the camera and point.
+    const dx = world.x - geometry.camera.x
+    const dy = world.y - geometry.camera.y
+    const cross = (projection.x - geometry.camera.x) * dy - (projection.y - geometry.camera.y) * dx
+    expect(Math.abs(cross)).toBeLessThan(1e-6)
+    const t = (projection.x - geometry.camera.x) / dx
+    expect(t).toBeGreaterThan(0)
+    expect(t).toBeLessThan(1)
+    expect(projection.y).toBeCloseTo(geometry.camera.y + t * dy, 6)
+  }
+
+  // Equal x = 0.60 gives u = 0.30 for z = 2 and u = 0.20 for z = 3;
+  // in this view the nearer projection is visibly farther from the optical axis.
+  expect(geometry.rays.near.projection.y).toBeLessThan(geometry.rays.far.projection.y)
+})
+
+test('the footprint axis labels stay outside the thin ellipse contour', async ({ page }) => {
+  await page.goto(LESSON, { waitUntil: 'domcontentloaded' })
+  const figure = page.locator('[data-concept-figure="footprint-axes"] svg')
+  await expect(figure.locator('[data-footprint="sigma-1"]')).toHaveCount(1)
+
+  const geometry = await figure.evaluate((svg) => {
+    const ellipse = svg.querySelector('[data-footprint="sigma-1"]')!
+    const centerY = Number(ellipse.getAttribute('cy'))
+    const majorRadius = Number(ellipse.getAttribute('rx'))
+    const minorRadius = Number(ellipse.getAttribute('ry'))
+    const angleDegrees = Number(ellipse.getAttribute('transform')!.match(/rotate\(([-\d.]+)/)?.[1])
+    const angle = angleDegrees * Math.PI / 180
+    const verticalRadius = Math.hypot(majorRadius * Math.sin(angle), minorRadius * Math.cos(angle))
+    const labels = Array.from(svg.querySelectorAll<SVGTextElement>('[data-footprint-label]'))
+      .map((label) => {
+        const box = label.getBBox()
+        return {
+          name: label.getAttribute('data-footprint-label'),
+          top: box.y,
+          bottom: box.y + box.height,
+          left: box.x,
+          right: box.x + box.width,
+        }
+      })
+    return {
+      centerY,
+      top: centerY - verticalRadius,
+      bottom: centerY + verticalRadius,
+      viewBox: { x: svg.viewBox.baseVal.x, width: svg.viewBox.baseVal.width },
+      labels,
+    }
+  })
+
+  const upperLabels = geometry.labels.filter((label) => label.name !== 'minor-axis')
+  for (const label of upperLabels) {
+    expect(label.bottom).toBeLessThan(geometry.top)
+    expect(label.left).toBeGreaterThanOrEqual(geometry.viewBox.x)
+    expect(label.right).toBeLessThanOrEqual(geometry.viewBox.x + geometry.viewBox.width)
+  }
+  const lowerLabel = geometry.labels.find((label) => label.name === 'minor-axis')!
+  expect(lowerLabel.top).toBeGreaterThan(geometry.bottom)
+  expect(lowerLabel.left).toBeGreaterThanOrEqual(geometry.viewBox.x)
+  expect(lowerLabel.right).toBeLessThanOrEqual(geometry.viewBox.x + geometry.viewBox.width)
+})
+
 test('the pixel-weight bridge is present in prose, not only in the math module', async ({ page }) => {
   // This is the P0 the first version failed: the chain from a 2D covariance to a
   // per-pixel opacity was never written down, so "ellipse" and "photo" were not

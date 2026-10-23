@@ -4,6 +4,7 @@ import {
   axisAlignedCovariance,
   compareFootprints,
   ellipseAxes,
+  gaussianFalloff,
   horizontalFootprint,
   projectedCovariance,
   type Sym2,
@@ -13,14 +14,18 @@ import {
  * Projection lab.
  *
  * The reader sets how far a Gaussian is stretched along the view axis and how far
- * off-axis it sits, then predicts which of the two screen footprints is right.
- * Every number and both outlines come from src/math/gaussian-splatting.ts, the
- * same module the unit tests exercise, so the drawing cannot disagree with the
- * arithmetic.
+ * off-axis it sits, then predicts which of the two screen footprints is right and
+ * how far the Gaussian's influence actually reaches. Every number, both outlines
+ * and the weight profile come from src/math/gaussian-splatting.ts. The browser
+ * tests also check that those values are mapped to the chart's coordinates.
+ *
+ * The weight profile is the point of the lab: the ellipse readout alone lets a
+ * reader compare two abstract shapes, while the profile shows the quantity the
+ * rasterizer actually consumes, and where it dies.
  */
 
 const PRESETS = [
-  { id: 'on-axis', label: '光轴上（两法一致）', x: 0, along: 0.5, cross: 0.01, note: 'x = 0 时第三列权重为零，朴素算法精确' },
+  { id: 'on-axis', label: '光轴上（两法一致）', x: 0, along: 0.5, cross: 0.01, note: 'x = 0 时第三列系数为零，朴素算法精确' },
   { id: 'needle', label: '离轴的针（默认）', x: 1, along: 0.5, cross: 0.01, note: '横向 0.01、深度 0.5，朴素低估 25 倍' },
   { id: 'isotropic', label: '各向同性', x: 1, along: 0.01, cross: 0.01, note: '没有各向异性，两法只差一点点' },
   { id: 'planar', label: '沿深度的薄片', x: 1, along: 0, cross: 0.05, note: '深度尺度趋近 0，投影在支撑集上真正仿射' },
@@ -48,11 +53,35 @@ export default function GaussianProjectionLab() {
   const ratio = footprint.ratio
   const agree = Math.abs(ratio - 1) < 1e-6
 
-  const frameWidth = 250
-  const frameHeight = 170
+  // The pixel-weight profile, cut along the major axis of each covariance. Both
+  // are sampled at the same pixel offsets, so the reader compares the same pixel
+  // under two hypotheses rather than two differently-scaled plots.
+  const profileRange = Math.max(
+    12,
+    comparison.correctedAxes.major * NDC_TO_PIXELS * 2.2,
+    comparison.naiveAxes.major * NDC_TO_PIXELS * 6,
+  )
+  const profileLayout = { width: 520, height: 210, left: 48, right: 500, top: 30, bottom: 136 }
+  const profileX = (px: number) => profileLayout.left + ((px + profileRange) / (2 * profileRange))
+    * (profileLayout.right - profileLayout.left)
+  const profileY = (weight: number) => profileLayout.bottom - weight * (profileLayout.bottom - profileLayout.top)
+  const profile = (matrix: Sym2) => {
+    const steps = 96
+    const points: string[] = []
+    for (let i = 0; i <= steps; i++) {
+      const px = (-profileRange + (2 * profileRange * i) / steps)
+      const weight = gaussianFalloff(px / NDC_TO_PIXELS, 0, matrix)
+      points.push(`${i ? 'L' : 'M'}${profileX(px).toFixed(2)},${profileY(weight).toFixed(2)}`)
+    }
+    return points.join(' ')
+  }
+  // A 2-sigma reference distance, not a cutoff: Gaussian tails continue beyond it.
+  const reachPx = comparison.correctedAxes.major * NDC_TO_PIXELS * 2
+  const naiveReachPx = comparison.naiveAxes.major * NDC_TO_PIXELS * 2
+
   const centre = lateral / DEPTH
-  const halfWidth = Math.max(0.16, comparison.correctedAxes.major * 0.14)
-  const halfHeight = Math.max(0.05, comparison.correctedAxes.major * 0.05)
+  const halfWidth = Math.max(0.16, comparison.correctedAxes.major * 1.2)
+  const halfHeight = Math.max(0.05, comparison.correctedAxes.minor * 1.2)
 
   const footprintPanel = (label: string, matrix: Sym2, tone: string, dashed: boolean, testId: string) => {
     const axes = ellipseAxes(matrix)
@@ -71,6 +100,36 @@ export default function GaussianProjectionLab() {
       </svg>
       <figcaption><strong>{label}</strong>
         <span data-readout={testId}>σ₁ = {(axes.major * NDC_TO_PIXELS).toFixed(1)} px</span>
+      </figcaption>
+    </figure>
+  }
+
+  // Weight-profile panel: the live consequence of the two covariances.
+  const profileChart = () => {
+    const { width, height, left, right, top, bottom } = profileLayout
+    return <figure className="gs-lab-panel gs-lab-profile">
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" data-profile-chart data-pixel-range={profileRange}
+        aria-label="沿长轴的像素权重剖面：取 o = 1，比较校正与朴素两条协方差给出的不透明度随屏幕距离的衰减">
+        <rect width={width} height={height} fill="none" />
+        {[0, 0.5, 1].map((value) => <g key={value}>
+          <line x1={left} y1={profileY(value)} x2={right} y2={profileY(value)} stroke="#e8eff3" />
+          <text x={left - 6} y={profileY(value) + 5} textAnchor="end" fill="#7b8fa0" fontSize="16">{value.toFixed(1)}</text>
+        </g>)}
+        <line x1={left} y1={top} x2={left} y2={bottom} stroke="#c9d6dd" />
+        {showNaive && <path d={profile(comparison.naive)} fill="none" stroke="#8a6a94" strokeWidth="2" strokeDasharray="5 4" data-profile="naive" />}
+        <path d={profile(comparison.corrected)} fill="none" stroke="#128577" strokeWidth="2.2" data-profile="corrected" />
+        {/* At 2σ the weight is exp(-2), about 13.5% of its central value. */}
+        <line data-two-sigma x1={profileX(reachPx)} y1={top} x2={profileX(reachPx)} y2={bottom} stroke="#c4713f" strokeWidth="1" strokeDasharray="3 3" />
+        <text x={profileX(reachPx) - 4} y={top - 10} textAnchor="end" fill="#c4713f" fontSize="16">2σ = {reachPx.toFixed(0)} px</text>
+        {[-reachPx, 0, reachPx].map((px) => <text key={px} x={profileX(px)} y={bottom + 20}
+          textAnchor="middle" fill="#7b8fa0" fontSize="16">{px.toFixed(0)}</text>)}
+        <text x={left} y={top - 10} fill="#7b8fa0" fontSize="16">α（o = 1）</text>
+        <text x={right} y={height - 6} textAnchor="end" fill="#7b8fa0" fontSize="16">距中心屏幕距离（px，沿长轴）</text>
+        <text x={left} y={height - 26} fill="#128577" fontSize="16">■ 校正 Σ'</text>
+        {showNaive && <text x={left + 128} y={height - 26} fill="#8a6a94" fontSize="16">▨ 朴素 2×2 块</text>}
+      </svg>
+      <figcaption><strong>每个像素拿到多少权重</strong>
+        <span data-readout="profile">2σ 处距中心：校正路径 {reachPx.toFixed(1)} px；朴素路径 {naiveReachPx.toFixed(1)} px。此处 α ≈ 0.135，之外仍继续衰减。</span>
       </figcaption>
     </figure>
   }
@@ -125,6 +184,8 @@ export default function GaussianProjectionLab() {
         {showNaive && footprintPanel('仅取左上 2×2 块（朴素）', comparison.naive, '#8a6a94', true, 'naive')}
       </div>
 
+      {profileChart()}
+
       <div className="gs-lab-readout" role="status" aria-live="polite">
         <span>展宽倍数 <strong data-testid="gs-ratio">{state.degenerate ? '—' : ratio.toFixed(2) + '×'}</strong></span>
         <span>朴素 σ <strong data-testid="gs-naive">{footprint.naivelyPx.toFixed(2)} px</strong></span>
@@ -136,12 +197,14 @@ export default function GaussianProjectionLab() {
         {state.degenerate
           ? '横向尺度趋近 0：屏幕足迹退化，两条路径都趋于零宽。'
           : agree
-            ? '此时两条路径给出的横向足迹完全相同——中心位于光轴，第三列系数为零；因此朴素算法与局部仿射结果一致，但透视本身仍是非线性的。'
-            : `第三列把深度尺度折进了屏幕横向：朴素结果 ${footprint.naivelyPx.toFixed(2)} px，校正结果 ${footprint.correctedPx.toFixed(2)} px，相差 ${ratio.toFixed(2)} 倍。`}
+            ? lateral === 0
+              ? '此时两条路径给出的横向足迹完全相同——中心位于光轴，第三列系数为零；因此朴素算法与局部仿射结果一致，但透视本身仍是非线性的。'
+              : '深度方向尺度为零，所有点的 z 相同，透视投影在这个平面上是仿射映射；两条路径给出的横向足迹完全相同。'
+            : `第三列把深度尺度折进了屏幕横向：朴素足迹的 σ 是 ${footprint.naivelyPx.toFixed(2)} px，校正后是 ${footprint.correctedPx.toFixed(2)} px，相差 ${ratio.toFixed(2)} 倍。中心附近两条曲线相同；离开中心后，漏掉这一项的朴素权重下降得快得多。`}
       </p>
 
       <p className="gs-lab-footnote">
-        两个面板共用同一比例尺，因此可以直接比较大小。椭圆由协方差矩阵特征分解得到，读数取自同一份计算。
+        两个椭圆面板共用同一比例尺；权重剖面的横轴将屏幕距离换算为像素，用来比较同一像素处的权重。椭圆由协方差矩阵特征分解得到，权重剖面由同一协方差的马氏距离得到，读数取自同一份计算。
         横向偏移与深度尺度都作用于相机坐标系中的高斯；深度固定为 {DEPTH.toFixed(1)}，因为在这个模型里，
         决定展宽的是无量纲的横向角 x/z 和尺度比 σ<sub>along</sub>/σ<sub>cross</sub>，与绝对深度无关。
       </p>

@@ -338,6 +338,8 @@ button { cursor:pointer; }
 .gs-preset.active { border-color:#3ba69b; background:#e8f6f3; color:#0c7c70; font-weight:700; }
 .gs-lab-panels { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .gs-lab-panel { margin:0; background:#fff; border:1px solid #e6ecf1; border-radius:10px; overflow:hidden; }
+.gs-lab-panel svg { display:block; width:100%; height:auto; }
+.gs-lab-profile { margin-top:12px; }
 .gs-lab-panel figcaption { padding:9px 11px 8px; border-top:1px solid #eef2f6; }
 .gs-lab-panel figcaption strong { display:block; font-size:12px; color:#233a50; }
 .gs-lab-panel figcaption span { display:block; margin-top:3px; font-size:11px; color:#8a99a8; font-variant-numeric:tabular-nums; }

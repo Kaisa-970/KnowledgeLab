@@ -5,14 +5,19 @@ import {
   alphaAt,
   axisAlignedCovariance,
   compareFootprints,
+  createRandom,
   compositeFrontToBack,
+  compositeFrontToBackDetail,
   covarianceFromScaleRotation,
   ellipseAxes,
   empiricalCovariance,
+  footprintOpacity,
   footprintSmearingRatio,
   gaussianFalloff,
   horizontalFootprint,
+  mahalanobisSquared,
   naiveCovariance,
+  projectPoint,
   projectedCovariance,
   projectionJacobian,
   quaternionToRotation,
@@ -345,13 +350,156 @@ test('the falloff matches the closed-form bivariate Gaussian on a well-condition
   }
 })
 
-test('the falloff is a valid unnormalized Gaussian density', () => {
+test('the unnormalized Gaussian falloff is well formed', () => {
   const m: Sym2 = [4, 0.5, 1]
   assert.ok(close(gaussianFalloff(0, 0, m), 1))
   assert.ok(gaussianFalloff(3, 3, m) < gaussianFalloff(1, 1, m))
   // A degenerate footprint must not produce NaN or a spurious bright cell.
   assert.equal(gaussianFalloff(0.2, 0.2, [0, 0, 0]), 0)
   assert.equal(gaussianFalloff(0.2, 0.2, [1, 2, 1]), 0)
+})
+
+test('the falloff IS the Mahalanobis distance, so the two cannot drift apart', () => {
+  // The article reports r = sqrt(d^T Sigma'^-1 d) and separately reports alpha.
+  // If those were computed from different expressions a reader verifying one
+  // would silently disagree with a figure drawn from the other. Pin the identity
+  // on a well-conditioned matrix, where the quadratic form is exactly invertible.
+  const m: Sym2 = [0.04, 0.006, 0.01]
+  for (const [dx, dy] of [[0.05, 0.0], [0.0, 0.08], [0.03, -0.04], [-0.06, 0.02]]) {
+    const r2 = mahalanobisSquared(dx, dy, m)
+    assert.ok(close(gaussianFalloff(dx, dy, m), Math.exp(-0.5 * r2), 1e-15))
+  }
+  // One sigma along either principal axis is exactly r^2 = 1, hence e^-1/2.
+  const { major, minor, angle } = ellipseAxes(m)
+  assert.ok(close(mahalanobisSquared(major * Math.cos(angle), major * Math.sin(angle), m), 1, 1e-12))
+  assert.ok(close(mahalanobisSquared(-minor * Math.sin(angle), minor * Math.cos(angle), m), 1, 1e-12))
+})
+
+test('the weight profile is what makes the naive footprint visibly wrong', () => {
+  // The bridge the article is built on. Both covariance paths place their
+  // ellipse at the same screen centre (the divide commutes with a linear map),
+  // so the ONLY observable difference is the per-pixel weight. Quantify it at a
+  // few offsets so the claim "a bright bar, not a dot" has a number behind it.
+  const corrected = projectedCovariance(axisAlignedCovariance(NEEDLE.sigmaCross, NEEDLE.sigmaAlong), { x: NEEDLE.x, y: 0, z: NEEDLE.z })
+  const naive = naiveCovariance(axisAlignedCovariance(NEEDLE.sigmaCross, NEEDLE.sigmaAlong), NEEDLE.z)
+
+  const weight = (m: Sym2, offsetPx: number) => gaussianFalloff(offsetPx / NDC_TO_PIXELS, 0, m)
+
+  assert.ok(close(weight(corrected, 0), 1, 1e-15))
+  assert.ok(close(weight(naive, 0), 1, 1e-15))
+
+  // At one NAIVE sigma (2.5 px) the correct path has barely moved.
+  assert.ok(close(weight(naive, 2.5), Math.exp(-0.5), 1e-12), 'naive is at e^-1/2 one sigma out')
+  assert.ok(weight(corrected, 2.5) > 0.999, `corrected ${weight(corrected, 2.5)}`)
+
+  // At 10 px the naive path is essentially dark.
+  assert.ok(weight(naive, 10) < 0.001, `naive ${weight(naive, 10)}`)
+  assert.ok(weight(corrected, 10) > 0.98, `corrected ${weight(corrected, 10)}`)
+
+  // At the corrected semi-axis (62.5 px) the naive path is effectively dark. It
+  // is not bitwise zero: exp(-0.5 * (62.5/2.5)^2) underflows to ~1e-136 first.
+  assert.ok(weight(naive, 62.5) < 1e-100, `naive ${weight(naive, 62.5)}`)
+  assert.ok(weight(corrected, 62.5) > 0.6, `corrected ${weight(corrected, 62.5)}`)
+})
+
+test('the two covariance paths share a centre, so only the width can differ', () => {
+  // Guards the article's claim about WHY the failure mode is a width error.
+  // A reader who assumes the naive rule also shifts the ellipse would predict a
+  // positional artifact, which is not what the renderer produces.
+  const mean = { x: NEEDLE.x, y: 0, z: NEEDLE.z }
+  const centre = { u: mean.x / mean.z, v: mean.y / mean.z }
+  const covariance = axisAlignedCovariance(NEEDLE.sigmaCross, NEEDLE.sigmaAlong)
+  const corrected = projectedCovariance(covariance, mean)
+  const naive = naiveCovariance(covariance, mean.z)
+
+  const offsetU = 3 / NDC_TO_PIXELS
+  const correctedWeight = footprintOpacity(1, centre.u + offsetU, centre.v, { x: 0, y: 0, z: 1 }, corrected)
+  const naiveWeight = footprintOpacity(1, centre.u + offsetU, centre.v, { x: 0, y: 0, z: 1 }, naive)
+  assert.ok(correctedWeight > naiveWeight * 100,
+    `same pixel, same centre: ${correctedWeight} vs ${naiveWeight}`)
+})
+
+test('the ray through a point meets the image plane exactly at x/z', () => {
+  // The perspective figure draws the projection twice: once as the point's own
+  // x/z, and once as where the ray from the camera crosses the plane at z = 1.
+  // Those must be the same number or the picture contradicts the formula beside
+  // it — the failure mode the earlier far-to-near blending figure shipped with.
+  const planeZ = 1
+  const cameraZ = 0
+  for (const p of [{ x: 0.6, y: 0, z: 2 }, { x: 0.6, y: 0, z: 3 }, { x: -0.25, y: 0, z: 1.4 }]) {
+    const t = (planeZ - cameraZ) / (p.z - cameraZ)
+    const onPlane = p.x * t
+    assert.ok(close(onPlane, p.x / p.z, 1e-12),
+      `ray hits ${onPlane}, formula says ${p.x / p.z}`)
+    assert.ok(close(onPlane, projectPoint(p).u, 1e-12))
+  }
+  // Equal lateral offset: the projected displacements are in the inverse ratio of
+  // the depths, which is the figure's stated 0.30 vs 0.20.
+  const near = { x: 0.6, z: 2 }
+  const far = { x: 0.6, z: 3 }
+  assert.ok(close((near.x / near.z) / (far.x / far.z), far.z / near.z, 1e-12))
+  assert.ok(Math.abs(near.x / near.z - 0.30) < 1e-12)
+  assert.ok(Math.abs(far.x / far.z - 0.20) < 1e-12)
+})
+
+test('Sigma\' = J Sigma J^T follows from applying J to the increments, not to Sigma', () => {
+  // The article derives the congruence transform instead of asserting it. The
+  // claim a reader could get wrong is that the transform is NOT "multiply Sigma
+  // by J": it is "transform the increments, then take their second moment".
+  // Verify by sampling increments, pushing them through J, and comparing the
+  // measured covariance of the images against J Sigma J^T.
+  //
+  // An AXIS-ALIGNED Gaussian is used deliberately: its Cholesky factor is the
+  // diagonal of standard deviations, so the sampling has no factoring convention
+  // to get wrong. If this test fails it is about the congruence identity, not
+  // about an index into a triangular matrix.
+  const mean = { x: 0.7, y: -0.3, z: 2.4 }
+  const deviations = [0.12, 0.08, 0.05]
+  const cov3 = covarianceFromScaleRotation({ x: deviations[0]!, y: deviations[1]!, z: deviations[2]! })
+  const j = projectionJacobian(mean)
+  const expected = projectedCovariance(cov3, mean)
+
+  const count = 200_000
+  const random = createRandom(777)
+  const mapped: { u: number; v: number }[] = []
+  for (let i = 0; i < count; i++) {
+    const dx = deviations.map((sigma) => {
+      const a = random(), b = random()
+      return sigma * Math.sqrt(-2 * Math.log(a)) * Math.cos(2 * Math.PI * b)
+    })
+    mapped.push({
+      u: j[0]! * dx[0]! + j[1]! * dx[1]! + j[2]! * dx[2]!,
+      v: j[3]! * dx[0]! + j[4]! * dx[1]! + j[5]! * dx[2]!,
+    })
+  }
+  const measured = empiricalCovariance(mapped)
+  const error = relativeCovarianceError(measured, expected)
+  assert.ok(error < 0.02, `J-applied increments: ${measured} vs J Sigma J^T ${expected} (rel ${error})`)
+
+  // Control: the transform that the article says is WRONG. Pointwise it is a
+  // different matrix, so a test that passed on both would be measuring nothing.
+  assert.ok(relativeCovarianceError(expected, [cov3[0]!, cov3[1]!, cov3[4]!]) > 0.5,
+    'the identity must differ from the raw upper-left block')
+})
+
+test('opacity scales the whole weight profile, leaving every ratio unchanged', () => {
+  // The prose and the profile figure use o = 1 so the vertical axis reads e^{-r^2/2}.
+  // That is a presentation choice, and it is only legitimate because a different
+  // opacity scales the CURVE without changing any of the comparisons drawn from
+  // it. Assert the scaling and the invariant, so "此图取 o = 1" is earned.
+  const cov = projectedCovariance(axisAlignedCovariance(0.01, 0.5), { x: 1, y: 0, z: 2 })
+  const at = (opacity: number, offsetPx: number) =>
+    alphaAt(opacity, offsetPx / NDC_TO_PIXELS, 0, cov)
+  assert.ok(close(at(1, 0), 1, 1e-15), 'o = 1 puts the centre weight at 1')
+  assert.ok(close(at(1, 10), 0.987302, 1e-6))
+  // One sigma along the major axis is e^{-1/2} of the centre, for any opacity.
+  const sigmaPx = ellipseAxes(cov).major * NDC_TO_PIXELS
+  assert.ok(close(at(1, sigmaPx), Math.exp(-0.5), 1e-12))
+  for (const opacity of [0.2, 0.55, 1]) {
+    assert.ok(close(at(opacity, 10) / at(opacity, 0), at(1, 10) / at(1, 0), 1e-15),
+      `ratio must not depend on opacity, failed at o = ${opacity}`)
+    assert.ok(close(at(opacity, 0), opacity, 1e-15))
+  }
 })
 
 test('front-to-back compositing depends on order, which is why splats get sorted', () => {
@@ -381,6 +529,41 @@ test('front-to-back compositing depends on order, which is why splats get sorted
   assert.ok(close(sorted.color[2]!, 0.012, 1e-15))
   const summed = sorted.color[0]! + sorted.color[1]! + sorted.color[2]!
   assert.ok(close(summed + sorted.transmittance, 1, 1e-15))
+})
+
+test('each layer contribution is incoming transmittance times alpha', () => {
+  // This is the exact fixed example drawn by SplatBlendingFigure.
+  const nearToFar = [0.30, 0.35, 0.45].map((alpha) => ({ color: [1, 1, 1] as const, alpha }))
+  const correct = compositeFrontToBackDetail(nearToFar)
+  const expected = [[1, 0.3, 0.7], [0.7, 0.245, 0.455], [0.455, 0.20475, 0.25025]]
+  correct.details.forEach((row, index) => {
+    assert.ok(close(row.carried, expected[index]![0]!, 1e-15))
+    assert.ok(close(row.contribution, expected[index]![1]!, 1e-15))
+    assert.ok(close(row.remaining, expected[index]![2]!, 1e-15))
+  })
+  for (const row of correct.details) {
+    assert.ok(close(row.contribution, row.carried * row.alpha, 1e-15))
+    assert.ok(close(row.remaining, row.carried * (1 - row.alpha), 1e-15))
+  }
+
+  const reversed = compositeFrontToBackDetail([...nearToFar].reverse())
+  // (1-a) products commute: total contribution and final transmittance agree,
+  // even though reversing the list changes the contribution assigned per layer.
+  assert.ok(close(correct.weightSum, reversed.weightSum, 1e-15))
+  assert.ok(close(correct.transmittance, reversed.transmittance, 1e-15))
+  assert.notDeepEqual(
+    correct.details.map((row) => row.contribution),
+    [...reversed.details].reverse().map((row) => row.contribution),
+  )
+
+  // Nearest does NOT always contribute most: a far layer with larger alpha can
+  // outweigh a weak near layer after the incoming transmittance is applied.
+  const counterexample = compositeFrontToBackDetail([
+    { color: [1, 1, 1], alpha: 0.1 },
+    { color: [1, 1, 1], alpha: 0.9 },
+  ])
+  assert.deepEqual(counterexample.details.map((row) => row.contribution), [0.1, 0.81])
+  assert.ok(counterexample.details[1]!.contribution > counterexample.details[0]!.contribution)
 })
 
 test('transmittance closes and fully opaque layers terminate the ray', () => {

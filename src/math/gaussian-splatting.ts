@@ -153,13 +153,15 @@ export function ellipseAxes(m: Sym2): { major: number; minor: number; angle: num
 /**
  * exp(-1/2 d^T Sigma^-1 d) for d = (dx, dy). The normalizing constant is
  * omitted: it only rescales opacity, which is a learned parameter here.
+ *
+ * This is `exp(-r^2 / 2)` in the Mahalanobis distance `r`; the quadratic form
+ * itself lives in `mahalanobisSquared` so the falloff in the rasterizer and the
+ * distance reported in the article cannot drift apart.
  */
 export function gaussianFalloff(dx: number, dy: number, m: Sym2): number {
-  const det = determinant2D(m)
-  if (!(det > 0)) return 0
-  const [a, b, c] = m
-  const quadratic = (c * dx * dx - 2 * b * dx * dy + a * dy * dy) / det
-  return Math.exp(-0.5 * Math.max(quadratic, 0))
+  const quadratic = mahalanobisSquared(dx, dy, m)
+  if (!Number.isFinite(quadratic)) return 0
+  return Math.exp(-0.5 * quadratic)
 }
 
 export function alphaAt(opacity: number, dx: number, dy: number, m: Sym2): number {
@@ -168,6 +170,22 @@ export function alphaAt(opacity: number, dx: number, dy: number, m: Sym2): numbe
 
 function clamp01(value: number): number {
   return value < 0 ? 0 : value > 1 ? 1 : value
+}
+
+/**
+ * How far a pixel sits from a footprint centre, measured in units of the
+ * footprint's own covariance:
+ *
+ *     r^2 = d^T Sigma'^-1 d,   d = (du, dv)
+ *
+ * This is the Mahalanobis distance. It is the quantity the falloff actually
+ * consumes, so `alphaAt` is exp(-r^2 / 2) along any direction.
+ */
+export function mahalanobisSquared(du: number, dv: number, m: Sym2): number {
+  const det = determinant2D(m)
+  if (!(det > 0)) return Number.POSITIVE_INFINITY
+  const [a, b, c] = m
+  return Math.max((c * du * du - 2 * b * du * dv + a * dv * dv) / det, 0)
 }
 
 export type BlendLayer = { color: readonly [number, number, number]; alpha: number }
@@ -191,6 +209,48 @@ export function compositeFrontToBack(layers: readonly BlendLayer[]): {
     transmittance *= 1 - alpha
   }
   return { color, transmittance }
+}
+
+export type BlendDetail = {
+  index: number
+  alpha: number
+  /** Transmittance arriving at this layer, i.e. what survived the layers in front. */
+  carried: number
+  /** This layer's share of the final colour: carried * alpha. */
+  contribution: number
+  /** Transmittance surviving past this layer. */
+  remaining: number
+}
+
+/**
+ * The same front-to-back walk as `compositeFrontToBack`, reported per layer.
+ *
+ * This exists so a figure can draw the per-layer weights WITHOUT re-implementing
+ * the accumulation. An earlier version of the blending figure inlined its own
+ * `carry *= 1 - alpha` loop while this module held the tested version; the two
+ * drifted, the figure taught the wrong weights, and every test stayed green
+ * because the tests exercised the copy the figure did not use. Figures must call
+ * one of these two functions, never accumulate transmittance themselves.
+ */
+export function compositeFrontToBackDetail(layers: readonly BlendLayer[]): {
+  details: BlendDetail[]
+  transmittance: number
+  weightSum: number
+} {
+  const details: BlendDetail[] = []
+  let transmittance = 1
+  layers.forEach((layer, index) => {
+    const alpha = clamp01(layer.alpha)
+    const carried = transmittance
+    const contribution = carried * alpha
+    transmittance *= 1 - alpha
+    details.push({ index, alpha, carried, contribution, remaining: transmittance })
+  })
+  return {
+    details,
+    transmittance,
+    weightSum: details.reduce((sum, row) => sum + row.contribution, 0),
+  }
 }
 
 /**
@@ -340,7 +400,7 @@ export function compareFootprints(
   }
 }
 
-/** Opacity of a Gaussian whose covariance is given, at a screen-space offset. */
+/** Opacity at absolute screen coordinates; subtracts the projected centre internally. */
 export function footprintOpacity(
   opacity: number, offsetU: number, offsetV: number, mean: Vec3, corrected: Sym2,
 ): number {

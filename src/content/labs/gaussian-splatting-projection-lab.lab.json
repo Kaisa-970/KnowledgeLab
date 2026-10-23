@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "id": "gaussian-splatting-projection-lab",
-  "question": "一个三维高斯在屏幕上究竟占多大、朝哪个方向？为什么「丢掉协方差的深度分量」这条看似自然的规则，在光轴以外会给出几十倍的错误？",
-  "prediction": "把「深度方向尺度」从 0.01 拉到 0.5，再做同样的横向偏移：屏幕足迹会变大、变小，还是不变？朴素结果与校正结果哪一个跟着变？把横向偏移归零之后，两者还会不一致吗？",
+  "question": "一个三维高斯在屏幕上究竟占多大、朝哪个方向？为什么「丢掉协方差的深度分量」这条看似自然的规则，在光轴以外会给出几十倍的错误？更关键的是：这个宽度差异怎样变成每个像素实际拿到的不透明度？",
+  "prediction": "把「深度方向尺度」从 0.01 拉到 0.5，再做同样的横向偏移：屏幕足迹会变大、变小，还是不变？朴素结果与校正结果哪一个跟着变？然后换一个角度——不看椭圆，只看权重剖面：离足迹中心 10 像素处，两条路径各自还剩下多少不透明度？把横向偏移归零之后，两条曲线会重合吗？",
   "controls": [
     {
       "id": "lateral-offset",
@@ -54,6 +54,11 @@
       "id": "insight-line",
       "label": "因果说明行",
       "description": "根据当前状态给出文字解释：两法为何一致、或差异来自第三列的哪个系数"
+    },
+    {
+      "id": "weight-profile",
+      "label": "像素权重剖面",
+      "description": "沿长轴切开的两条 α(r) 曲线，由同一协方差的马氏距离得到；给出各路径 2σ 参考距离，此处权重约 0.135、之外仍继续衰减"
     }
   ],
   "invariants": [
@@ -104,7 +109,7 @@
     },
     {
       "id": "falloff-wellformed",
-      "statement": "alpha 衰减在中心取最大值、向四周单调下降，退化协方差不产生 NaN",
+      "statement": "未归一化衰减核在中心取最大值、向四周单调下降，退化协方差不产生 NaN",
       "oracleIds": [
         "falloff-wellformed-test",
         "alpha-mahalanobis-test"
@@ -119,7 +124,7 @@
     },
     {
       "id": "compositing-closure",
-      "statement": "每个像素的颜色贡献与最终剩余透射率之和恒为 1，不透明层终止光线",
+      "statement": "每个像素的各层颜色贡献权重之和加最终剩余透射率恒为 1，不透明层终止光线",
       "oracleIds": [
         "transmittance-closure-test",
         "empty-stack-test"
@@ -130,6 +135,37 @@
       "statement": "界面显示的两个足迹与底层两条协方差路径逐项一致，不存在第二套计算来源",
       "oracleIds": [
         "helper-consistency-test"
+      ]
+    },
+    {
+      "id": "weight-is-mahalanobis",
+      "statement": "像素不透明度恒等于 exp(−r²/2) 乘以该图元的不透明度，其中 r 是同一协方差的马氏距离；权重剖面与椭圆半轴来自同一个 Σ′，不存在第二套计算",
+      "oracleIds": [
+        "alpha-mahalanobis-test",
+        "falloff-wellformed-test"
+      ]
+    },
+    {
+      "id": "blend-order-weight",
+      "statement": "近→远遍历时，每层贡献等于到达该层的透射率乘本层 alpha；换序保持最终透射率和总贡献不变，但会改变逐层分配。图示固定 alpha（近/中/远为 0.30/0.35/0.45）时近层贡献最大，这只对该组数值成立",
+      "oracleIds": [
+        "blend-per-layer-contribution-test",
+        "compositing-order-test"
+      ]
+    },
+    {
+      "id": "covariance-congruence",
+      "statement": "屏幕协方差等于把增量经雅可比线性映射后取二阶矩，即 Σ′ = J Σ_c Jᵀ；它不是把 Σ 直接乘 J，且与直接取左上 2×2 块明显不同",
+      "oracleIds": [
+        "congruence-derivation-test"
+      ]
+    },
+    {
+      "id": "opacity-scales-ratios",
+      "statement": "不透明度 o 只等比缩放整条权重剖面；中心权重等于 o，一个 σ 处等于 e^{−1/2}o，任意两点权重之比与 o 无关",
+      "oracleIds": [
+        "opacity-scaling-test",
+        "alpha-mahalanobis-test"
       ]
     }
   ],
@@ -185,9 +221,18 @@
       "oracleIds": [
         "degenerate-cross-test"
       ]
+    },
+    {
+      "id": "weight-profile-decay",
+      "setup": "预设「离轴的针」：横向 0.01、深度 0.5、偏移 1，然后观察权重剖面在 10 像素处的读数",
+      "expected": "校正曲线在 10 像素处仍接近 1，朴素曲线已经降到千分之一量级；两者在中心都等于该图元的不透明度",
+      "oracleIds": [
+        "weight-profile-bridge-test",
+        "shared-centre-test"
+      ]
     }
   ],
-  "explanation": "透视投影 pi(p)=(x/z, y/z) 不是仿射映射，因此三维高斯投影后一般不再是高斯。在每一点取它的一阶导数 J=[[1/z,0,-x/z²],[0,1/z,-y/z²]]，就得到局部仿射近似，其协方差为 Sigma'=J Sigma Jᵀ。关键是 J 的第三列：两个系数分别含 x/z² 与 y/z²，在光轴上为零，各向同性离轴时仍非零。因此沿视线方向的深度尺度会被折进屏幕横向的展宽，而「只取协方差左上 2×2 块」等于显式假设这一列为零。朴素规则在光轴上与局部仿射路径精确一致；各向同性离轴时仍有误差，在深度尺度接近其自身深度时明显失效——这也解释了为什么训练出的高斯必须保持紧凑。",
+  "explanation": "透视投影 pi(p)=(x/z, y/z) 不是仿射映射，因此三维高斯投影后一般不再是高斯。在每一点取它的一阶导数 J=[[1/z,0,-x/z²],[0,1/z,-y/z²]]，就得到局部仿射近似，其协方差为 Sigma'=J Sigma Jᵀ。关键是 J 的第三列：两个系数分别含 x/z² 与 y/z²，在光轴上为零，各向同性离轴时仍非零。因此沿视线方向的深度尺度会被折进屏幕横向的展宽，而「只取协方差左上 2×2 块」等于显式假设这一列为零。这个宽度差异不是抽象几何：光栅化器对每个像素求的是 alpha = o * exp(-r²/2)，r 为该协方差下的马氏距离。协方差宽 25 倍，同一点上的权重相差三个数量级，所以画面表现是「一条 60 多像素宽的亮条」而不是「一个亮点」。朴素规则在光轴上与局部仿射路径精确一致；各向同性离轴时仍有误差；在深度尺度接近其自身深度时明显失效——这也解释了为什么训练出的高斯必须保持紧凑。",
   "oracles": [
     {
       "id": "on-axis-test",
@@ -318,9 +363,9 @@
     {
       "id": "falloff-wellformed-test",
       "kind": "analytical",
-      "description": "falloff 在中心为 1、随距离递减，对奇异协方差返回 0 而不是 NaN",
+      "description": "未归一化衰减核在中心为 1、随距离递减，对奇异协方差返回 0 而不是 NaN",
       "testFile": "src/math/gaussian-splatting.test.ts",
-      "testName": "the falloff is a valid unnormalized Gaussian density"
+      "testName": "the unnormalized Gaussian falloff is well formed"
     },
     {
       "id": "alpha-mahalanobis-test",
@@ -339,7 +384,7 @@
     {
       "id": "transmittance-closure-test",
       "kind": "analytical",
-      "description": "不透明层把透射率清零，颜色贡献与剩余透射率之和恒为 1",
+      "description": "不透明层把透射率清零，颜色贡献权重与剩余透射率之和恒为 1",
       "testFile": "src/math/gaussian-splatting.test.ts",
       "testName": "transmittance closes and fully opaque layers terminate the ray"
     },
@@ -356,6 +401,48 @@
       "description": "实验组件调用的封装函数与两条协方差路径逐项一致，防止界面显示与底层计算分家",
       "testFile": "src/math/gaussian-splatting.test.ts",
       "testName": "the comparison helper agrees with the two covariance paths it wraps"
+    },
+    {
+      "id": "weight-profile-bridge-test",
+      "kind": "regression",
+      "description": "同一像素上两条协方差的权重相差三个数量级，正是几何差异在渲染上的实际后果",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "the weight profile is what makes the naive footprint visibly wrong"
+    },
+    {
+      "id": "shared-centre-test",
+      "kind": "analytical",
+      "description": "两条路径的椭圆中心相同，因此误差必然表现为宽度而非位移",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "the two covariance paths share a centre, so only the width can differ"
+    },
+    {
+      "id": "mahalanobis-identity-test",
+      "kind": "property",
+      "description": "衰减函数与马氏距离是同一个量，保证文中读数与图中曲线不会分家",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "the falloff IS the Mahalanobis distance, so the two cannot drift apart"
+    },
+    {
+      "id": "blend-per-layer-contribution-test",
+      "kind": "regression",
+      "description": "每层贡献等于进入该层的透射率乘 alpha；图示固定 alpha 下近层最大，反向遍历保持总和与透射率但改变逐层权重，并以 alpha 0.1/0.9 反例证明近层不总是最大",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "each layer contribution is incoming transmittance times alpha"
+    },
+    {
+      "id": "congruence-derivation-test",
+      "kind": "analytical",
+      "description": "把采样增量经 J 映射后实测协方差，与闭式 J Σ Jᵀ 一致；并断言它明显不同于直接取左上 2×2 块",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "Sigma' = J Sigma J^T follows from applying J to the increments, not to Sigma"
+    },
+    {
+      "id": "opacity-scaling-test",
+      "kind": "property",
+      "description": "权重剖面按不透明度等比缩放：中心为 o、一个 σ 处为 e^{−1/2}o，且任意两像素的权重比与 o 无关",
+      "testFile": "src/math/gaussian-splatting.test.ts",
+      "testName": "opacity scales the whole weight profile, leaving every ratio unchanged"
     }
   ],
   "implementation": {

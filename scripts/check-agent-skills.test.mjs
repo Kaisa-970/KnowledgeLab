@@ -40,7 +40,7 @@ test('tutorial-authoring is an entrypoint with concrete examples, evals and capt
   assert.match(cases, /6\/10/)
   // The walkthrough is the only feedback-anchored production record, so the skill
   // must route to it; a skill that cites it nowhere is back to citing only results.
-  for (const token of ['references/walkthrough.md', 'audit-figures.mjs', 'audit:figures']) {
+  for (const token of ['references/walkthrough.md', 'references/ciechanowski-study.md', 'audit-figures.mjs', 'audit:figures']) {
     assert.ok(tutorial.includes(token), 'Missing executable skill step or reference: ' + token)
   }
   const evals = JSON.parse(read('.claude/skills/tutorial-authoring/evals/cases.json'))
@@ -63,6 +63,7 @@ test('tutorial-authoring missing a reference blocks skill validation', () => {
   for (const missing of [
     'tutorial-authoring/references/review.md',
     'tutorial-authoring/references/walkthrough.md',
+    'tutorial-authoring/references/ciechanowski-study.md',
     'scripts/audit-figures.mjs',
   ]) {
     const badRead = p => p.endsWith(missing) ? (() => {throw new Error('missing')})() : read(p)

@@ -43,6 +43,7 @@ export function checkSkillFiles(read, names = skillNames) {
     '.claude/skills/tutorial-authoring/references/review.md',
     '.claude/skills/tutorial-authoring/references/walkthrough.md',
     '.claude/skills/tutorial-authoring/references/explanation-workshop.md',
+    '.claude/skills/tutorial-authoring/references/ciechanowski-study.md',
     '.claude/skills/tutorial-authoring/evals/cases.json',
     'scripts/capture-lesson.mjs',
     'scripts/audit-figures.mjs',

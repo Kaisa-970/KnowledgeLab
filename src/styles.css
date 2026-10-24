@@ -44,6 +44,7 @@ button { cursor:pointer; }
 .lesson-article h2 { color:#23374e; font-size:23px; line-height:1.45; margin:55px 0 16px; letter-spacing:-.5px; scroll-margin-top:30px; }
 .lesson-article p,.lesson-article li { font-size:15px; color:#506075; line-height:2; }
 .lesson-article strong { color:#273d55; }
+.lesson-article code { overflow-wrap:anywhere; }
 .lesson-article .lead { font-size:16px; line-height:2; color:#5c6d83; margin-bottom:27px; }
 .objectives { border:1px solid #e2eae9; border-left:3px solid #35a99a; background:#f0f8f7; border-radius:8px; padding:17px 21px; }
 .objectives strong { font-size:13px; }
@@ -359,3 +360,85 @@ button { cursor:pointer; }
 .gs-two-panel { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:12px 14px 4px; background:#fbfdfe; }
 .gs-two-panel svg { display:block; width:100%; height:auto; }
 @media(max-width:560px) { .gs-two-panel { gap:6px; padding:10px 8px 2px; } }
+
+/* Vulkan frame lifecycle figures: ownership, command state and synchronization. */
+.vk-table-wrap { margin:20px 0; overflow-x:auto; }
+.vk-table { width:100%; border-collapse:collapse; font-size:13px; color:#506075; }
+.vk-table caption { padding:0 0 9px; text-align:left; font-size:13px; color:#365569; }
+.vk-table th,.vk-table td { padding:10px 12px; border-bottom:1px solid #e0e9eb; text-align:left; vertical-align:top; line-height:1.75; }
+.vk-table thead th { background:#f5f9f8; color:#244b58; }
+.vk-table tbody th { width:28%; font-weight:500; color:#365569; }
+.vk-table code { font-size:12px; }
+.vk-figure { margin:25px 0 30px; border:1px solid #d9e5e9; border-radius:8px; overflow:hidden; background:#fff; }
+.vk-figure-head { display:flex; align-items:baseline; flex-wrap:wrap; gap:5px 14px; padding:13px 16px; border-bottom:1px solid #e8eef0; background:#f5f9f8; }
+.vk-figure-head strong { color:#244b58; font-size:14px; line-height:1.5; }
+.vk-figure-head span { color:#748995; font-size:11px; }
+.lesson-article .vk-figure figcaption { margin:0; padding:11px 16px 14px; border-top:1px solid #edf1f2; color:#5e7481; font-size:12px; line-height:1.75; }
+.vk-object-grid { display:grid; grid-template-columns:1fr 1fr; }
+.vk-object-lane { min-width:0; padding:15px 16px 17px; text-align:center; }
+.vk-object-lane + .vk-object-lane { border-left:1px solid #e7edef; background:#fbfdfd; }
+.vk-object-lane h3 { margin:0 0 12px; color:#365569; font-size:13px; }
+.vk-object-card { display:flex; flex-direction:column; gap:5px; align-items:center; padding:11px 10px; border:1px solid #dfe8ea; border-radius:6px; background:white; color:#536b78; }
+.vk-object-card b { color:#25485a; font-size:13px; }
+.vk-object-card code { max-width:100%; overflow-wrap:anywhere; color:#31776e; font-size:11px; }
+.vk-object-card span { font-size:11px; line-height:1.5; }
+.vk-object-pair { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.vk-object-card.vk-blue { border-color:#bedde5; background:#f1f8fa; }
+.vk-object-card.vk-orange { border-color:#f0d3b9; background:#fff8f1; }
+.vk-object-card.vk-purple { border-color:#d7d4e8; background:#f7f6fb; }
+.vk-flow-link { padding:8px 3px; color:#748893; font-size:11px; }
+.vk-states { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0; margin:0; padding:16px 14px 10px; list-style:none; }
+.vk-states li { position:relative; min-width:0; display:flex; flex-direction:column; gap:6px; padding:10px 12px; border:1px solid #e0e9eb; border-right:0; background:#fbfdfd; }
+.vk-states li:first-child { border-radius:6px 0 0 6px; }
+.vk-states li:last-child { border-right:1px solid #e0e9eb; border-radius:0 6px 6px 0; background:#fff8f1; }
+.vk-states li strong { color:#27586a; font-size:13px; }
+.vk-states li>span:last-child { color:#657b86; font-size:11px; line-height:1.55; }
+.vk-state-event { color:#a56d42; font-size:10px; }
+.vk-completion { display:flex; flex-wrap:wrap; align-items:baseline; gap:5px 12px; margin:0 14px; padding:10px 12px; border-left:3px solid #348b7e; background:#eff8f5; color:#355f5a; font-size:12px; }
+.vk-completion span { color:#637d78; font-size:11px; }
+.vk-fence-note { margin:9px 14px 15px; padding:9px 12px; border:1px dashed #b9cbd0; border-radius:5px; color:#536e79; font-size:11px; line-height:1.6; }
+.vk-identities { display:grid; grid-template-columns:1fr 1fr; gap:9px; padding:13px 14px 5px; }
+.vk-identities>div { display:flex; flex-wrap:wrap; gap:4px 10px; align-items:baseline; padding:9px 11px; border-radius:6px; background:#eef7f6; color:#53736f; font-size:11px; }
+.vk-identities>div:last-child { background:#fff4ea; color:#806a59; }
+.vk-identities b { width:100%; color:#286b63; font-size:12px; }
+.vk-identities>div:last-child b { color:#a45f36; }
+.vk-frame-flow { display:grid; grid-template-columns:minmax(0,1fr); gap:0; padding:8px 14px 12px; }
+.vk-flow-step { display:grid; grid-template-columns:75px minmax(0,1fr); gap:7px 11px; align-items:center; padding:11px 12px; border:1px solid #e0e9eb; background:#fbfdfd; }
+.vk-flow-step:first-child { border-radius:6px 6px 0 0; }
+.vk-flow-step:last-child { border-radius:0 0 6px 6px; }
+.vk-flow-step>div:nth-child(2) { display:flex; flex-direction:column; gap:3px; min-width:0; }
+.vk-flow-step strong { color:#25485a; font-size:12px; }
+.vk-flow-step span { color:#607681; font-size:11px; line-height:1.55; }
+.vk-actor { color:#26766e; font-size:11px; }
+.vk-flow-step.vk-purple { background:#f7f6fb; }
+.vk-flow-step.vk-orange { background:#fff8f1; }
+.vk-flow-step.vk-orange .vk-actor { color:#a66336; }
+.vk-dependency { display:flex; flex-wrap:wrap; gap:4px 11px; align-items:baseline; padding:7px 11px 7px 97px; border-right:1px solid #e0e9eb; border-left:1px solid #e0e9eb; background:#f4faf9; }
+.vk-dependency span,.vk-device-output span,.vk-host-output span { color:#31786f; font-size:11px; font-weight:700; }
+.vk-dependency small,.vk-device-output small,.vk-host-output small { color:#70838c; font-size:10px; line-height:1.5; }
+.vk-outputs { display:grid; grid-template-columns:1fr 1fr; }
+.vk-device-output,.vk-host-output { display:flex; flex-direction:column; gap:3px; padding:9px 12px; border:1px solid #e0e9eb; border-top:0; }
+.vk-device-output { margin-left:0; background:#f4faf9; }
+.vk-host-output { border-left:0; background:#f2f7fb; }
+.vk-host-output span { color:#49718e; }
+.vk-triangle { width:min(92px,35%); grid-column:2; }
+.vk-triangle svg { display:block; width:100%; height:auto; }
+.vk-index-note { margin:0 14px 15px; padding:9px 11px; border-radius:5px; background:#f4f7f8; color:#536b76; font-size:11px; line-height:1.6; }
+.lesson-article pre { max-width:100%; overflow:auto; }
+@media(max-width:680px) {
+  .vk-object-grid { grid-template-columns:1fr; }
+  .vk-object-lane + .vk-object-lane { border-top:1px solid #e7edef; border-left:0; }
+  .vk-states { grid-template-columns:1fr 1fr; gap:6px; padding:12px 10px 9px; }
+  .vk-states li,.vk-states li:first-child,.vk-states li:last-child { border:1px solid #e0e9eb; border-radius:5px; }
+  .vk-states li:last-child { border-color:#f0d3b9; }
+  .vk-identities { grid-template-columns:1fr; gap:6px; padding:10px 9px 4px; }
+  .vk-frame-flow { padding:7px 9px 10px; }
+  .vk-flow-step { grid-template-columns:48px minmax(0,1fr); padding:9px 8px; }
+  .vk-dependency { padding-left:57px; }
+  .vk-outputs { grid-template-columns:1fr; }
+  .vk-host-output { border-left:1px solid #e0e9eb; }
+  .vk-triangle { width:76px; }
+  .vk-index-note { margin-right:9px; margin-left:9px; }
+  .vk-figure-head { padding:11px 12px; }
+  .lesson-article .vk-figure figcaption { padding:10px 12px 12px; }
+}

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "courseId": "modern-gpu-pipeline",
+  "links": [
+    {
+      "from": { "courseId": "modern-gpu-pipeline", "conceptId": "pipeline-state" },
+      "to": { "courseId": "graphics-rasterization", "conceptId": "attribute-interpolation" },
+      "kind": "same-principle",
+      "reason": "Vulkan pipeline 固定执行所需的图形状态，而光栅化课程解释这些状态最终如何参与属性插值。",
+      "boundary": "对象配置的生命周期与插值数学不同；pipeline 创建不会替代顶点或片元阶段的计算。"
+    },
+    {
+      "from": { "courseId": "modern-gpu-pipeline", "conceptId": "pipeline-state" },
+      "to": { "courseId": "graphics-rasterization", "conceptId": "perspective-correct-interpolation" },
+      "kind": "contrasts-with",
+      "reason": "本课的显式 pipeline 状态决定何时以什么配置执行；透视校正章节决定像素内属性应怎样计算。",
+      "boundary": "Vulkan API 的显式程度不改变 1/w 校正的几何原因。"
+    },
+    {
+      "from": { "courseId": "modern-gpu-pipeline", "conceptId": "image-layout-visibility" },
+      "to": { "courseId": "graphics-rasterization", "conceptId": "depth-buffer" },
+      "kind": "applied-in",
+      "reason": "深度图像也是被 GPU 读写的资源，需要在不同使用阶段满足布局和可见性约束。",
+      "boundary": "本课不重新解释 z/w 的数值插值，也不把 layout barrier 当作深度算法。"
+    }
+  ]
+}

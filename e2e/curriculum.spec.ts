@@ -5,7 +5,7 @@ test('catalog shows curriculum tracks and planned courses without treating them 
   await expect(page.getByRole('heading', { name: '课程目录' })).toBeVisible()
   const roadmap = page.locator('.curriculum-plan')
   await expect(roadmap.locator('.curriculum-track')).toHaveCount(5)
-  await expect(page.locator('.index-position')).toHaveCount(5)
+  await expect(page.locator('.index-position')).toHaveCount(6)
   await expect(roadmap.getByText('光栅化：像素是怎么算出来的 · 已收录')).toBeVisible()
   await expect(roadmap.getByText('傅里叶变换与频谱 · 规划中')).toBeVisible()
   // The 3DGS course moved out of plannedCourses into courseIds; the neural

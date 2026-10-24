@@ -73,15 +73,10 @@
           "focus": "空间变换、光栅化、属性插值、遮挡与纹理采样",
           "dependsOnModuleIds": [],
           "courseIds": [
-            "graphics-rasterization"
+            "graphics-rasterization",
+            "modern-gpu-pipeline"
           ],
-          "plannedCourses": [
-            {
-              "id": "modern-gpu-pipeline",
-              "title": "现代图形管线与 Vulkan",
-              "scope": "GPU 提交、同步、管线状态与显式 API"
-            }
-          ]
+          "plannedCourses": []
         },
         {
           "id": "shading-rendering",

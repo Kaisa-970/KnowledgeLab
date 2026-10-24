@@ -1,0 +1,142 @@
+import {
+  VulkanObjectBoundariesFigure,
+  VulkanCommandLifecycleFigure,
+  VulkanFrameLifecycleFigure,
+} from '../../components/VulkanFrameLifecycleFigures'
+
+<div className="lesson-meta"><span>计算机图形学与 GPU · 图形渲染管线</span><span>Vulkan 基础 · 以 OpenGL 经验为起点</span></div>
+
+# 同一个三角形，Vulkan 为什么把一帧拆成这么多对象？
+
+<div className="lead">在 OpenGL 里，写下几次绑定、一次 `glDraw*`，最后交换缓冲，画面就出现了。换到 Vulkan，第一次画三角形却要面对 buffer、image、pipeline、command buffer、queue、semaphore 和 fence。它们不是把同一个动作拆成了很多种叫法，而是在回答三个原本被 OpenGL 藏起来的问题：<strong>状态保存在哪里，命令什么时候执行，某个东西什么时候真的可以复用？</strong></div>
+
+这篇文章只追踪一件事：应用如何把一个三角形交给 GPU，并把它交给窗口系统。沿途把三角形变成每帧更新、需要批量绘制的对象，就能看见拆分带来的实际选择：等旧数据用完，还是换一份存储；串行准备命令，还是分给几个线程；逐个分配内存，还是在大块内存里安排资源。先不展开实例创建、descriptor 设计和多 queue 所有权转移。
+
+## 先把 OpenGL 的“一个 draw”拆开
+
+OpenGL 的 context 像一张持续存在的工作台。程序把当前 program、VAO、framebuffer 和其他状态绑定上去，`glDrawElements` 读取这张工作台的当前内容。驱动仍可能把工作排队、延迟执行，但这些边界通常由 API 和驱动替应用管理。
+
+先让三角形动起来：CPU 每帧更新顶点。一次 draw 返回后，GPU 可能还在读旧顶点，CPU 却已经要写下一帧了。两边争用的是同一份存储：
+
+```text
+CPU：上传顶点 A → draw 返回 → 准备写入顶点 B
+GPU：                  仍在读取顶点 A
+```
+
+在普通的 `glBufferSubData` 更新路径里，OpenGL 必须维持正确的先后语义；实现可能等待相关读取完成。应用也可以重新指定存储，让驱动有机会保留旧存储给尚未完成的 draw，再提供新存储供 CPU 写入。这种做法常称为 buffer orphaning。等待和换存储各有代价：前者可能让 CPU 停下，后者需要额外存储与管理。
+
+驱动能追踪已经交给它的命令，却看不到应用接下来完整的使用计划：这份数据是否马上会被覆盖？是否已经有另一份空闲存储？应用更愿意等待还是多占一些内存？OpenGL 也提供显式同步等控制手段，但许多选择仍可以由实现隐藏。Vulkan 则把资源复用的安排明确交给应用。例如，保留 A、B 两份存储：GPU 读 A 时 CPU 准备 B，轮到再次写 A 前，先取得覆盖旧读取的完成证明。**多一份资源解决“写到哪里”，同步对象解决“什么时候可以写”。**
+
+这时再看 Vulkan 的对象分工就有了理由：`VkBuffer` 和 `VkImage` 描述 GPU 要访问的数据资源，实际存储通常由独立的 `VkDeviceMemory` 分配并绑定；pipeline 保存 shader 与一组绘制配置；command buffer 保存“这一次要执行哪些动作”；queue 接收已经录好的命令并安排设备执行。资源、配置、命令和完成证明可以分别存在，应用才能单独安排它们的复用时机。
+
+<VulkanObjectBoundariesFigure />
+
+图中的右侧不是完整的 Vulkan 对象清单，而是为了回答一个问题：**为什么 draw 不能直接等同于 GPU 已经完成？** `vkCmdDraw` 只是把一个动作记录进 command buffer；`vkQueueSubmit` 才把这份记录交给 queue。即使提交返回，GPU 也可能还没有执行到三角形。
+
+这也解释了为什么资源不能随意改写。command buffer 只保存对资源和 pipeline 的引用与参数，不会替你复制一份 buffer 内容。只要 GPU 还可能读 `vertexBuffer`，CPU 就不能把它当成已经空闲的内存来重用。需要判断的不是“我调用函数多久了”，而是“哪一个同步对象证明了这次访问已经结束”。
+
+### 资源和存储为什么还要再拆一层？
+
+如果每个小 buffer 都必须单独申请一块设备内存，场景中成千上万份几何数据就会变成大量分配。Vulkan 让 `VkBuffer` 描述大小和用途，让 `VkDeviceMemory` 表示一块分配，再把 buffer 绑定到其中某个偏移。这样，多个资源可以使用同一块大分配中的不同区间，称为**子分配**。应用可以把一起创建、一起释放的几何数据放在同一个内存池里；短期更新数据则走另一种分配策略。
+
+这并非任意拼接：每个资源都要满足查询得到的大小、对齐和可用 memory type 要求，有些资源还要求独立分配。memory type 决定这块内存具有什么性质，例如能否由 CPU 映射访问、是否具有 device-local 属性；两者在某些硬件上可以同时成立，不能简单理解为“显存或内存”二选一。
+
+在 OpenGL 的通常资源分配接口中，这类底层安排更多由驱动决定。Vulkan 暴露它们，应用才有机会根据自己的资源寿命减少分配次数、管理碎片；同时也要承担分配失败、对齐和生命周期管理。拆开不会自动消除碎片，也不意味着应用完全控制了操作系统的物理驻留。本文只说明这道边界存在的原因，具体分配器留到后续资源章节。
+
+## 录完命令，不等于执行完命令
+
+分离“写命令”和“执行命令”还有一个直接收益。只画一个三角形时，录制开销很小；同一种三角形要在场景里绘制很多次时，CPU 就要为每次绘制准备配置、资源引用和 draw 命令。如果所有线程都修改同一份当前状态，线程 A 刚绑定好 pipeline，线程 B 就可能把它换掉，因而必须协调这段访问。
+
+command buffer 给每份记录一个独立身份。线程 A 用自己的 command pool 录制一部分绘制，线程 B 用另一个 pool 录制其余部分；两份录制完成后，可以由提交线程把它们按需要的顺序一次提交给 queue。**CPU 并行准备命令，不要求 GPU 同时执行它们。** 一个 command pool 的访问必须外部同步，因此不能把“多个线程”理解为可以无锁地共用同一 pool；对同一 queue 的提交也要按同步要求协调。
+
+OpenGL 也能用多个共享 context 配合线程，但同一个 context 不能同时被多个线程调用；跨 context 又需要安排共享资源与同步。Vulkan 将独立录制作为直接表达的工作单元，让应用能按场景任务划分 CPU 工作。这是可利用的并行机会，不是用了 Vulkan 就必然更快。
+
+把一份 command buffer 想成已经写好的播放列表：`vkEndCommandBuffer` 表示列表写完，可以提交；它没有按下播放键。提交后，command buffer 进入 `pending`，设备可能正在执行，也可能还在等待前置依赖。这时应用不能重录或修改它。
+
+<VulkanCommandLifecycleFigure />
+
+在没有 `VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT` 的主路径中，设备完成其中最后一个命令后，状态会从 `pending` 回到 `executable`；它不是因为 CPU 又调用了一次 reset 才回去。若录制时使用了 `ONE_TIME_SUBMIT`，完成后会进入 `invalid`，需要 reset 后重新录制。这个差别是命令缓冲生命周期的规则，不是某个驱动的实现细节。
+
+那 CPU 怎样知道“可以重用 command buffer 了”？提交时可以附带一个 fence。fence 是**设备到主机**的完成证明：当它 signaled，提交中由它覆盖的 GPU 工作已经完成，CPU 可以等待它并复用对应的 frame 资源。它不会把所有后续操作都纳入证明范围，尤其不能凭它断言窗口系统已经消费了 present 操作等待的 semaphore。
+
+这一区分很重要，因为“提交返回”和“提交完成”是两个时间点：
+
+```text
+CPU:  begin → record → end → queueSubmit 返回 ───────────────┐
+GPU:                                  等待 → 执行 draw → 完成 ─┘
+                                                   fence signaled
+```
+
+CPU 可以在 GPU 工作时继续准备下一帧，但不能把仍处于 `pending` 的 command buffer 当成空白纸。
+
+## 一帧真正要经过哪几道门？
+
+交换链通常有多张 image。一次循环需要先拿到一张当前可呈现的 image，再让 GPU 把三角形画进去，最后请求窗口系统呈现它。把这三步写成 `acquire → submit → present` 还不够，因为每一步之间有不同的等待关系。
+
+<VulkanFrameLifecycleFigure />
+
+图中有两个故意分开的索引。`frame slot = 0` 代表 CPU 侧这轮要复用的资源，例如 `command[0]`、`uniform[0]`、`fence[0]`；`acquired image = 2` 代表交换链这次交给你的图像，例如 `image[2]`、`view[2]`。下一轮通常轮到 slot 1，但 `acquire` 可能返回 image 0，也可能仍然返回另一张可用图像。**slot 是应用的在途工作槽，image 是窗口系统给出的呈现目标；它们不是同一个计数器。**
+
+把这条依赖按参与者展开：
+
+1. CPU 等待 `fence[0]`，确认上一份使用 slot 0 的 queue submission 已完成；此时可以复用 `command[0]` 和 `uniform[0]`。先不要急着 reset fence。
+2. `vkAcquireNextImageKHR` 返回 `imageIndex = 2`，并通过 `imageAvailable[0]` 告诉设备：image 2 已可被这次提交使用。这个 semaphore 是设备侧等待，CPU 不需要停在这里等 GPU。
+3. 成功取得 image 后、提交前，才 reset `fence[0]`。submit 把 `command[0]` 交给 queue，并声明它要等待 `imageAvailable[0]`。命令按 image 的先前状态把 image 2 转到适合 color attachment 写入的布局，执行绘制，再转到呈现所需的布局。
+4. submit 完成绘制后 signal `renderFinished[2]`。present 操作等待这个 semaphore，只有渲染完成后才接收 image 2。
+5. 同一次 submit 也 signal `fence[0]`，让 CPU 以后知道 slot 0 的提交工作已经结束。如果 acquire 返回 out-of-date 等错误而没有提交，就不能把已 reset、却无人 signal 的 fence 留给下一轮等待。
+
+这里的三个信号解决的是不同方向的问题：
+
+<div className="vk-table-wrap">
+<table className="vk-table">
+<caption>一帧中的三个同步信号</caption>
+<thead><tr><th scope="col">对象</th><th scope="col">谁等待谁</th><th scope="col">它证明什么</th></tr></thead>
+<tbody>
+<tr><th scope="row"><code>imageAvailable[slot]</code></th><td>GPU submit 等待 acquire</td><td>这张交换链 image 可以被本次绘制使用</td></tr>
+<tr><th scope="row"><code>renderFinished[image]</code></th><td>present 等待 submit</td><td>本次绘制已经完成，可以交给呈现操作</td></tr>
+<tr><th scope="row"><code>fence[slot]</code></th><td>CPU 等待 submit</td><td>这次提交覆盖的设备工作已完成，slot 资源可复用</td></tr>
+</tbody>
+</table>
+</div>
+
+`renderFinished` 按 image 索引而不是按 slot 索引，并非排版偏好。在这里讨论的核心 swapchain 路径中，present 没有普通 fence 输出让 CPU 直接等待它完成。下一次 `acquire` 再拿到同一张 image 后，还要等 acquire 对应的 semaphore 或 fence signal；常见做法是让新的 submit 等 `imageAvailable[slot]`。这条依赖保证之前针对该 image 的呈现操作已结束，包括它对 wait semaphore 的使用。因此，按 swapchain image 分配并在 acquire 同步完成后使用对应 semaphore，是一种能证明安全复用的策略。`fence[0]` 只解决 frame slot 的复用，不能单独解决 present semaphore 的复用。支持额外 present-fence 扩展的平台还有其他做法。
+
+## barrier 又在管什么？
+
+semaphore 可以把不同 queue 操作连接起来，并建立相应的执行与内存依赖；fence 则让 CPU 知道某份提交何时完成。但 semaphore 本身不执行 image layout 转换。若两次访问已由正确的 semaphore signal/wait 覆盖，且不需要 layout 转换，可能不必额外添加 barrier；若命令内部的访问依赖没有被这种关系覆盖，就仍需用 barrier 等机制建立它。
+
+pipeline barrier 解决的是**命令序列中的阶段依赖、相应访问的内存可见性，以及必要的 image layout 转换**。例如，绘制开始前，交换链 image 可能需要处在适合 color attachment 写入的布局；绘制完成后，又要转换到适合呈现的布局。barrier 的 source/destination stage 和 access mask 描述“哪类访问必须先完成、哪些后续访问需要看到它”，layout 字段描述同一 image 的使用方式变化。semaphore 与 barrier 都可能参与内存依赖，选择哪一个取决于依赖跨越的操作边界与所需访问范围。
+
+可以把四种机制放到同一张表里：
+
+<div className="vk-table-wrap">
+<table className="vk-table">
+<caption>同步与图像身份的不同职责</caption>
+<thead><tr><th scope="col">机制</th><th scope="col">发生在哪一侧</th><th scope="col">主要回答</th></tr></thead>
+<tbody>
+<tr><th scope="row">pipeline barrier</th><td>GPU 命令之间</td><td>前一阶段的访问何时对后一阶段可见，image 以什么布局使用</td></tr>
+<tr><th scope="row">semaphore</th><td>GPU 操作之间</td><td>等待所覆盖的后续工作何时可以开始，并建立相应内存依赖</td></tr>
+<tr><th scope="row">fence</th><td>GPU → CPU</td><td>主机何时可以确认一份提交完成并复用资源</td></tr>
+<tr><th scope="row"><code>acquire</code> 返回的 image index</th><td>窗口系统 → 应用</td><td>这轮实际得到哪张交换链 image</td></tr>
+</tbody>
+</table>
+</div>
+
+选择时要核对等待方向、覆盖哪些访问，以及是否还需要 layout 转换。把提交 fence 当成 present 完成信号，或把这里的 binary semaphore 当成 CPU 可等待的 fence，都会把完成证明用错地方。
+
+## 用一个变化检查这张时间图
+
+假设仍有两份 frame slot、三张 swapchain image。上一轮使用 slot 0 画到了 image 2；现在 `fence[0]` 已 signaled，但下一次 `acquire` 返回 image 1。此时可以复用 `command[0]` 和 `uniform[0]`，因为 fence 覆盖的 submit 已结束；本次 present wait semaphore 应取 `renderFinished[1]`，因为这轮要交给呈现的是 image 1。`renderFinished[2]` 是否能被复用，则由再次取得 image 2 的时机提供保证，不能由“slot 0 的 fence 已完成”这句话单独推出。
+
+回到每帧更新的三角形：把资源与完成证明分开，CPU 才能在旧数据仍被读取时选择另一份存储；把命令记录独立出来，几个线程才能分别准备工作再集中提交；把资源与内存分开，应用才能按资源寿命组织大块分配。驱动仍然负责把合法命令实现为设备工作，但等待、复用和分配策略不必都藏在调用背后。同步与呈现的时间图，就是应用承担这些选择时必须遵守的条件。下一步学习 descriptor、pipeline 状态或多 queue 时，仍然可以沿同一条问题追踪：对象保存什么，谁会访问它，哪个信号证明它可以进入下一种状态。
+
+<details className="answer">
+<summary>迁移题：如果 command buffer 用了 `ONE_TIME_SUBMIT`，fence signaled 后它是什么状态？</summary>
+
+它是 `invalid`，不是 `executable`。fence 只告诉主机这次提交覆盖的执行已完成；command buffer 是否回到 executable 还取决于录制时的 usage flag。要再次使用，需要 reset 后重新 begin/record/end。若没有 `ONE_TIME_SUBMIT`，同样的完成时点会回到 `executable`。
+
+进一步改变准备方式：若 CPU 已把下一帧顶点写入 B，并在另一个线程录好命令，能否立即覆盖 A？仍然不能仅凭这些条件判断。独立存储让新一帧有地方写，独立命令让录制可以并行；它们都没有证明 GPU 已经读完 A。仍需等待覆盖 A 的旧访问的完成信号；还要确保没有其他在途工作继续使用 A。
+
+</details>
+
+<small>规范与工程依据（2026-10-25 核对）：<a href="https://docs.vulkan.org/spec/latest/chapters/cmdbuffers.html">Vulkan command buffer lifecycle</a>、<a href="https://docs.vulkan.org/spec/latest/chapters/synchronization.html">Vulkan synchronization</a>、<a href="https://docs.vulkan.org/guide/latest/synchronization_examples.html">semaphore 与 barrier 的作用范围</a>、<a href="https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html">Khronos Guide: swapchain semaphore reuse</a>、<a href="https://docs.vulkan.org/guide/latest/threading.html">Vulkan 多线程录制</a>、<a href="https://docs.vulkan.org/guide/latest/memory_allocation.html">Vulkan 内存子分配</a>、<a href="https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBufferSubData.xhtml">OpenGL buffer 更新与等待</a>、<a href="https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBufferData.xhtml">重新指定 buffer 存储</a>。本文的三张图是原创的关系与时序示意，不是驱动 trace；示例假设 graphics 与 present 使用同一 queue family。</small>

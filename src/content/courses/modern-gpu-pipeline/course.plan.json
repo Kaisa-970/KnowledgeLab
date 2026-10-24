@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 2,
+  "id": "modern-gpu-pipeline",
+  "title": "现代图形管线与 Vulkan",
+  "status": "prototype",
+  "curriculum": { "trackId": "graphics-gpu", "moduleId": "graphics-pipeline" },
+  "domain": "graphics",
+  "level": "intermediate",
+  "summary": "以每帧更新的三角形为线索，解释 Vulkan 如何把隐藏的等待、存储和命令准备变成应用可安排的选择，再沿录制、执行和呈现追踪不同对象的生命周期。",
+  "prerequisites": [
+    "使用过 OpenGL 的顶点缓冲、着色器、绘制调用和交换缓冲",
+    "理解顶点经过投影、光栅化后形成片元的基本过程",
+    "能阅读简短的 C/C++ 或伪代码控制流"
+  ],
+  "learningOutcomes": [
+    "用顶点更新、并行录制与子分配解释 Vulkan 拆分对象带来的选择和责任",
+    "区分资源、pipeline、command buffer 和 queue 各自保存什么以及何时生效",
+    "沿 acquire → submit → present 区分 semaphore、fence 和 pipeline barrier 各自解决的问题",
+    "解释 frame slot index 与 acquired swapchain image index 为什么不能混用",
+    "在给定资源复用情境中预测哪个对象可以复用，以及依据是哪一个完成信号"
+  ],
+  "knowledgeNodes": [
+    { "id": "opengl-state-model", "title": "OpenGL 上下文与隐式状态", "dependsOn": [] },
+    { "id": "explicit-resources", "title": "Vulkan 资源与内存的显式生命周期", "dependsOn": ["opengl-state-model"] },
+    { "id": "pipeline-state", "title": "固定的图形 pipeline 状态", "dependsOn": ["explicit-resources"] },
+    { "id": "command-recording", "title": "命令缓冲的录制与状态", "dependsOn": ["pipeline-state"] },
+    { "id": "queue-execution", "title": "队列提交与 GPU 执行", "dependsOn": ["command-recording"] },
+    { "id": "swapchain-images", "title": "交换链图像与呈现", "dependsOn": ["queue-execution"] },
+    { "id": "device-host-synchronization", "title": "设备侧 semaphore 与主机侧 fence", "dependsOn": ["queue-execution"] },
+    { "id": "image-layout-visibility", "title": "图像布局与内存可见性", "dependsOn": ["queue-execution", "swapchain-images"] },
+    { "id": "frame-lifecycle", "title": "一帧的 acquire—submit—present 生命周期", "dependsOn": ["device-host-synchronization", "image-layout-visibility"] }
+  ],
+  "chapters": [
+    {
+      "id": "vulkan-frame-lifecycle",
+      "title": "同一个三角形，Vulkan 为什么把一帧拆成这么多对象？",
+      "coreQuestion": "为什么把资源、存储、命令与完成证明分开，应用就能控制等待、并行录制与内存复用；这些选择在一帧中受哪些生命周期约束？",
+      "learningObjectives": [
+        "解释旧数据读取与新数据写入的争用，以及独立命令录制和资源子分配的收益与边界",
+        "解释录制命令不等于执行命令，以及 pending command buffer 为什么不能立即重录",
+        "沿一帧的 acquire、submit、present 路径区分 imageAvailable、renderFinished 和 frame fence",
+        "用 frame slot 与 swapchain image 的不同索引解释安全复用资源的边界"
+      ],
+      "conceptIds": ["opengl-state-model", "explicit-resources", "pipeline-state", "command-recording", "queue-execution", "swapchain-images", "device-host-synchronization", "image-layout-visibility", "frame-lifecycle"],
+      "prerequisites": ["OpenGL 绘制调用和交换缓冲", "顶点缓冲、着色器和基本图形管线"],
+      "dependsOnChapterIds": [],
+      "coreTask": "假设两份 frame slot 资源、三张 swapchain image：frame slot 0 的 fence 已 signaled，但上一提交的图像仍可能在 present 中使用。指出哪些对象可以复用、哪些不能仅凭该 fence 判断，并说明下一次 acquire 返回 image 1 而不是 image 2 时改变了哪个索引。",
+      "lessonPath": "src/content/lessons/vulkan-frame-lifecycle.mdx",
+      "status": "prototype"
+    }
+  ],
+  "plannedChapters": [
+    { "id": "resource-and-descriptor-layout", "title": "资源、descriptor 与内存布局：GPU 为什么需要你告诉它地址", "dependsOnChapterIds": ["vulkan-frame-lifecycle"] },
+    { "id": "pipeline-state-and-shaders", "title": "从 shader 到 pipeline：哪些状态可以在绘制时改变", "dependsOnChapterIds": ["vulkan-frame-lifecycle"] },
+    { "id": "multi-queue-ownership", "title": "多个 queue 与资源所有权转移", "dependsOnChapterIds": ["vulkan-frame-lifecycle"] }
+  ],
+  "design": {
+    "learningBriefPath": "src/content/courses/modern-gpu-pipeline/learning-brief.md",
+    "knowledgeMapPath": "src/content/courses/modern-gpu-pipeline/knowledge-map.md",
+    "knowledgeLinksPath": "src/content/courses/modern-gpu-pipeline/knowledge-map.json"
+  }
+}
